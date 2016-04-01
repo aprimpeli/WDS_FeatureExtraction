@@ -19,12 +19,13 @@ public class ProductCatalogs {
 	
 	public static void main (String args[]){
 		try{
+			DocPreprocessor process = new DocPreprocessor();
 			ProductCatalogs test = new ProductCatalogs();
 			String filepath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\catalog\\TVCatalog.json";
 			HashMap<String, List<String>> tokens = test.getCatalogTokens("tv", filepath);
 			for (Map.Entry<String,List<String> > entry: tokens.entrySet()){
 				System.out.println(entry.getKey());
-				DocPreprocessor.printList(entry.getValue());
+				process.printList(entry.getValue());
 			}
 		}
 		catch (Exception e){
@@ -34,6 +35,7 @@ public class ProductCatalogs {
 	
 	public HashMap<String, List<String>> getCatalogTokens(String productCategory, String filePath) throws JSONException, IOException{
 
+		DocPreprocessor processText = new DocPreprocessor();
 		HashMap<String, List<String>> catalogProducts = new HashMap<String,List<String>>();
 		String headItem="";
 		if(productCategory.equals("phone")){
@@ -61,7 +63,8 @@ public class ProductCatalogs {
 			for (String property: properties){
 				String value= array.getJSONObject(i).getString(property);
 				if (value.equals("")) continue;
-				entityValues.add(value);
+				List<String> tokenizedValue = processText.textProcessing(null, value, false, false, false, true);
+				entityValues.addAll(tokenizedValue);
 
 			}
 			catalogProducts.put(array.getJSONObject(i).getString("Product Name"), entityValues);

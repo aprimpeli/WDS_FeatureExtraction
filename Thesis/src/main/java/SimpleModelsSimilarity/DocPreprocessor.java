@@ -37,13 +37,13 @@ public class DocPreprocessor {
 			String filepath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\43uf6400_1.html";
 			DocPreprocessor process = new DocPreprocessor();
 			System.out.println("CASE 1");
-			process.printList(process.textProcessing(filepath, true, true, true, true));
+			process.printList(process.textProcessing(filepath, "",true, true, true, true));
 			System.out.println("CASE 2");
-			process.printList(process.textProcessing(filepath, true, false, true, true));
+			process.printList(process.textProcessing(filepath, "",true, false, true, true));
 			System.out.println("CASE 3");
-			process.printList(process.textProcessing(filepath, true, false, false, true));
+			process.printList(process.textProcessing(filepath, "",true, false, false, true));
 			System.out.println("CASE 4");
-			process.printList(process.textProcessing(filepath, true, false, false, false));
+			process.printList(process.textProcessing(filepath,"", true, false, false, false));
 
 		}
 		catch (Exception e){
@@ -58,10 +58,12 @@ public class DocPreprocessor {
 	 * Uses Lucene library for removal of stopwords, tokenization, stemming and normalization to lower case
 	 * Returns the list of the preprocessed words
 	 */
-	@SuppressWarnings("resource")
-	public List<String> textProcessing (String filepath, boolean isHTML,  boolean stemming, boolean stopwordremoval, boolean lowercase) throws IOException{
+	public List<String> textProcessing (String filepath, String text, boolean isHTML,  boolean stemming, boolean stopwordremoval, boolean lowercase) throws IOException{
 		
-		String text = fileToText(filepath);
+		if (null==text && null!=filepath)
+			text = fileToText(filepath);
+		
+		
 		
 		if (isHTML) text= Jsoup.parse(text).text();
 		Reader corpus= StringToReaderConverter(text);
@@ -105,10 +107,11 @@ public class DocPreprocessor {
 		  return new String(encoded, StandardCharsets.UTF_8);	
 	}
 	
-	public static void printList (List<String> list){
+	public void printList (List<String> list){
 		System.out.println("SIZE of word list:"+list.size());
 		for (String l:list) System.out.println(l);
 	}
 	
+		
 	
 }
