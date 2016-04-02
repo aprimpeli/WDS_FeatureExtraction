@@ -18,9 +18,11 @@ import org.apache.lucene.analysis.StopAnalyzer;
 import org.apache.lucene.analysis.StopFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
+import org.apache.lucene.analysis.shingle.ShingleFilter;
 import org.apache.lucene.analysis.standard.StandardFilter;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.analysis.ngram.NGramTokenizer;
 import org.apache.lucene.util.Version;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -34,16 +36,16 @@ public class DocPreprocessor {
 
 	public static void main (String [] args){
 		try{
-			String filepath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\43uf6400_1.html";
+			String filepath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\htmlPages\\43uf6400_1.html";
 			DocPreprocessor process = new DocPreprocessor();
 			System.out.println("CASE 1");
-			process.printList(process.textProcessing(filepath, "",true, true, true, true));
-			System.out.println("CASE 2");
-			process.printList(process.textProcessing(filepath, "",true, false, true, true));
-			System.out.println("CASE 3");
-			process.printList(process.textProcessing(filepath, "",true, false, false, true));
-			System.out.println("CASE 4");
-			process.printList(process.textProcessing(filepath,"", true, false, false, false));
+			process.textProcessing(filepath, null ,1,true, true, true, true);
+//			System.out.println("CASE 2");
+//			process.printList(process.textProcessing(filepath, "",true, false, true, true));
+//			System.out.println("CASE 3");
+//			process.printList(process.textProcessing(filepath, "",true, false, false, true));
+//			System.out.println("CASE 4");
+//			process.printList(process.textProcessing(filepath,"", true, false, false, false));
 
 		}
 		catch (Exception e){
@@ -58,20 +60,25 @@ public class DocPreprocessor {
 	 * Uses Lucene library for removal of stopwords, tokenization, stemming and normalization to lower case
 	 * Returns the list of the preprocessed words
 	 */
-	public List<String> textProcessing (String filepath, String text, boolean isHTML,  boolean stemming, boolean stopwordremoval, boolean lowercase) throws IOException{
+	public List<String> textProcessing (String filepath, String text, int grams, boolean isHTML,  boolean stemming, boolean stopwordremoval, boolean lowercase) throws IOException{
 		
 		if (null==text && null!=filepath)
 			text = fileToText(filepath);
-		
-		
-		
+	
 		if (isHTML) text= Jsoup.parse(text).text();
 		Reader corpus= StringToReaderConverter(text);
 		
 		List<String> processedWords = new ArrayList<String>();
-		
-		final Tokenizer source = new StandardTokenizer(Version.LUCENE_36, corpus);
-		TokenStream result = new StandardFilter(Version.LUCENE_36, source);
+		TokenStream result;
+		if(grams==1){
+			final Tokenizer source = new StandardTokenizer(Version.LUCENE_36, corpus);
+			result = new StandardFilter(Version.LUCENE_36, source);
+		}
+		else{
+			result = new StandardTokenizer(Version.LUCENE_36, corpus);
+			result = new ShingleFilter(result, grams,grams);	
+		}
+							
 		if (lowercase)
 			result = new LowerCaseFilter(Version.LUCENE_36, result);
 		if (stopwordremoval)
@@ -79,12 +86,17 @@ public class DocPreprocessor {
 		if (stemming)
 		     result = new PorterStemFilter(result);
 		
+		//CharTermAttribute charTermAttribute = result.addAttribute(CharTermAttribute.class);
+		//result.reset();
+		
 		while (result.incrementToken()){
-			processedWords.add(((CharTermAttribute)result.getAttribute(CharTermAttribute.class)).toString());		
+			String token=((CharTermAttribute)result.getAttribute(CharTermAttribute.class)).toString();
+			if(grams>1 && !token.contains(" ")) continue;
+			processedWords.add(token);	
 		}
-
-//		 System.out.println("Size of stemmed words:"+stemmedWords.size());
-		 return processedWords;
+		result.close();
+//		System.out.println("Size of stemmed words:"+stemmedWords.size());
+		return processedWords;
     }
 	
 	public Reader StringToReaderConverter(String text){
