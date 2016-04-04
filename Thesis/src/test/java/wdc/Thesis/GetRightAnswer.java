@@ -5,7 +5,7 @@ import java.io.IOException;
 import org.json.JSONException;
 import org.junit.Test;
 
-import SimpleModelsSimilarity.SimilarityCalculator;
+import BagOfWordsModel.SimilarityCalculator;
 
 public class GetRightAnswer {
 
@@ -14,6 +14,6 @@ public class GetRightAnswer {
 		SimilarityCalculator test = new SimilarityCalculator();
 		String labelPath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\labelled.txt";
 		String nodeID= "node5d654fadc5cada7635a6525863c1829";
-		System.out.println(test.getRightAnswer(nodeID, labelPath));
+		//System.out.println(test.getRightAnswer(nodeID, labelPath));
 	}
 }

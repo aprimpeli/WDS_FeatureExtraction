@@ -1,4 +1,4 @@
-package SimpleModelsSimilarity;
+package BagOfWordsModel;
 
 import java.io.BufferedReader;
 import java.io.IOException;

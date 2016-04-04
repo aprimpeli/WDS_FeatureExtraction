@@ -13,7 +13,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import SimpleModelsSimilarity.DocPreprocessor;
+import BagOfWordsModel.DocPreprocessor;
 
 public class ProductCatalogs {
 	
@@ -77,10 +77,10 @@ public class ProductCatalogs {
 		String filename="";
 		ArrayList<String> properties = new ArrayList<String>();
 		if(productCategory.equals("phone")){
-			filename="C:/Users/Anna/Documents/Student Job - DWS/workspace/Thesis/resources/phone.txt";
+			filename="C:/Users/Anna/Documents/Student Job - DWS/workspace/Thesis/resources/Properties/phone.txt";
 		}
 		else if (productCategory.equals("headphone")){
-			filename="C:/Users/Anna/Documents/Student Job - DWS/workspace/Thesis/resources/headphone.txt";
+			filename="C:/Users/Anna/Documents/Student Job - DWS/workspace/Thesis/resources/Properties/headphone.txt";
 		}
 		else if (productCategory.equals("tv"))		{
 			filename="resources//Properties//tv.txt";

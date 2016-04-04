@@ -1,4 +1,4 @@
-package SimpleModelsSimilarity;
+package BagOfWordsModel;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,6 +39,12 @@ public class Weightening {
 		
 	}
 
+	public HashMap<String,Double> getBooleanWeightning(List<String> wordsOfVector){
+		HashMap<String,Double> weights = new HashMap<String,Double>();
+		for (String gram: wordsOfVector)
+			weights.put(gram, 1.0);
+		return weights;
+	}
 	private HashMap<String, Integer> getFrequencyOfWords(List<String> wordsOfVector){
 	
 		HashMap<String, Integer> frequencyOfWords = new HashMap<String,Integer>();

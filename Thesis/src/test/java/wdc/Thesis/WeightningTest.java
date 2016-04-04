@@ -7,7 +7,8 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import SimpleModelsSimilarity.Weightening;
+import BagOfWordsModel.SimilarityCalculator;
+import BagOfWordsModel.Weightening;
 
 public class WeightningTest {
 
@@ -74,5 +75,21 @@ public class WeightningTest {
 			System.out.println(g.getKey()+":"+g.getValue());
 		}
 
+		List<String> query = new ArrayList<String>(){{
+			add("apple");
+			add("cake");
+			add("recipe");
+			
+		}};	
+		
+		SimilarityCalculator similarity = new SimilarityCalculator();
+		double score1 = similarity.cosineSimilarity(doc1, query, corpus, "tfidf");
+		double score2 = similarity.cosineSimilarity(doc2, query, corpus, "tfidf");
+		double score3 = similarity.cosineSimilarity(doc3, query, corpus, "tfidf");
+		System.out.println("Cosine Similarity Score DOC 1:"+score1);
+		System.out.println("Cosine Similarity Score DOC 2:"+score2);
+		System.out.println("Cosine Similarity Score DOC 3:"+score3);
+
+		
 	}
 }

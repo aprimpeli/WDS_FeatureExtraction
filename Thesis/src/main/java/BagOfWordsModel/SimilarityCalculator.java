@@ -1,4 +1,4 @@
-package SimpleModelsSimilarity;
+package BagOfWordsModel;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -42,8 +43,67 @@ public class SimilarityCalculator {
 		return score;
 	}
 	
-	public String getRightAnswer(String nodeID, String labelledEntitiesPath) throws JSONException, IOException{
+	
+	public double cosineSimilarity(List<String> catalogVector, List<String> pageVector, List<List<String>> wholeCatalogVector,String typeOfWeighting){
+		Weightening weights = new Weightening();
+		HashMap<String,Double> catalogWeights = new HashMap<String,Double>();
+		HashMap<String,Double> pageWeights = new HashMap<String,Double>();
 		
+		Set<String> commonWords = new HashSet<String>(catalogVector);
+		commonWords.retainAll(pageVector);
+		
+		double score = 0.0;
+		if(typeOfWeighting.equals("simple")){
+			catalogWeights=weights.getSimpleWeighting(catalogVector);
+			pageWeights=weights.getSimpleWeighting(pageVector);
+		}
+		else if (typeOfWeighting.equals("tfidf")){
+			catalogWeights=weights.getTfIdfWeighting(catalogVector, wholeCatalogVector);
+			pageWeights=weights.getSimpleWeighting(pageVector);
+			//pageWeights=weights.getBooleanWeightning(pageVector);
+		}
+		else {
+			System.out.println("Type of weighting:"+typeOfWeighting+" cannot be calculated. Available options: simple or tfidf. The program will end.");
+			System.exit(0);
+		}
+		score = getCosineSimilarityScore(catalogWeights, pageWeights, commonWords);
+		return score;
+	}
+	
+	private double getCosineSimilarityScore(HashMap<String,Double> vector1, HashMap<String,Double> vector2, Set<String> commonWords){
+		
+		double [] vectorA= new double[commonWords.size()];
+		double [] vectorB= new double[commonWords.size()];
+		vectorA= fromMapToMatrix(vector1,commonWords );
+		vectorB = fromMapToMatrix(vector2, commonWords);
+
+		double dotProduct = 0.0;
+	    double normA = 0.0;
+	    double normB = 0.0;
+	    for (int i = 0; i < vectorA.length; i++) dotProduct += vectorA[i] * vectorB[i];   
+	    for(Map.Entry<String, Double> v1:vector1.entrySet()) normA+=Math.pow(v1.getValue(), 2);
+	    for(Map.Entry<String, Double> v2:vector2.entrySet()) normB+=Math.pow(v2.getValue(), 2);
+
+	    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+	}
+	
+	private double[] fromMapToMatrix(HashMap<String,Double> map, Set<String> list){
+		
+		double[] matrix = new double[list.size()];
+		int insertions=0;
+		for(String word:list){
+			if(map.containsKey(word)){
+				matrix[insertions]=map.get(word);
+				insertions++;
+			} 
+		}
+		return matrix;
+	}
+	
+	public String getRightAnswer(String labelledEntitiesPath,String htmlPath, String nqFileMapPath) throws JSONException, IOException{
+		
+		String nodeID=extractNodeIDFromNQMapFile(htmlPath, nqFileMapPath);
+
 		JSONArray labelled = new JSONArray(DocPreprocessor.fileToText(labelledEntitiesPath));
 		String rightAnswer = "";
 		for(int i = 0 ; i < labelled.length() ; i++){
@@ -53,13 +113,13 @@ public class SimilarityCalculator {
 			}
 		}
 		if (rightAnswer.equals("")){
-			System.out.println("The nodeID "+nodeID+" does not exist in the labelled set.");
+			//System.out.println("The nodeID "+nodeID+" does not exist in the labelled set.");
 			rightAnswer="n/a";
 		}
 		return rightAnswer;
 	}
 	
-	public Entry<String, Double> getPredictedAnswer(String catalogPath, String productCategory, String htmlPage, int grams) throws IOException{
+	public Entry<String, Double> getPredictedAnswer(String catalogPath, String productCategory, String similarityType, String typeOfWeighting, String htmlPage, int grams) throws IOException{
 		
 		DocPreprocessor process = new DocPreprocessor();
 		ProductCatalogs processCatalog = new ProductCatalogs();
@@ -72,7 +132,19 @@ public class SimilarityCalculator {
 		String matchedProduct="";
 		
 		for (Map.Entry<String, List<String>> entry:vectorcatalog.entrySet()){
-			double score=calculate.simpleContainmentSimilarity(entry.getValue(), vectorpage);
+			double score =0.0;
+			if(similarityType.equals("simple"))
+				score=calculate.simpleContainmentSimilarity(entry.getValue(), vectorpage);
+			else if (similarityType.equals("cosine")){
+				List<List<String>> valuesOfMap = new ArrayList<List<String>>();
+				for(Map.Entry<String,List<String>> v:vectorcatalog.entrySet() ) valuesOfMap.add(v.getValue());
+				score=calculate.cosineSimilarity(entry.getValue(), vectorpage, valuesOfMap,typeOfWeighting);
+
+			}
+			else{
+				System.out.println("The similarity type "+similarityType+" cannot be handled. Available options are cosine and simple. The program will end.");
+				System.exit(0);
+			}
 			if(score>maxScore){
 				maxScore=score;
 				matchedProduct=entry.getKey();
@@ -85,25 +157,20 @@ public class SimilarityCalculator {
 		String htmlfrag[] = htmlPage.split("\\\\");
 		String htmlName = htmlfrag[htmlfrag.length-1];
 		
-		System.out.println("The page "+htmlName+" fitted with score "+maxScore+" to the product name "+matchedProduct);
+		//System.out.println("The page "+htmlName+" fitted with score "+maxScore+" to the product name "+matchedProduct);
 		return predictedAnswer;
 	}
 	
 	/**
-	 * @param predictedAnswer
-	 * @param htmlPath
-	 * @param labelledEntitiesPath
-	 * @param nqFileMapPath
 	 * @return
 	 * @throws JSONException
 	 * @throws IOException
 	 * Can return yes/no/N/A 
 	 * */
-	public String didIGuessRight(String predictedAnswer, String htmlPath, String labelledEntitiesPath, String nqFileMapPath) throws JSONException, IOException{
+	public String didIGuessRight(String rightAnswer, String predictedAnswer ) throws JSONException, IOException{
 		
-		String nodeID=extractNodeIDFromNQMapFile(htmlPath, nqFileMapPath);
 				
-		String rightAnswer = getRightAnswer(nodeID, labelledEntitiesPath);
+		//String rightAnswer = getRightAnswer(nodeID, labelledEntitiesPath);
 		if (rightAnswer.equals("n/a"))
 			return ("n/a");
 		else if (predictedAnswer.toLowerCase().contains(rightAnswer.toLowerCase()))
