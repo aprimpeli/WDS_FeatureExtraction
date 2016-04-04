@@ -45,15 +45,13 @@ public class Weightening {
 			weights.put(gram, 1.0);
 		return weights;
 	}
-	private HashMap<String, Integer> getFrequencyOfWords(List<String> wordsOfVector){
+	public HashMap<String, Integer> getFrequencyOfWords(List<String> wordsOfVector){
 	
 		HashMap<String, Integer> frequencyOfWords = new HashMap<String,Integer>();
 		Set<String> unique = new HashSet<String>(wordsOfVector);
 		for (String key : unique) {
 			frequencyOfWords.put(key, Collections.frequency(wordsOfVector, key));
-		    //System.out.println(key + ": " + Collections.frequency(wordsOfVector, key));
 		}
-		
 		return frequencyOfWords;
 	}
 }

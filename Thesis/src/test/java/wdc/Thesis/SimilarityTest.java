@@ -46,6 +46,8 @@ public class SimilarityTest {
 		String typeOfWeighting="tfidf";
 		//any possible number of n-grams is possible
 		int grams=1;
+		double maxFreq=0;
+		double minFreq=0;
 		
 		SimilarityCalculator calculate = new SimilarityCalculator();
 		File folderHTML = new File(htmlFolder);
@@ -63,7 +65,7 @@ public class SimilarityTest {
 	    		dontKnow++;
 	    		continue;
 	    	}
-	    	Entry<String,Double> predicted = calculate.getPredictedAnswer(catalog, "tv",similarityType, typeOfWeighting, listOfHTML[i].getPath(), grams);
+	    	Entry<String,Double> predicted = calculate.getPredictedAnswer(catalog, "tv",similarityType, typeOfWeighting, listOfHTML[i].getPath(), grams, maxFreq, minFreq);
 			
 			String answer = calculate.didIGuessRight(rightAnswer, predicted.getKey());
 			if(answer.equals("yes")) {

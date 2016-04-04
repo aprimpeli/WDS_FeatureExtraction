@@ -43,6 +43,29 @@ public class SimilarityCalculator {
 		return score;
 	}
 	
+	private double simpleWithFrequencyThreshold(List<String> vectorcatalog,
+			List<String> vectorpage, double maxFrequency, double minFrequency) {
+		
+		Weightening frequencies = new Weightening();
+		HashMap<String,Integer> vectorPageFrequencies = frequencies.getFrequencyOfWords(vectorpage);
+		HashMap<String,Integer> vectorCatalogFrequencies = frequencies.getFrequencyOfWords(vectorcatalog);
+		
+		//update the input lists
+		for (Map.Entry<String, Integer> pageGram :vectorPageFrequencies.entrySet() ){
+			if(((double)pageGram.getValue()/(double)vectorPageFrequencies.size()) > maxFrequency || 
+					((double)pageGram.getValue()/(double)vectorPageFrequencies.size()) < minFrequency)
+				vectorpage.removeAll((Collections.singleton(pageGram.getKey())));
+		}
+		
+		for (Map.Entry<String, Integer> catalogGram :vectorCatalogFrequencies.entrySet() ){
+			if(((double)catalogGram.getValue()/(double)vectorCatalogFrequencies.size()) > maxFrequency || 
+					((double)catalogGram.getValue()/(double)vectorCatalogFrequencies.size()) < minFrequency)
+				vectorcatalog.removeAll((Collections.singleton(catalogGram.getKey())));
+		}
+		//and then just apply simple similarity containment
+		double score= simpleContainmentSimilarity(vectorcatalog,vectorpage);
+		return score;
+	}
 	public double jaccardSimilarity(List<String> catalogVector, List<String> pageVector) {
 		//take unique values
 		Set<String> catalogVectorSet = new HashSet<String>(catalogVector);
@@ -149,7 +172,7 @@ public class SimilarityCalculator {
 		return rightAnswer;
 	}
 	
-	public Entry<String, Double> getPredictedAnswer(String catalogPath, String productCategory, String similarityType, String typeOfWeighting, String htmlPage, int grams) throws IOException{
+	public Entry<String, Double> getPredictedAnswer(String catalogPath, String productCategory, String similarityType, String typeOfWeighting, String htmlPage, int grams, double maxFrequency, double minFrequency) throws IOException{
 		
 		DocPreprocessor process = new DocPreprocessor();
 		ProductCatalogs processCatalog = new ProductCatalogs();
@@ -172,6 +195,9 @@ public class SimilarityCalculator {
 			}
 			else if (similarityType.equals("jaccard")){
 				score=calculate.jaccardSimilarity(entry.getValue(), vectorpage);
+			}
+			else if (similarityType.equals("simple with frequency threshold")){
+				score = calculate.simpleWithFrequencyThreshold(entry.getValue(),vectorpage, maxFrequency, minFrequency);
 			}
 			else{
 				System.out.println("The similarity type "+similarityType+" cannot be handled. Available options are cosine , jaccard and simple. The program will end.");
@@ -196,6 +222,8 @@ public class SimilarityCalculator {
 	
 
 
+
+	
 
 	/**
 	 * @return

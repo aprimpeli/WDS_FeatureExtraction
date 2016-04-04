@@ -10,12 +10,15 @@ public class Initializer {
 	static String htmlFolder="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\tvs\\HTML";
 	static String labelled="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\tvs\\labelled.txt";
 	static String nqFileMap="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\tvs\\FileNQMap.txt";
-	//cosine or simple(exact matching) or jaccard
-	static String similarityType="jaccard";
+	//cosine or simple(exact matching) or jaccard or simple with frequency threshold
+	static String similarityType="simple with frequency threshold";
 	//simple(average frequency) or tfidf
 	static String typeOfWeighting="n/a";
 	//any possible number of n-grams is possible
-	static int grams=3;
+	static int grams=1;
+	//applied only for simple with frequency threshold similarity - otherwise they make no sense
+	static double maxFreq=0.035;
+	static double minFreq=0;
 	
 	public static void main (String args[]) throws Exception{
 		
@@ -41,7 +44,7 @@ public class Initializer {
 	    		dontKnow++;
 	    		continue;
 	    	}
-	    	Entry<String,Double> predicted = calculate.getPredictedAnswer(catalog, productCategory ,similarityType, typeOfWeighting, listOfHTML[i].getPath(), grams);
+	    	Entry<String,Double> predicted = calculate.getPredictedAnswer(catalog, productCategory ,similarityType, typeOfWeighting, listOfHTML[i].getPath(), grams, maxFreq, minFreq);
 			
 			String answer = calculate.didIGuessRight(rightAnswer, predicted.getKey());
 			if(answer.equals("yes")) {
