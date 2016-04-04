@@ -43,6 +43,36 @@ public class SimilarityCalculator {
 		return score;
 	}
 	
+	public double jaccardSimilarity(List<String> catalogVector, List<String> pageVector) {
+		//take unique values
+		Set<String> catalogVectorSet = new HashSet<String>(catalogVector);
+		Set<String> pageVectorSet = new HashSet<String>(pageVector);
+		int commonGrams=0;
+		
+		for(String gram:pageVectorSet){
+			ArrayList<String> tokensOfPageGram = new ArrayList<String>();
+			String [] pageTokens = gram.split("\\s+");
+			for(int i=0;i<pageTokens.length;i++) tokensOfPageGram.add(pageTokens[i]);
+			boolean foundCommon=false;
+			if (foundCommon) continue;
+			for(String catalogGram:catalogVectorSet){
+				ArrayList<String> tokensOfCatalogGram = new ArrayList<String>();
+				String [] catalogTokens = catalogGram.split("\\s+");
+				for (int j=0;j<catalogTokens.length; j++) tokensOfCatalogGram.add(catalogTokens[j]);
+				
+				List<String> commonElements = new ArrayList<String>(tokensOfPageGram);
+				commonElements.retainAll(tokensOfCatalogGram);
+				if (commonElements.size()==tokensOfPageGram.size()) {
+					commonGrams++;
+					foundCommon=true;
+					break;
+				}
+			}
+		}
+		int unionSize = catalogVectorSet.size()+pageVectorSet.size() - commonGrams;
+		double score=((double)commonGrams/(double) unionSize);
+		return score;
+	}
 	
 	public double cosineSimilarity(List<String> catalogVector, List<String> pageVector, List<List<String>> wholeCatalogVector,String typeOfWeighting){
 		Weightening weights = new Weightening();
@@ -139,10 +169,12 @@ public class SimilarityCalculator {
 				List<List<String>> valuesOfMap = new ArrayList<List<String>>();
 				for(Map.Entry<String,List<String>> v:vectorcatalog.entrySet() ) valuesOfMap.add(v.getValue());
 				score=calculate.cosineSimilarity(entry.getValue(), vectorpage, valuesOfMap,typeOfWeighting);
-
+			}
+			else if (similarityType.equals("jaccard")){
+				score=calculate.jaccardSimilarity(entry.getValue(), vectorpage);
 			}
 			else{
-				System.out.println("The similarity type "+similarityType+" cannot be handled. Available options are cosine and simple. The program will end.");
+				System.out.println("The similarity type "+similarityType+" cannot be handled. Available options are cosine , jaccard and simple. The program will end.");
 				System.exit(0);
 			}
 			if(score>maxScore){
@@ -161,6 +193,10 @@ public class SimilarityCalculator {
 		return predictedAnswer;
 	}
 	
+	
+
+
+
 	/**
 	 * @return
 	 * @throws JSONException

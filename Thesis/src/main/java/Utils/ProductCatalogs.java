@@ -77,10 +77,10 @@ public class ProductCatalogs {
 		String filename="";
 		ArrayList<String> properties = new ArrayList<String>();
 		if(productCategory.equals("phone")){
-			filename="C:/Users/Anna/Documents/Student Job - DWS/workspace/Thesis/resources/Properties/phone.txt";
+			filename="resources/Properties/phone.txt";
 		}
 		else if (productCategory.equals("headphone")){
-			filename="C:/Users/Anna/Documents/Student Job - DWS/workspace/Thesis/resources/Properties/headphone.txt";
+			filename="resources/Properties/headphone.txt";
 		}
 		else if (productCategory.equals("tv"))		{
 			filename="resources//Properties//tv.txt";
