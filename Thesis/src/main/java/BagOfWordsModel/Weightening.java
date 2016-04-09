@@ -20,7 +20,36 @@ public class Weightening {
 		return gramWeights;
 	}
 	
-	public HashMap<String,Double> getTfIdfWeighting(List<String> wordsOfVector, List<List<String>> vectorsOfCorpus){
+	public HashMap<String, Double> getIDFWeighting(List<List<String>> vectorsOfCorpus){
+		HashMap<String,Double> IDFWeights = new HashMap<String,Double>();
+		Set<String> uniqueGrams = new HashSet<String>();
+		for(List<String> vector: vectorsOfCorpus){
+			for(String gram:vector)
+				uniqueGrams.add(gram);
+		}
+		for (String uniqueGram:uniqueGrams){
+			
+			int appearanceOfTokeninCorpus=0;
+			for(List<String> vector: vectorsOfCorpus)
+				if(vector.contains(uniqueGram)) appearanceOfTokeninCorpus++;
+			IDFWeights.put(uniqueGram, Math.log10((double)vectorsOfCorpus.size()/(double)appearanceOfTokeninCorpus));
+		}
+		
+		return IDFWeights;
+	}
+	
+	public HashMap<String, Double> getTfIdfWeighting (List<String> wordsOfVector, HashMap<String,Double> IDFWeights){
+		
+		HashMap<String, Double> tfidfWeights = new HashMap<String,Double>();
+		HashMap<String, Integer> frequencyOfWords = getFrequencyOfWords(wordsOfVector);
+		for(Map.Entry<String,Integer> gramFrequency: frequencyOfWords.entrySet()){						
+			double tfidf = (double) gramFrequency.getValue() * IDFWeights.get(gramFrequency.getKey());
+			tfidfWeights.put(gramFrequency.getKey(), tfidf);
+		}
+		return tfidfWeights;
+	}
+	
+	public HashMap<String,Double> getTfIdfWeighting_(List<String> wordsOfVector, List<List<String>> vectorsOfCorpus){
 		//get tf
 		HashMap<String, Integer> frequencyOfWords = getFrequencyOfWords(wordsOfVector);
 		int totalDocuments = vectorsOfCorpus.size();

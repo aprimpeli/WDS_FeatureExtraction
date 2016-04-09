@@ -2,7 +2,6 @@ package BagOfWordsModel;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.AbstractMap;
@@ -22,7 +21,35 @@ import org.json.JSONObject;
 import Utils.ProductCatalogs;
 
 public class SimilarityCalculator {
+	
+	static BagOfWordsConfiguration model;
+	static PreprocessingConfiguration preprocessing;
+	static HashMap<String,List<String>> vectorCatalogEntities;
+	List<List<String>> CatalogEntitiesAsList;
+	List<List<String>> PagesAsList;
+	
+	public SimilarityCalculator() {
+	}
+	
+	public SimilarityCalculator(BagOfWordsConfiguration modelConfig, PreprocessingConfiguration preprocessing, HashMap<String,List<String>> pagesTokens,HashMap<String,List<String>> catalogTokens ) {
+		SimilarityCalculator.model = modelConfig;
+		SimilarityCalculator.preprocessing=preprocessing;				
+		SimilarityCalculator.vectorCatalogEntities = catalogTokens;
+		//SimilarityCalculator.PagesAsList = pagesTokens;
+		
+		CatalogEntitiesAsList = new ArrayList<List<String>>();
+		for(Map.Entry<String,List<String>> v:vectorCatalogEntities.entrySet() ) CatalogEntitiesAsList.add(v.getValue());
+		
+		PagesAsList = new ArrayList<List<String>>();
+		for(Map.Entry<String,List<String>> v:pagesTokens.entrySet() ) PagesAsList.add(v.getValue());
 
+		//precalculation of the tfidf weighting so that we dont have to repeat every time
+		if(modelConfig.getSimilarityType().equals("cosine") && modelConfig.getTypeOfWeighting().equals("tfidf")){
+			Weightening weights = new Weightening();
+			modelConfig.setIdfWeightsCatalog(weights.getIDFWeighting(CatalogEntitiesAsList));
+			modelConfig.setIdfWeightsPages(weights.getIDFWeighting(PagesAsList));
+		}
+	}
 	/**
 	 * @param catalogVector
 	 * @param pageVector
@@ -36,15 +63,28 @@ public class SimilarityCalculator {
 		Set<String> pageVectorSet = new HashSet<String>(pageVector);
 		
 		double score = 0;
-		List<String> commonElements = new ArrayList<String>(pageVectorSet);
-		commonElements.retainAll(catalogVectorSet);
-		score = ((double) commonElements.size()) / ((double) pageVectorSet.size());
+		Set<String> commonElements = new HashSet<String>();
+		if(model.isOnTopLevenshtein()){
+			for(String gram1:catalogVectorSet){
+				for(String gram2:pageVectorSet)
+					if(commonWithLevenshteinSimilarity(gram1, gram2, model.getLevenshteinThreshold()))
+						commonElements.add(gram1);
+			}			
+		}
+		else{
+			commonElements = new HashSet<String>(pageVectorSet);
+			commonElements.retainAll(catalogVectorSet);
+		}
+		
+		score = ((double) commonElements.size()) / ((double) catalogVectorSet.size());
 		
 		return score;
 	}
 	
+	
+
 	private double simpleWithFrequencyThreshold(List<String> vectorcatalog,
-			List<String> vectorpage, double maxFrequency, double minFrequency) {
+			List<String> vectorpage) {
 		
 		Weightening frequencies = new Weightening();
 		HashMap<String,Integer> vectorPageFrequencies = frequencies.getFrequencyOfWords(vectorpage);
@@ -52,20 +92,21 @@ public class SimilarityCalculator {
 		
 		//update the input lists
 		for (Map.Entry<String, Integer> pageGram :vectorPageFrequencies.entrySet() ){
-			if(((double)pageGram.getValue()/(double)vectorPageFrequencies.size()) > maxFrequency || 
-					((double)pageGram.getValue()/(double)vectorPageFrequencies.size()) < minFrequency)
+			if(((double)pageGram.getValue()/(double)vectorPageFrequencies.size()) > model.getMaxFreq() || 
+					((double)pageGram.getValue()/(double)vectorPageFrequencies.size()) < model.getMinFreq())
 				vectorpage.removeAll((Collections.singleton(pageGram.getKey())));
 		}
 		
 		for (Map.Entry<String, Integer> catalogGram :vectorCatalogFrequencies.entrySet() ){
-			if(((double)catalogGram.getValue()/(double)vectorCatalogFrequencies.size()) > maxFrequency || 
-					((double)catalogGram.getValue()/(double)vectorCatalogFrequencies.size()) < minFrequency)
+			if(((double)catalogGram.getValue()/(double)vectorCatalogFrequencies.size()) > model.getMaxFreq() || 
+					((double)catalogGram.getValue()/(double)vectorCatalogFrequencies.size()) < model.getMinFreq())
 				vectorcatalog.removeAll((Collections.singleton(catalogGram.getKey())));
 		}
 		//and then just apply simple similarity containment
 		double score= simpleContainmentSimilarity(vectorcatalog,vectorpage);
 		return score;
 	}
+	
 	public double jaccardSimilarity(List<String> catalogVector, List<String> pageVector) {
 		//take unique values
 		Set<String> catalogVectorSet = new HashSet<String>(catalogVector);
@@ -83,8 +124,18 @@ public class SimilarityCalculator {
 				String [] catalogTokens = catalogGram.split("\\s+");
 				for (int j=0;j<catalogTokens.length; j++) tokensOfCatalogGram.add(catalogTokens[j]);
 				
-				List<String> commonElements = new ArrayList<String>(tokensOfPageGram);
-				commonElements.retainAll(tokensOfCatalogGram);
+				ArrayList<String> commonElements = new ArrayList<String>(tokensOfPageGram);
+				if(model.isOnTopLevenshtein()){
+					for(String gram1:tokensOfCatalogGram){
+						for(String gram2:tokensOfPageGram)
+							if(commonWithLevenshteinSimilarity(gram1, gram2, model.getLevenshteinThreshold()))
+								commonElements.add(gram1);
+					}
+				} 
+				else {
+					commonElements = new ArrayList<String>(tokensOfPageGram);
+					commonElements.retainAll(tokensOfCatalogGram);
+				}
 				if (commonElements.size()==tokensOfPageGram.size()) {
 					commonGrams++;
 					foundCommon=true;
@@ -97,29 +148,44 @@ public class SimilarityCalculator {
 		return score;
 	}
 	
-	public double cosineSimilarity(List<String> catalogVector, List<String> pageVector, List<List<String>> wholeCatalogVector,String typeOfWeighting){
+	public double cosineSimilarity(List<String> catalogVector, List<String> pageVector){
 		Weightening weights = new Weightening();
 		HashMap<String,Double> catalogWeights = new HashMap<String,Double>();
 		HashMap<String,Double> pageWeights = new HashMap<String,Double>();
 		
-		Set<String> commonWords = new HashSet<String>(catalogVector);
-		commonWords.retainAll(pageVector);
+		Set<String> commonWords = new HashSet<String>();
+		if(model.isOnTopLevenshtein()){
+			for(String gram1:catalogVector){
+				for(String gram2:pageVector)
+					if(commonWithLevenshteinSimilarity(gram1, gram2, model.getLevenshteinThreshold()))
+						commonWords.add(gram1);
+			}
+		}
+		else{
+			commonWords = new HashSet<String>(catalogVector);
+			commonWords.retainAll(pageVector);
+		}
+		
 		
 		double score = 0.0;
-		if(typeOfWeighting.equals("simple")){
-			catalogWeights=weights.getSimpleWeighting(catalogVector);
-			pageWeights=weights.getSimpleWeighting(pageVector);
+		if (commonWords.size()>0){
+			if(model.getTypeOfWeighting().equals("simple")){
+				catalogWeights=weights.getSimpleWeighting(catalogVector);
+				pageWeights=weights.getSimpleWeighting(pageVector);
+			}
+			else if (model.getTypeOfWeighting().equals("tfidf")){
+				catalogWeights=weights.getTfIdfWeighting(catalogVector, model.getIdfWeightsCatalog());
+				pageWeights=weights.getTfIdfWeighting(pageVector, model.getIdfWeightsPages());
+				//pageWeights=weights.getBooleanWeightning(pageVector);
+			}
+			else {
+				System.out.println("Type of weighting:"+model.getTypeOfWeighting()+" cannot be calculated. Available options: simple or tfidf. The program will end.");
+				System.exit(0);
+			}
+			score = getCosineSimilarityScore(catalogWeights, pageWeights, commonWords);
+
 		}
-		else if (typeOfWeighting.equals("tfidf")){
-			catalogWeights=weights.getTfIdfWeighting(catalogVector, wholeCatalogVector);
-			pageWeights=weights.getSimpleWeighting(pageVector);
-			//pageWeights=weights.getBooleanWeightning(pageVector);
-		}
-		else {
-			System.out.println("Type of weighting:"+typeOfWeighting+" cannot be calculated. Available options: simple or tfidf. The program will end.");
-			System.exit(0);
-		}
-		score = getCosineSimilarityScore(catalogWeights, pageWeights, commonWords);
+		 
 		return score;
 	}
 	
@@ -172,55 +238,54 @@ public class SimilarityCalculator {
 		return rightAnswer;
 	}
 	
-	public Entry<String, Double> getPredictedAnswer(String catalogPath, String productCategory, String similarityType, String typeOfWeighting, String htmlPage, int grams, double maxFrequency, double minFrequency) throws IOException{
+	public HashMap<String, Double> getPredictedAnswers(List<String> vectorpage) throws IOException{
+				
+	
+		HashMap<String, Double> predictedAnswers = new HashMap<String,Double>();
 		
-		DocPreprocessor process = new DocPreprocessor();
-		ProductCatalogs processCatalog = new ProductCatalogs();
-		SimilarityCalculator calculate = new SimilarityCalculator();
-		
-		List<String> vectorpage = process.textProcessing(htmlPage, null, grams, true, false, true, true);
-		HashMap<String, List<String>> vectorcatalog = processCatalog.getCatalogTokens(productCategory, catalogPath, grams);
-		
-		double maxScore = 0;
-		String matchedProduct="";
-		
-		for (Map.Entry<String, List<String>> entry:vectorcatalog.entrySet()){
+		for (Map.Entry<String, List<String>> entry:vectorCatalogEntities.entrySet()){
 			double score =0.0;
-			if(similarityType.equals("simple"))
-				score=calculate.simpleContainmentSimilarity(entry.getValue(), vectorpage);
-			else if (similarityType.equals("cosine")){
-				List<List<String>> valuesOfMap = new ArrayList<List<String>>();
-				for(Map.Entry<String,List<String>> v:vectorcatalog.entrySet() ) valuesOfMap.add(v.getValue());
-				score=calculate.cosineSimilarity(entry.getValue(), vectorpage, valuesOfMap,typeOfWeighting);
+			if(model.getSimilarityType().equals("simple"))
+				score=simpleContainmentSimilarity(entry.getValue(), vectorpage);
+			
+			else if (model.getSimilarityType().equals("cosine")){				
+				score=cosineSimilarity(entry.getValue(), vectorpage);
 			}
-			else if (similarityType.equals("jaccard")){
-				score=calculate.jaccardSimilarity(entry.getValue(), vectorpage);
+			else if (model.getSimilarityType().equals("jaccard")){
+				score=jaccardSimilarity(entry.getValue(), vectorpage);
 			}
-			else if (similarityType.equals("simple with frequency threshold")){
-				score = calculate.simpleWithFrequencyThreshold(entry.getValue(),vectorpage, maxFrequency, minFrequency);
+			else if (model.getSimilarityType().equals("simple with frequency threshold")){
+				score = simpleWithFrequencyThreshold(entry.getValue(),vectorpage);
 			}
 			else{
-				System.out.println("The similarity type "+similarityType+" cannot be handled. Available options are cosine , jaccard and simple. The program will end.");
+				System.out.println("The similarity type "+model.getSimilarityType()+" cannot be handled. Available options are cosine , jaccard and simple. The program will end.");
 				System.exit(0);
 			}
-			if(score>maxScore){
-				maxScore=score;
-				matchedProduct=entry.getKey();
-			}
+			predictedAnswers.put(entry.getKey(), score);
+			
 			//System.out.println("Page and "+entry.getKey()+" score:"+score);
 		}
-		Map.Entry<String,Double> predictedAnswer =
-			    new AbstractMap.SimpleEntry<String, Double>(matchedProduct, maxScore);
 		
-		String htmlfrag[] = htmlPage.split("\\\\");
-		String htmlName = htmlfrag[htmlfrag.length-1];
+		
+		//String htmlfrag[] = htmlPage.split("\\\\");
+		//String htmlName = htmlfrag[htmlfrag.length-1];
 		
 		//System.out.println("The page "+htmlName+" fitted with score "+maxScore+" to the product name "+matchedProduct);
-		return predictedAnswer;
+		return predictedAnswers;
 	}
 	
-	
-
+	public static boolean commonWithLevenshteinSimilarity(String a, String b, double threshold) {
+		
+		int distance = org.apache.commons.lang.StringUtils.getLevenshteinDistance(a, b);
+        double similarity= 0;
+        if(a.length()>b.length())
+        	similarity=1.0-((double)distance/a.length());
+        else
+        	similarity=1.0-((double)distance/b.length());
+        
+        
+        return (similarity>=threshold);
+    }
 
 
 	
@@ -237,7 +302,9 @@ public class SimilarityCalculator {
 		//String rightAnswer = getRightAnswer(nodeID, labelledEntitiesPath);
 		if (rightAnswer.equals("n/a"))
 			return ("n/a");
-		else if (predictedAnswer.toLowerCase().contains(rightAnswer.toLowerCase()))
+		else if (predictedAnswer.toLowerCase().contains(rightAnswer.toLowerCase()) && !model.getProductCategory().equals("phone"))
+			return "yes";
+		else if (predictedAnswer.toLowerCase().equals(rightAnswer.toLowerCase()) && model.getProductCategory().equals("phone"))
 			return "yes";
 		else
 			return "no";

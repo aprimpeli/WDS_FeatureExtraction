@@ -14,6 +14,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import BagOfWordsModel.DocPreprocessor;
+import BagOfWordsModel.PreprocessingConfiguration;
 
 public class ProductCatalogs {
 	
@@ -22,7 +23,8 @@ public class ProductCatalogs {
 			DocPreprocessor process = new DocPreprocessor();
 			ProductCatalogs test = new ProductCatalogs();
 			String filepath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\catalog\\TVCatalog.json";
-			HashMap<String, List<String>> tokens = test.getCatalogTokens("tv", filepath, 1);
+			PreprocessingConfiguration preprocess = new PreprocessingConfiguration(false, true, true);
+			HashMap<String, List<String>> tokens = test.getCatalogTokens("tv", filepath, 1, preprocess);
 			for (Map.Entry<String,List<String> > entry: tokens.entrySet()){
 				System.out.println(entry.getKey());
 				process.printList(entry.getValue());
@@ -33,7 +35,7 @@ public class ProductCatalogs {
 		}
 	}
 	
-	public HashMap<String, List<String>> getCatalogTokens(String productCategory, String filePath, int grams) throws JSONException, IOException{
+	public static HashMap<String, List<String>> getCatalogTokens(String productCategory, String filePath, int grams, PreprocessingConfiguration preprocessing) throws JSONException, IOException{
 
 		DocPreprocessor processText = new DocPreprocessor();
 		HashMap<String, List<String>> catalogProducts = new HashMap<String,List<String>>();
@@ -63,7 +65,7 @@ public class ProductCatalogs {
 			for (String property: properties){
 				String value= array.getJSONObject(i).getString(property);
 				if (value.equals("")) continue;
-				List<String> tokenizedValue = processText.textProcessing(null, value, grams, false, false, false, true);
+				List<String> tokenizedValue = processText.textProcessing(null, value, grams, false, preprocessing);
 				entityValues.addAll(tokenizedValue);
 
 			}
@@ -73,7 +75,7 @@ public class ProductCatalogs {
 		return catalogProducts;
 	}
 
-	public ArrayList<String> getPropertiesFromFile(String productCategory){
+	public static ArrayList<String> getPropertiesFromFile(String productCategory){
 		String filename="";
 		ArrayList<String> properties = new ArrayList<String>();
 		if(productCategory.equals("phone")){
