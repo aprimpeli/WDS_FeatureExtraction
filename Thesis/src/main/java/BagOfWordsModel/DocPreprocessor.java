@@ -33,12 +33,12 @@ public class DocPreprocessor {
 
 	public static void main (String [] args){
 		try{
-			String filepath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\htmlPages\\43uf6400_1.html";
+			String filepath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\tvs\\HTML\\43uf6400_1.html";
 			String nqFileMap="";
 			DocPreprocessor process = new DocPreprocessor();
 			System.out.println("CASE 1");
 			PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(true, true, true, "all_html");
-			process.textProcessing(filepath, null ,1,true, preprocessing, nqFileMap);
+			process.printList(process.textProcessing(filepath, null ,2,true, preprocessing, nqFileMap));
 //			System.out.println("CASE 2");
 //			process.printList(process.textProcessing(filepath, "",true, false, true, true));
 //			System.out.println("CASE 3");
@@ -66,15 +66,10 @@ public class DocPreprocessor {
 		
 		List<String> processedWords = new ArrayList<String>();
 		TokenStream result=null;
-		if(grams==1){
-			final Tokenizer source = new StandardTokenizer(Version.LUCENE_36, corpus);
-			result = new StandardFilter(Version.LUCENE_36, source);
-		}
-		else{
-			result = new StandardTokenizer(Version.LUCENE_36, corpus);
-			result = new ShingleFilter(result, grams,grams);	
-		}
-							
+		
+		final Tokenizer source = new StandardTokenizer(Version.LUCENE_36, corpus);
+		result = new StandardFilter(Version.LUCENE_36, source);
+					
 		if (preprocessing.isLowerCase())
 			result = new LowerCaseFilter(Version.LUCENE_36, result);
 		if (preprocessing.isStopWordRemoval())
@@ -85,14 +80,30 @@ public class DocPreprocessor {
 		//CharTermAttribute charTermAttribute = result.addAttribute(CharTermAttribute.class);
 		//result.reset();
 		
-		while (result.incrementToken()){
-			String token=((CharTermAttribute)result.getAttribute(CharTermAttribute.class)).toString();
-			if(grams>1 && !token.contains(" ")) continue;
+		while(result.incrementToken()){
+			String token=((CharTermAttribute)result.getAttribute(CharTermAttribute.class)).toString();		
 			processedWords.add(token);	
+		}	
+
+		if(grams>1){
+			StringBuilder buildText = new StringBuilder();
+			for (String word:processedWords){
+				buildText.append(word+" ");
+			}
+			//now I have the preprocessed text I can tokenize it based on n-grams
+			corpus.reset();
+			corpus = StringToReaderConverter(buildText.toString());
+			result.reset();
+			result = new StandardTokenizer(Version.LUCENE_36, corpus);
+			result = new ShingleFilter(result, grams,grams);	
+			while(result.incrementToken()){
+				String token=((CharTermAttribute)result.getAttribute(CharTermAttribute.class)).toString();
+				if(grams>1 && !token.contains(" ")) continue;
+				processedWords.add(token);	
+			}
 		}
 		result.close();
 //		System.out.println("Size of stemmed words:"+stemmedWords.size());
-		for (String w:processedWords)System.out.println(w);
 		return processedWords;
     }
 	
