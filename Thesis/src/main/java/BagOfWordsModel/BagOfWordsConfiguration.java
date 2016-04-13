@@ -21,6 +21,28 @@ public class BagOfWordsConfiguration {
 	private HashMap<String, Double> idfWeightsCatalog;
 	private HashMap<String,Double> idfWeightsPages;
 	
+	private HashMap<String,Integer> vectorPageFrequencies;
+	private HashMap<String,Integer> vectorCatalogFrequencies;
+
+	
+	public HashMap<String, Integer> getVectorPageFrequencies() {
+		return vectorPageFrequencies;
+	}
+
+	public void setVectorPageFrequencies(
+			HashMap<String, Integer> vectorPageFrequencies) {
+		this.vectorPageFrequencies = vectorPageFrequencies;
+	}
+
+	public HashMap<String, Integer> getVectorCatalogFrequencies() {
+		return vectorCatalogFrequencies;
+	}
+
+	public void setVectorCatalogFrequencies(
+			HashMap<String, Integer> vectorCatalogFrequencies) {
+		this.vectorCatalogFrequencies = vectorCatalogFrequencies;
+	}
+
 	public BagOfWordsConfiguration(String productCategory, String catalog,
 			String htmlFolder, String labelled, String nqFileMap,
 			String similarityType, String typeOfWeighting, int grams,

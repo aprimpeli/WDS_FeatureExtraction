@@ -23,7 +23,7 @@ public class ProductCatalogs {
 			DocPreprocessor process = new DocPreprocessor();
 			ProductCatalogs test = new ProductCatalogs();
 			String filepath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\catalog\\TVCatalog.json";
-			PreprocessingConfiguration preprocess = new PreprocessingConfiguration(false, true, true);
+			PreprocessingConfiguration preprocess = new PreprocessingConfiguration(false, true, true,"");
 			HashMap<String, List<String>> tokens = test.getCatalogTokens("tv", filepath, 1, preprocess);
 			for (Map.Entry<String,List<String> > entry: tokens.entrySet()){
 				System.out.println(entry.getKey());
@@ -65,7 +65,7 @@ public class ProductCatalogs {
 			for (String property: properties){
 				String value= array.getJSONObject(i).getString(property);
 				if (value.equals("")) continue;
-				List<String> tokenizedValue = processText.textProcessing(null, value, grams, false, preprocessing);
+				List<String> tokenizedValue = processText.textProcessing(null, value, grams, false, preprocessing,null);
 				entityValues.addAll(tokenizedValue);
 
 			}

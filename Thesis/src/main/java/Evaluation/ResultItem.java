@@ -6,6 +6,25 @@ public class ResultItem {
 	private int trueNegatives;
 	private int falsePositives;
 	private int falseNegatives;
+	private double threshold;
+	private double a;
+	
+	public ResultItem(){
+		this.a=-1;
+	}
+	
+	public double getThreshold() {
+		return threshold;
+	}
+	public void setThreshold(double threshold) {
+		this.threshold = threshold;
+	}
+	public double getA() {
+		return a;
+	}
+	public void setA(double a) {
+		this.a = a;
+	}
 	public int getTruePositives() {
 		return truePositives;
 	}
@@ -32,15 +51,22 @@ public class ResultItem {
 	}
 	
 	public double getPrecision(){
-		return (double) truePositives/((double) truePositives+(double)falsePositives);
+		double precision=(double) truePositives/((double) truePositives+(double)falsePositives);
+		if(Double.isNaN(precision)) return 0;
+		else return precision;
 	}
 	public double getRecall(){
-		return (double) truePositives/((double) truePositives+(double)falseNegatives);
+		double recall=(double) truePositives/((double) truePositives+(double)falseNegatives);
+		if(Double.isNaN(recall)) return 0;
+		else return recall;
 
 	}
 	public double getF1(){
+		
 		double p=(double) truePositives/((double) truePositives+(double)falsePositives);
 		double r=(double) truePositives/((double) truePositives+(double)falseNegatives);
-	    return ((2.0*p*r)/(p+r));
+		double f1=((2.0*p*r)/(p+r));
+		if(Double.isNaN(f1)) return 0;
+		else return f1;
 	}
 }

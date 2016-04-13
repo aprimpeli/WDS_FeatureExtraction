@@ -2,11 +2,13 @@ package BagOfWordsModel;
 
 import java.io.File;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
 import Evaluation.Evaluation;
+import Evaluation.EvaluationItem;
 import Evaluation.ResultItem;
 import Utils.HTMLPages;
 import Utils.ProductCatalogs;
@@ -24,6 +26,7 @@ public class Initializer {
 	static boolean stemming=true;
 	static boolean stopWordRemoval=true;
 	static boolean lowerCase=true;
+	static String htmlParsingElements=""; //
 	
 	//SIMILARITY CONFIGURATION
 	//cosine or simple(exact matching) or jaccard or simple with frequency threshold
@@ -49,7 +52,7 @@ public class Initializer {
 				 maxFreq,  minFreq,  onTopLevenshtein,
 				 levenshteinThreshold);
 		
-		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase);
+		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements);
 		
 		System.out.println("---START---");
 		System.out.println("The bag of words model will be executed for the product category "+ productCategory);
@@ -58,17 +61,19 @@ public class Initializer {
 		System.out.println("The chosen type of weighting (not available for simple similarity method) is "+typeOfWeighting);
 		System.out.println("The bag of words model will be implemented on the basis of "+grams+" grams");
 		
-		HashMap<String,List<String>> tokensOfAllHTML = HTMLPages.getHTMLToken(modelConfig.getHtmlFolder(), modelConfig.getGrams(), preprocessing);
+		HashMap<String,List<String>> tokensOfAllHTML = HTMLPages.getHTMLToken(modelConfig, preprocessing);
 		HashMap<String,List<String>> tokensOfAllCatalogEntities = ProductCatalogs.getCatalogTokens(modelConfig.getProductCategory(), modelConfig.getCatalog(), modelConfig.getGrams(), preprocessing);
 		SimilarityCalculator calculate = new SimilarityCalculator(modelConfig,preprocessing, tokensOfAllHTML, tokensOfAllCatalogEntities);
 		File folderHTML = new File(modelConfig.getHtmlFolder());
 		File[] listOfHTML = folderHTML.listFiles();
 		
-		HashMap<String, Double> predictedAnswersForPage = new HashMap<String,Double>();
 		ResultItem results= new ResultItem();
+		List<EvaluationItem> ItemstoBeEvaluated = new ArrayList<EvaluationItem>();
 
 		for (int i = 0; i < listOfHTML.length; i++) {
-	    	String rightAnswer= calculate.getRightAnswer(modelConfig.getLabelled(), listOfHTML[i].getPath(), modelConfig.getNqFileMap());
+			HashMap<String, Double> predictedAnswersForPage = new HashMap<String,Double>();
+
+			String rightAnswer= calculate.getRightAnswer(modelConfig.getLabelled(), listOfHTML[i].getPath(), modelConfig.getNqFileMap());
 	    	if (rightAnswer.equals("n/a")) {
 	    		continue;
 	    	}
@@ -76,11 +81,15 @@ public class Initializer {
 
 	    	//get all the matches with the equivalent scores
 	    	predictedAnswersForPage = calculate.getPredictedAnswers(tokensOfAllHTML.get(listOfHTML[i].getName()));
-	    	
-			Evaluation evaluate = new Evaluation(results);
-			results=evaluate.getResults(predictedAnswersForPage, rightAnswer, modelConfig.getProductCategory());
+	    	EvaluationItem toBeEvaluated= new EvaluationItem();
+	    	toBeEvaluated.setPredictedAnswers(predictedAnswersForPage);
+	    	toBeEvaluated.setRightAnswer(rightAnswer);
+	    	toBeEvaluated.setProductCategory(modelConfig.getProductCategory());
+	    	ItemstoBeEvaluated.add(toBeEvaluated);
 	    }
-	    
+		Evaluation evaluate = new Evaluation();
+		results=evaluate.getResultsWithAverageThreshold(ItemstoBeEvaluated);
+		
 	    System.out.println("---RESULTS---");
 	    System.out.println("Precision: "+results.getPrecision());
 	    System.out.println("Recall: "+results.getRecall());

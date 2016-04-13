@@ -2,6 +2,7 @@ package BagOfWordsModel;
 
 public class PreprocessingConfiguration {
 
+	private String htmlParsingType;
 	private boolean stemming;
 	private boolean stopWordRemoval;
 	private boolean lowerCase;
@@ -24,11 +25,18 @@ public class PreprocessingConfiguration {
 		this.lowerCase = lowerCase;
 	}
 	public PreprocessingConfiguration(boolean stemming,
-			boolean stopWordRemoval, boolean lowerCase) {
+			boolean stopWordRemoval, boolean lowerCase, String htmlParsingElements) {
 		super();
 		this.stemming = stemming;
 		this.stopWordRemoval = stopWordRemoval;
 		this.lowerCase = lowerCase;
+		this.htmlParsingType=htmlParsingElements;
+	}
+	public String getHtmlParsingType() {
+		return htmlParsingType;
+	}
+	public void setHtmlParsingType(String htmlParsingType) {
+		this.htmlParsingType = htmlParsingType;
 	}
 	
 	

@@ -22,6 +22,10 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.util.Version;
 import org.jsoup.Jsoup;
 
+import Utils.HTMLFragmentsExtractor;
+import Utils.NQMapFileExtractions;
+import Utils.NodeFromNQ;
+
 
 
 
@@ -30,10 +34,11 @@ public class DocPreprocessor {
 	public static void main (String [] args){
 		try{
 			String filepath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\htmlPages\\43uf6400_1.html";
+			String nqFileMap="";
 			DocPreprocessor process = new DocPreprocessor();
 			System.out.println("CASE 1");
-			PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(true, true, true);
-			process.textProcessing(filepath, null ,1,true, preprocessing);
+			PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(true, true, true, "all_html");
+			process.textProcessing(filepath, null ,1,true, preprocessing, nqFileMap);
 //			System.out.println("CASE 2");
 //			process.printList(process.textProcessing(filepath, "",true, false, true, true));
 //			System.out.println("CASE 3");
@@ -47,6 +52,7 @@ public class DocPreprocessor {
 		}
 	}
 	/**
+	 * @param string 
 	 * @param reader
 	 * @return
 	 * @throws IOException
@@ -54,13 +60,9 @@ public class DocPreprocessor {
 	 * Uses Lucene library for removal of stopwords, tokenization, stemming and normalization to lower case
 	 * Returns the list of the preprocessed words
 	 */
-	public List<String> textProcessing (String filepath, String text, int grams, boolean isHTML,  PreprocessingConfiguration preprocessing) throws IOException{
+	public List<String> textProcessing (String filepath, String text, int grams, boolean isHTML,  PreprocessingConfiguration preprocessing, String nqFileMap) throws IOException{
 		
-		if (null==text && null!=filepath)
-			text = fileToText(filepath);
-	
-		if (isHTML) text= Jsoup.parse(text).text();
-		Reader corpus= StringToReaderConverter(text);
+		Reader corpus= StringToReaderConverter(getText(isHTML, text, filepath, preprocessing, nqFileMap));
 		
 		List<String> processedWords = new ArrayList<String>();
 		TokenStream result=null;
@@ -90,8 +92,49 @@ public class DocPreprocessor {
 		}
 		result.close();
 //		System.out.println("Size of stemmed words:"+stemmedWords.size());
+		for (String w:processedWords)System.out.println(w);
 		return processedWords;
     }
+	
+	public String getText(boolean isHTML, String text, String filepath,
+			PreprocessingConfiguration preprocessing, String nqFileMap) throws IOException {
+
+		if (null==text && null!=filepath)
+			text = fileToText(filepath);
+		
+		if (isHTML) {
+			if(preprocessing.getHtmlParsingType().equals("all_html"))
+				text= Jsoup.parse(text).text();
+			else if(preprocessing.getHtmlParsingType().equals("html_tables")){
+				HTMLFragmentsExtractor utils = new HTMLFragmentsExtractor();
+				text=utils.getTableText(filepath);
+			}
+			else if(preprocessing.getHtmlParsingType().equals("html_lists")){
+				HTMLFragmentsExtractor utils = new HTMLFragmentsExtractor();
+				text=utils.getListText(filepath);
+			}
+			else if(preprocessing.getHtmlParsingType().equals("html_tables_lists")){
+				HTMLFragmentsExtractor utils = new HTMLFragmentsExtractor();
+				StringBuilder allContent = new StringBuilder();
+				String listText=utils.getListText(filepath);
+				//System.out.println("LIST:"+listText);
+				String tableText=utils.getTableText(filepath);
+				//System.out.println("TABLE:"+tableText);
+				allContent.append(listText).append(tableText);
+				text = allContent.toString();
+				//System.out.println("ALL:"+text);
+			}
+			else if (preprocessing.getHtmlParsingType().equals("marked_up_data")){
+				 NodeFromNQ node =NQMapFileExtractions.extractNodeIDFromNQMapFile(filepath, nqFileMap);
+				 StringBuilder allContent = new StringBuilder();
+
+				 allContent.append(node.getTitle());
+				 allContent.append(node.getDescription());
+				 text = allContent.toString();
+			}
+		}
+		return text;
+	}
 	
 	public Reader StringToReaderConverter(String text){
 		

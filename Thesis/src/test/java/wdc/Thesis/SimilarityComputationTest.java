@@ -25,6 +25,7 @@ public class SimilarityComputationTest {
 		static boolean stemming=true;
 		static boolean stopWordRemoval=true;
 		static boolean lowerCase=true;
+		static String htmlParsingElements="";
 		
 		//SIMILARITY CONFIGURATION
 		//cosine or simple(exact matching) or jaccard or simple with frequency threshold
@@ -104,7 +105,7 @@ public class SimilarityComputationTest {
 				 maxFreq,  minFreq,  onTopLevenshtein,
 				 levenshteinThreshold);
 		
-		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase);
+		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase,htmlParsingElements);
 
 		SimilarityCalculator calculate = new SimilarityCalculator(modelConfig, preprocessing, queryCorpus, docCorpus );
 

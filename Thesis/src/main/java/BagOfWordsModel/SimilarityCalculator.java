@@ -18,6 +18,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import Utils.NQMapFileExtractions;
 import Utils.ProductCatalogs;
 
 public class SimilarityCalculator {
@@ -35,7 +36,8 @@ public class SimilarityCalculator {
 		SimilarityCalculator.model = modelConfig;
 		SimilarityCalculator.preprocessing=preprocessing;				
 		SimilarityCalculator.vectorCatalogEntities = catalogTokens;
-		//SimilarityCalculator.PagesAsList = pagesTokens;
+		Weightening weights = new Weightening();
+
 		
 		CatalogEntitiesAsList = new ArrayList<List<String>>();
 		for(Map.Entry<String,List<String>> v:vectorCatalogEntities.entrySet() ) CatalogEntitiesAsList.add(v.getValue());
@@ -45,10 +47,17 @@ public class SimilarityCalculator {
 
 		//precalculation of the tfidf weighting so that we dont have to repeat every time
 		if(modelConfig.getSimilarityType().equals("cosine") && modelConfig.getTypeOfWeighting().equals("tfidf")){
-			Weightening weights = new Weightening();
 			modelConfig.setIdfWeightsCatalog(weights.getIDFWeighting(CatalogEntitiesAsList));
 			modelConfig.setIdfWeightsPages(weights.getIDFWeighting(PagesAsList));
 		}
+		
+//		//precalculation of words frequencies
+//		if(modelConfig.getSimilarityType().equals("simple with frequency threshold")){
+//			modelConfig.setVectorCatalogFrequencies(weights.getFrequencyOfWords(wordsOfVector));
+//			modelConfig.setVectorPageFrequencies(weights.getFrequencyOfWords(wordsOfVector));
+//		}
+//		
+//		//precalculation of words vectors after frequency threshold
 	}
 	/**
 	 * @param catalogVector
@@ -76,7 +85,10 @@ public class SimilarityCalculator {
 			commonElements.retainAll(catalogVectorSet);
 		}
 		
-		score = ((double) commonElements.size()) / ((double) catalogVectorSet.size());
+		double minsize=0.0;
+		if(catalogVectorSet.size()<pageVectorSet.size()) minsize=catalogVectorSet.size();
+		else minsize=pageVectorSet.size();
+		score = ((double) commonElements.size()) / ((double) minsize);
 		
 		return score;
 	}
@@ -92,15 +104,18 @@ public class SimilarityCalculator {
 		
 		//update the input lists
 		for (Map.Entry<String, Integer> pageGram :vectorPageFrequencies.entrySet() ){
-			if(((double)pageGram.getValue()/(double)vectorPageFrequencies.size()) > model.getMaxFreq() || 
-					((double)pageGram.getValue()/(double)vectorPageFrequencies.size()) < model.getMinFreq())
+			if(((double)pageGram.getValue()/(double)vectorpage.size()) > model.getMaxFreq() || 
+					((double)pageGram.getValue()/(double)vectorpage.size()) < model.getMinFreq())
 				vectorpage.removeAll((Collections.singleton(pageGram.getKey())));
 		}
-		
 		for (Map.Entry<String, Integer> catalogGram :vectorCatalogFrequencies.entrySet() ){
-			if(((double)catalogGram.getValue()/(double)vectorCatalogFrequencies.size()) > model.getMaxFreq() || 
-					((double)catalogGram.getValue()/(double)vectorCatalogFrequencies.size()) < model.getMinFreq())
+			if(((double)catalogGram.getValue()/(double)vectorcatalog.size()) > model.getMaxFreq() || 
+					((double)catalogGram.getValue()/(double)vectorcatalog.size()) < model.getMinFreq())
 				vectorcatalog.removeAll((Collections.singleton(catalogGram.getKey())));
+		}
+		if(vectorcatalog.size()==0 || vectorpage.size()==0){
+			//System.out.println("The frequency thresholds given for the simple similarity with frequency threshold calculation were inappropriate and emptied the page or the catalog vectors. Please choose better thresholds");
+			return 0;
 		}
 		//and then just apply simple similarity containment
 		double score= simpleContainmentSimilarity(vectorcatalog,vectorpage);
@@ -221,7 +236,7 @@ public class SimilarityCalculator {
 	
 	public String getRightAnswer(String labelledEntitiesPath,String htmlPath, String nqFileMapPath) throws JSONException, IOException{
 		
-		String nodeID=extractNodeIDFromNQMapFile(htmlPath, nqFileMapPath);
+		String nodeID=NQMapFileExtractions.extractNodeIDFromNQMapFile(htmlPath, nqFileMapPath).getNodeID();
 
 		JSONArray labelled = new JSONArray(DocPreprocessor.fileToText(labelledEntitiesPath));
 		String rightAnswer = "";
@@ -311,28 +326,6 @@ public class SimilarityCalculator {
 		
 	}
 	
-	public static String extractNodeIDFromNQMapFile (String htmlPath, String nqFileMap) throws IOException{
-		String htmlfrag[] = htmlPath.split("\\\\");
-		String htmlName = htmlfrag[htmlfrag.length-1];
-		String nodeID="";
-		
-		FileInputStream in = new FileInputStream(nqFileMap);
-		 BufferedReader br = new BufferedReader(new InputStreamReader(in));
-		 String strLine;
-	 
-		  while((strLine = br.readLine())!= null)
-		  {
-			  String htmlPageName = strLine.split("\\|\\|\\|\\|")[0];
-			  if(htmlPageName.equals(htmlName)){
-				  nodeID = strLine.split("\\|\\|\\|\\|")[1].split("\\|\\|")[0];
-				  break;
-			  }
-		  }
-		  br.close();
-		  if (nodeID.equals("")) {
-			  System.out.println("Something went wrong. The node ID could not be retrieved from the NQFileMap file: "+nqFileMap);
-		  }
-		  return nodeID;
-	}
+	
 	
 }
