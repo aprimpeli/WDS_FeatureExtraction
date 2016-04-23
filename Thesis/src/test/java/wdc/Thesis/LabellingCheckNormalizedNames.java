@@ -17,7 +17,7 @@ import BagOfWordsModel.DocPreprocessor;
 
 public class LabellingCheckNormalizedNames {
 
-	//@Test
+	@Test
 	public void checkNames() throws JSONException, IOException{
 		
 		Scanner sc = new Scanner(System.in);
@@ -50,7 +50,7 @@ public class LabellingCheckNormalizedNames {
 			System.out.println(y);
 	}
 	
-	//@Test
+	//@Test get the necessary nq file
 	public void test() throws JSONException, IOException{
 		
 		String fileNQ="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\1.PreparationOfData\\CrawlerData\\phones\\february_version_fromNQ.txt";

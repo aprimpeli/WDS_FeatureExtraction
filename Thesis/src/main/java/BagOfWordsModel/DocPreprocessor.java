@@ -23,8 +23,8 @@ import org.apache.lucene.util.Version;
 import org.jsoup.Jsoup;
 
 import Utils.HTMLFragmentsExtractor;
-import Utils.NQMapFileExtractions;
-import Utils.NodeFromNQ;
+import Utils.LabelledFileExtractions;
+import Utils.NodeFromLabelled;
 
 
 
@@ -34,11 +34,11 @@ public class DocPreprocessor {
 	public static void main (String [] args){
 		try{
 			String filepath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\tvs\\HTML\\43uf6400_1.html";
-			String nqFileMap="";
+			String labelledPath="";
 			DocPreprocessor process = new DocPreprocessor();
 			System.out.println("CASE 1");
-			PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(true, true, true, "all_html");
-			process.printList(process.textProcessing(filepath, null ,2,true, preprocessing, nqFileMap));
+			PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(true, true, true, "marked_up_data");
+			process.printList(process.textProcessing(filepath, null ,1,true, preprocessing,labelledPath));
 //			System.out.println("CASE 2");
 //			process.printList(process.textProcessing(filepath, "",true, false, true, true));
 //			System.out.println("CASE 3");
@@ -60,9 +60,9 @@ public class DocPreprocessor {
 	 * Uses Lucene library for removal of stopwords, tokenization, stemming and normalization to lower case
 	 * Returns the list of the preprocessed words
 	 */
-	public List<String> textProcessing (String filepath, String text, int grams, boolean isHTML,  PreprocessingConfiguration preprocessing, String nqFileMap) throws IOException{
+	public List<String> textProcessing (String filepath, String text, int grams, boolean isHTML,  PreprocessingConfiguration preprocessing, String labelledPath) throws IOException{
 		
-		Reader corpus= StringToReaderConverter(getText(isHTML, text, filepath, preprocessing, nqFileMap));
+		Reader corpus= StringToReaderConverter(getText(isHTML, text, filepath, preprocessing, labelledPath));
 		
 		List<String> processedWords = new ArrayList<String>();
 		TokenStream result=null;
@@ -91,6 +91,7 @@ public class DocPreprocessor {
 				buildText.append(word+" ");
 			}
 			//now I have the preprocessed text I can tokenize it based on n-grams
+			processedWords.clear();
 			corpus.reset();
 			corpus = StringToReaderConverter(buildText.toString());
 			result.reset();
@@ -98,7 +99,8 @@ public class DocPreprocessor {
 			result = new ShingleFilter(result, grams,grams);	
 			while(result.incrementToken()){
 				String token=((CharTermAttribute)result.getAttribute(CharTermAttribute.class)).toString();
-				if(grams>1 && !token.contains(" ")) continue;
+				token.trim();
+				if(!token.contains(" ")) continue;
 				processedWords.add(token);	
 			}
 		}
@@ -108,7 +110,7 @@ public class DocPreprocessor {
     }
 	
 	public String getText(boolean isHTML, String text, String filepath,
-			PreprocessingConfiguration preprocessing, String nqFileMap) throws IOException {
+			PreprocessingConfiguration preprocessing, String labelledpath) throws IOException {
 
 		if (null==text && null!=filepath)
 			text = fileToText(filepath);
@@ -136,7 +138,7 @@ public class DocPreprocessor {
 				//System.out.println("ALL:"+text);
 			}
 			else if (preprocessing.getHtmlParsingType().equals("marked_up_data")){
-				 NodeFromNQ node =NQMapFileExtractions.extractNodeIDFromNQMapFile(filepath, nqFileMap);
+				 NodeFromLabelled node =LabelledFileExtractions.extractNodeFromLabelledFile(filepath, labelledpath);
 				 StringBuilder allContent = new StringBuilder();
 
 				 allContent.append(node.getTitle());

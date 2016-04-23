@@ -1,25 +1,18 @@
 package BagOfWordsModel;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import Utils.NQMapFileExtractions;
-import Utils.ProductCatalogs;
 
 public class SimilarityCalculator {
 	
@@ -114,7 +107,7 @@ public class SimilarityCalculator {
 				vectorcatalog.removeAll((Collections.singleton(catalogGram.getKey())));
 		}
 		if(vectorcatalog.size()==0 || vectorpage.size()==0){
-			//System.out.println("The frequency thresholds given for the simple similarity with frequency threshold calculation were inappropriate and emptied the page or the catalog vectors. Please choose better thresholds");
+			System.out.println("The frequency thresholds given for the simple similarity with frequency threshold calculation were inappropriate and emptied the page or the catalog vectors. Please choose better thresholds");
 			return 0;
 		}
 		//and then just apply simple similarity containment
@@ -234,23 +227,24 @@ public class SimilarityCalculator {
 		return matrix;
 	}
 	
-	public String getRightAnswer(String labelledEntitiesPath,String htmlPath, String nqFileMapPath) throws JSONException, IOException{
+	public ArrayList<String> getRightAnswer(String labelledEntitiesPath,String htmlName) throws JSONException, IOException{
 		
-		String nodeID=NQMapFileExtractions.extractNodeIDFromNQMapFile(htmlPath, nqFileMapPath).getNodeID();
+		String nodeID=htmlName.replace(".html", "");
 
 		JSONArray labelled = new JSONArray(DocPreprocessor.fileToText(labelledEntitiesPath));
+		ArrayList<String> rightAnswers = new ArrayList<String>();
 		String rightAnswer = "";
 		for(int i = 0 ; i < labelled.length() ; i++){
 			JSONObject entity = labelled.getJSONObject(i);
 			if(entity.getString("id_self").equals(nodeID)){
-				rightAnswer=entity.getString("normalized_product_name");
+				rightAnswer = entity.getString("normalized_product_name");
+				String [] answers = rightAnswer.split(";");
+				for(int j=0;j<answers.length;j++) rightAnswers.add(answers[j]);
+				break;
 			}
 		}
-		if (rightAnswer.equals("")){
-			//System.out.println("The nodeID "+nodeID+" does not exist in the labelled set.");
-			rightAnswer="n/a";
-		}
-		return rightAnswer;
+		
+		return rightAnswers;
 	}
 	
 	public HashMap<String, Double> getPredictedAnswers(List<String> vectorpage) throws IOException{
@@ -276,7 +270,7 @@ public class SimilarityCalculator {
 				System.out.println("The similarity type "+model.getSimilarityType()+" cannot be handled. Available options are cosine , jaccard and simple. The program will end.");
 				System.exit(0);
 			}
-			predictedAnswers.put(entry.getKey(), score);
+			predictedAnswers.put(entry.getKey().toLowerCase(), score);
 			
 			//System.out.println("Page and "+entry.getKey()+" score:"+score);
 		}

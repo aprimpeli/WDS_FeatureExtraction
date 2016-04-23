@@ -1,6 +1,6 @@
 package Utils;
 
-public class NodeFromNQ {
+public class NodeFromLabelled {
 	private String nodeID;
 	private String title;
 	private String description;

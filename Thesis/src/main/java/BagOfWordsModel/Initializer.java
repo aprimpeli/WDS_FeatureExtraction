@@ -20,7 +20,6 @@ public class Initializer {
 	static String catalog="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\catalog\\HeadphoneCatalog.json";
 	static String htmlFolder="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\headphones\\HTML";
 	static String labelled="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\headphones\\labelled.txt";
-	static String nqFileMap="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\headphones\\FileNQMap.txt";
 	
 	//PREPROCESSING
 	static boolean stemming=true;
@@ -47,7 +46,7 @@ public class Initializer {
 	public static void main (String args[]) throws Exception{
 		
 		BagOfWordsConfiguration modelConfig= new BagOfWordsConfiguration(productCategory, catalog,
-				 htmlFolder,  labelled,  nqFileMap,
+				 htmlFolder,  labelled, 
 				 similarityType, typeOfWeighting, grams,
 				 maxFreq,  minFreq,  onTopLevenshtein,
 				 levenshteinThreshold);
@@ -73,7 +72,7 @@ public class Initializer {
 		for (int i = 0; i < listOfHTML.length; i++) {
 			HashMap<String, Double> predictedAnswersForPage = new HashMap<String,Double>();
 
-			String rightAnswer= calculate.getRightAnswer(modelConfig.getLabelled(), listOfHTML[i].getPath(), modelConfig.getNqFileMap());
+			ArrayList<String> rightAnswer= calculate.getRightAnswer(modelConfig.getLabelled(), listOfHTML[i].getName());
 	    	if (rightAnswer.equals("n/a")) {
 	    		continue;
 	    	}
@@ -83,11 +82,11 @@ public class Initializer {
 	    	predictedAnswersForPage = calculate.getPredictedAnswers(tokensOfAllHTML.get(listOfHTML[i].getName()));
 	    	EvaluationItem toBeEvaluated= new EvaluationItem();
 	    	toBeEvaluated.setPredictedAnswers(predictedAnswersForPage);
-	    	toBeEvaluated.setRightAnswer(rightAnswer);
+	    	toBeEvaluated.setRightAnswers(rightAnswer);
 	    	toBeEvaluated.setProductCategory(modelConfig.getProductCategory());
 	    	ItemstoBeEvaluated.add(toBeEvaluated);
 	    }
-		Evaluation evaluate = new Evaluation();
+		Evaluation evaluate = new Evaluation(modelConfig.getSimilarityType());
 		results=evaluate.getResultsWithAverageThreshold(ItemstoBeEvaluated);
 		
 	    System.out.println("---RESULTS---");

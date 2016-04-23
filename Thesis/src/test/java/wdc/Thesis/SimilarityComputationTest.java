@@ -100,7 +100,7 @@ public class SimilarityComputationTest {
 		queryCorpus.put("query2",query2);
 		
 		BagOfWordsConfiguration modelConfig= new BagOfWordsConfiguration(productCategory, catalog,
-				 htmlFolder,  labelled,  nqFileMap,
+				 htmlFolder,  labelled,  
 				 similarityType, typeOfWeighting, grams,
 				 maxFreq,  minFreq,  onTopLevenshtein,
 				 levenshteinThreshold);

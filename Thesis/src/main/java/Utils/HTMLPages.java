@@ -18,7 +18,7 @@ public class HTMLPages {
 			DocPreprocessor processText = new DocPreprocessor();
 
 		    for (int i = 0; i < listOfHTML.length; i++) {		    	
-				List<String> tokenizedValue = processText.textProcessing(listOfHTML[i].getPath(), null, model.getGrams(), true, preprocessing, model.getNqFileMap());
+				List<String> tokenizedValue = processText.textProcessing(listOfHTML[i].getPath(), null, model.getGrams(), true, preprocessing,model.getLabelled());
 				tokensOfPages.put(listOfHTML[i].getName(), tokenizedValue);
 		    }
 			return tokensOfPages;      

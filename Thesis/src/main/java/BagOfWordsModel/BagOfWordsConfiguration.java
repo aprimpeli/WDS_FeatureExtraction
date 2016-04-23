@@ -8,7 +8,7 @@ public class BagOfWordsConfiguration {
 	private String catalog;
 	private String htmlFolder;
 	private String labelled;
-	private String nqFileMap;
+	//private String nqFileMap;
 	//cosine or simple(exact matching) or jaccard or simple with frequency threshold
 	private String similarityType;
 	//simple(average frequency) or tfidf
@@ -44,7 +44,7 @@ public class BagOfWordsConfiguration {
 	}
 
 	public BagOfWordsConfiguration(String productCategory, String catalog,
-			String htmlFolder, String labelled, String nqFileMap,
+			String htmlFolder, String labelled, 
 			String similarityType, String typeOfWeighting, int grams,
 			double maxFreq, double minFreq, boolean onTopLevenshtein,
 			double levenshteinThreshold) {
@@ -53,7 +53,6 @@ public class BagOfWordsConfiguration {
 		this.catalog = catalog;
 		this.htmlFolder = htmlFolder;
 		this.labelled = labelled;
-		this.nqFileMap = nqFileMap;
 		this.similarityType = similarityType;
 		this.typeOfWeighting = typeOfWeighting;
 		this.grams = grams;
@@ -76,12 +75,8 @@ public class BagOfWordsConfiguration {
 	public void setLabelled(String labelled) {
 		this.labelled = labelled;
 	}
-	public String getNqFileMap() {
-		return nqFileMap;
-	}
-	public void setNqFileMap(String nqFileMap) {
-		this.nqFileMap = nqFileMap;
-	}
+	
+	
 	public String getSimilarityType() {
 		return similarityType;
 	}

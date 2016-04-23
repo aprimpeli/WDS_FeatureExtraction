@@ -1,5 +1,9 @@
 package Evaluation;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -7,12 +11,16 @@ import java.util.Map;
 
 public class Evaluation {
 	ResultItem currentResults;
+	BufferedWriter logEvaluation;
 	
-	public Evaluation() {
+	public Evaluation(String simType) throws IOException {
 		currentResults=new ResultItem();
+		logEvaluation= new BufferedWriter(new FileWriter("resources/logEvaluation.txt"));
+		logEvaluation.append(simType);
+		logEvaluation.newLine();
 	}
 	
-	public ResultItem getResultsOptimizingF1(List<EvaluationItem>  allLinks ){
+	public ResultItem getResultsOptimizingF1(List<EvaluationItem>  allLinks ) throws IOException{
 		
 		ResultItem bestResult= new ResultItem();
 		
@@ -22,7 +30,7 @@ public class Evaluation {
 			currentResults.setA(a);
 			currentResults.setThreshold(threshold);
 			for(EvaluationItem item:allLinks){
-				calculateResults(threshold, item.getPredictedAnswers(), item.getRightAnswer(), item.getProductCategory());
+				calculateResults(threshold, item.getPredictedAnswers(), item.getRightAnswers(), item.getProductCategory());
 			}
 			if (currentResults.getF1()>bestResult.getF1()){
 				bestResult=currentResults;
@@ -66,23 +74,23 @@ public class Evaluation {
 		return threshold;
 	}
 	
- 	public ResultItem getResultsWithMedianThreshold(List<EvaluationItem>  allLinks){
+ 	public ResultItem getResultsWithMedianThreshold(List<EvaluationItem>  allLinks) throws IOException{
 		
  		double threshold=defineThresholdasMedian(allLinks);
  		currentResults.setThreshold(threshold);
  		for(EvaluationItem item:allLinks){			
- 			calculateResults(threshold, item.getPredictedAnswers(), item.getRightAnswer(), item.getProductCategory());
+ 			calculateResults(threshold, item.getPredictedAnswers(), item.getRightAnswers(), item.getProductCategory());
  		}	
 		return currentResults;
 	}
 
- 	public ResultItem getResultsWithAverageThreshold(List<EvaluationItem>  allLinks){
+ 	public ResultItem getResultsWithAverageThreshold(List<EvaluationItem>  allLinks) throws IOException{
 		
  		double threshold=defineThresholdAsAverage(allLinks);
  		currentResults.setThreshold(threshold);
 
  		for(EvaluationItem item:allLinks){			
- 			calculateResults(threshold, item.getPredictedAnswers(), item.getRightAnswer(), item.getProductCategory());
+ 			calculateResults(threshold, item.getPredictedAnswers(), item.getRightAnswers(), item.getProductCategory());
  		}	
 		return currentResults;
 	}
@@ -126,39 +134,58 @@ public class Evaluation {
 		return mean;
 	}
 	
-	private void calculateResults(double threshold,HashMap<String, Double> predicted, String answer, String productCategory ){
+	private void calculateResults(double threshold,HashMap<String, Double> predicted, ArrayList<String> rightAnswers, String productCategory ) throws IOException{
 		
-		HashMap<String, Double> positives = new HashMap<String, Double>();
-		HashMap<String, Double> negatives = new HashMap<String, Double>();
+		ArrayList<String> positives = new ArrayList<String>();
+		ArrayList<String> negatives = new ArrayList<String>();
 		
 		for(Map.Entry<String, Double> entry:predicted.entrySet()){
-			if(entry.getValue()>=threshold) positives.put(entry.getKey(), entry.getValue());
-			else negatives.put(entry.getKey(), entry.getValue());
+			if(entry.getValue()>=threshold) positives.add(entry.getKey());
+			else negatives.add(entry.getKey());
 		}
-		boolean answerInTruePositives= false;
-		for (Map.Entry<String,Double> p: positives.entrySet()){
-			if (p.getKey().toLowerCase().contains(answer.toLowerCase()) && !productCategory.equals("phone")){
-				answerInTruePositives=true;
-				break;
-			}
-			if (p.getKey().toLowerCase().equals(answer.toLowerCase()) && productCategory.equals("phone")){
-				answerInTruePositives=true;
-				break;
-			}
-		}
-		if (answerInTruePositives) {
-			currentResults.setTruePositives(currentResults.getTruePositives()+1);
-			currentResults.setFalsePositives(currentResults.getFalsePositives()+positives.size()-1);
-			currentResults.setTrueNegatives(currentResults.getTrueNegatives()+negatives.size());
-			currentResults.setFalseNegatives(currentResults.getFalseNegatives()+0);
-			
-		}
-		else {
-			currentResults.setTruePositives(currentResults.getTruePositives()+0);
-			currentResults.setFalsePositives(currentResults.getFalsePositives()+positives.size());
-			currentResults.setTrueNegatives(currentResults.getTrueNegatives()+negatives.size()-1);
-			currentResults.setFalseNegatives(currentResults.getFalseNegatives()+1);
-		}
+		//implementation considering that only one answer is correct
+//		boolean answerInTruePositives= false;
+//				
+//		for (Map.Entry<String,Double> p: positives.entrySet()){
+//			
+//			//logEvaluation.append("Predicted:"+p.getKey().toLowerCase()+";Right:"+arrayList.toLowerCase());
+//			logEvaluation.newLine();
+//			//System.out.println("Predicted:"+p.getKey()+";Right:"+answer.toLowerCase());
+//			if (p.getKey().toLowerCase().equals(rightsAnswer.toLowerCase())){
+//				answerInTruePositives=true;
+//				break;
+//			}
+//			
+//		}
+//		if (answerInTruePositives) {
+//			currentResults.setTruePositives(currentResults.getTruePositives()+1);
+//			currentResults.setFalsePositives(currentResults.getFalsePositives()+positives.size()-1);
+//			currentResults.setTrueNegatives(currentResults.getTrueNegatives()+negatives.size());
+//			currentResults.setFalseNegatives(currentResults.getFalseNegatives()+0);
+//			
+//		}
+//		else {
+//			currentResults.setTruePositives(currentResults.getTruePositives()+0);
+//			currentResults.setFalsePositives(currentResults.getFalsePositives()+positives.size());
+//			currentResults.setTrueNegatives(currentResults.getTrueNegatives()+negatives.size()-1);
+//			currentResults.setFalseNegatives(currentResults.getFalseNegatives()+1);
+//		}
+		
+		
+		List<String> truePositives = new ArrayList<String>(positives);
+		truePositives.retainAll(rightAnswers);
+		List<String> falsePositives = new ArrayList<String> (positives);
+		falsePositives.removeAll(rightAnswers);
+		List<String> trueNegatives = new ArrayList<String>(negatives);
+		trueNegatives.removeAll(rightAnswers);
+		List<String> falseNegatives = new ArrayList<String>(negatives);
+		falseNegatives.retainAll(rightAnswers);
+		
+		
+		currentResults.setTruePositives(currentResults.getTruePositives()+truePositives.size());
+		currentResults.setFalsePositives(currentResults.getFalsePositives()+falsePositives.size());
+		currentResults.setTrueNegatives(currentResults.getTrueNegatives()+trueNegatives.size());
+		currentResults.setFalseNegatives(currentResults.getFalseNegatives()+falseNegatives.size());
 		
 	}
 }
