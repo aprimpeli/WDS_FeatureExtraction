@@ -19,7 +19,7 @@ public class ReportGenarator {
 			File file = new File(filePath);
 			FileWriter fw = new FileWriter(file.getAbsoluteFile());
 			BufferedWriter bw = new BufferedWriter(fw);
-			bw.append("Similarity Method;Weighting;Frequency Threshold;Levenshtein on Top;Levenshtein Threshold;Grams;Precision;Recall;F1;Step a;Threshold");
+			bw.append("Similarity Method;Weighting;Frequency Threshold;Levenshtein on Top;Levenshtein Threshold;Grams;Precision;Recall;F1;Step a;Threshold;Avg Common Grams");
 			bw.newLine();
 			for(Map.Entry<BagOfWordsConfiguration,ResultItem> result:results.entrySet()){
 				String lineToAppend="";
@@ -40,7 +40,7 @@ public class ReportGenarator {
 				if(evaluation.getA()==-1) lineToAppend+=";n/a";
 				else lineToAppend+=";"+evaluation.getA();
 				lineToAppend+=";"+evaluation.getThreshold();
-
+				lineToAppend+=";"+evaluation.getAvgCommonGrams();
 
 				bw.append(lineToAppend);
 				bw.newLine();

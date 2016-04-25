@@ -1,4 +1,5 @@
 Product Name
+description
 product_type
 width
 depth

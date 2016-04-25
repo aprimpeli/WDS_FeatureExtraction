@@ -8,6 +8,7 @@ public class ResultItem {
 	private int falseNegatives;
 	private double threshold;
 	private double a;
+	private double avgCommonGrams;
 	
 	public ResultItem(){
 		this.a=-1;
@@ -68,5 +69,13 @@ public class ResultItem {
 		double f1=((2.0*p*r)/(p+r));
 		if(Double.isNaN(f1)) return 0;
 		else return f1;
+	}
+
+	public double getAvgCommonGrams() {
+		return avgCommonGrams;
+	}
+
+	public void setAvgCommonGrams(double avgCommonGrams) {
+		this.avgCommonGrams = avgCommonGrams;
 	}
 }

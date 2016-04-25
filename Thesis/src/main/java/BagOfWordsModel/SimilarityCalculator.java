@@ -21,6 +21,7 @@ public class SimilarityCalculator {
 	static HashMap<String,List<String>> vectorCatalogEntities;
 	List<List<String>> CatalogEntitiesAsList;
 	List<List<String>> PagesAsList;
+	int totalCommonElements;
 	
 	public SimilarityCalculator() {
 	}
@@ -30,7 +31,7 @@ public class SimilarityCalculator {
 		SimilarityCalculator.preprocessing=preprocessing;				
 		SimilarityCalculator.vectorCatalogEntities = catalogTokens;
 		Weightening weights = new Weightening();
-
+		totalCommonElements=0;
 		
 		CatalogEntitiesAsList = new ArrayList<List<String>>();
 		for(Map.Entry<String,List<String>> v:vectorCatalogEntities.entrySet() ) CatalogEntitiesAsList.add(v.getValue());
@@ -82,7 +83,7 @@ public class SimilarityCalculator {
 		if(catalogVectorSet.size()<pageVectorSet.size()) minsize=catalogVectorSet.size();
 		else minsize=pageVectorSet.size();
 		score = ((double) commonElements.size()) / ((double) minsize);
-		
+		totalCommonElements+=commonElements.size();
 		return score;
 	}
 	
@@ -153,6 +154,7 @@ public class SimilarityCalculator {
 		}
 		int unionSize = catalogVectorSet.size()+pageVectorSet.size() - commonGrams;
 		double score=((double)commonGrams/(double) unionSize);
+		totalCommonElements+=commonGrams;
 		return score;
 	}
 	
@@ -191,7 +193,7 @@ public class SimilarityCalculator {
 				System.exit(0);
 			}
 			score = getCosineSimilarityScore(catalogWeights, pageWeights, commonWords);
-
+			totalCommonElements+=commonWords.size();
 		}
 		 
 		return score;

@@ -1,4 +1,5 @@
 Product Name
+description
 compatible_channels
 product_type
 wattage_operational

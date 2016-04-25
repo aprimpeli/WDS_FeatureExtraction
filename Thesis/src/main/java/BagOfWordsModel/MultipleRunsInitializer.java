@@ -1,12 +1,15 @@
 package BagOfWordsModel;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Queue;
 
 import org.json.JSONException;
@@ -21,17 +24,17 @@ import Utils.ProductCatalogs;
 public class MultipleRunsInitializer {
 
 	//FILEPATHS
-	static String productCategory="headphone"; //tv, phone, headphone
-	static String catalog="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\catalog\\HeadphoneCatalog.json";
-	static String htmlFolder="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\headphones\\HTML_NODEBased";
-	static String labelled="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\headphones\\labelled.txt";
-	static String allExperimentsResultPath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\ExperimentsResults\\full_results\\allHTMLContent\\headphones.csv";
-	
+	static String productCategory="tv"; //tv, phone, headphone
+	static String catalog="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\ProductCatalog\\TVCatalog.json";
+	static String htmlFolder="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\HTML_Pages\\tvs";
+	static String labelled="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\CorrectedLabelledEntities\\TVsLabelledEntitiesProcessed.txt";
+	static String allExperimentsResultPath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\ExperimentsResults\\full_results\\MarkedUpContent\\tvs.csv";
+	static String logFile="resources\\log\\logEvaluationItems";
 	//PREPROCESSING
 	static boolean stemming=true;
 	static boolean stopWordRemoval=true;
 	static boolean lowerCase=true;
-	static String htmlParsingElements="all_html"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data
+	static String htmlParsingElements="marked_up_data"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data
 
 	//String evaluation type definition
 	static String evaluationType="optimizingF1"; //average, median, optimizingF1
@@ -68,6 +71,7 @@ public class MultipleRunsInitializer {
 				HashMap<String, Double> predictedAnswersForPage = new HashMap<String,Double>();
 		    	ArrayList<String> rightAnswers= calculate.getRightAnswer(modelConfig.getLabelled(), listOfHTML[i].getName());
 		    	if (rightAnswers.size()==0) {
+		    		System.out.println(listOfHTML[i]);
 		    		continue;
 		    	}
 	
@@ -82,6 +86,12 @@ public class MultipleRunsInitializer {
 
 		    }
 			System.out.println("Items to be Evaluated:"+ItemstoBeEvaluated.size());
+			
+			//write some log to check the predictions
+			BufferedWriter logger = new BufferedWriter(new FileWriter(new File(logFile+modelConfig.getSimilarityType()+".txt")));
+			writeLog(logger, ItemstoBeEvaluated);
+			logger.close();
+			
 			Evaluation evaluate = new Evaluation(modelConfig.getSimilarityType());
 			//average, median, optimizingF1
 			if (evaluationType.equals("average")) results=evaluate.getResultsWithAverageThreshold(ItemstoBeEvaluated);
@@ -89,10 +99,15 @@ public class MultipleRunsInitializer {
 			else if (evaluationType.equals("optimizingF1")) results=evaluate.getResultsOptimizingF1(ItemstoBeEvaluated);
 			else System.out.println("Wrong input for evaluation type. I can only handle average, median and optimizingF1");
 			
+			//average common words
+			double avgCommonGrams=((double)calculate.totalCommonElements)/((double)htmlFolder.length()*(double)tokensOfAllCatalogEntities.size());
+			results.setAvgCommonGrams(avgCommonGrams);
+			
 		    System.out.println("---RESULTS---");
 		    System.out.println("Precision: "+results.getPrecision());
 		    System.out.println("Recall: "+results.getRecall());
 		    System.out.println("F1: "+results.getF1());
+		    System.out.println("Average Common Grams: "+results.getAvgCommonGrams());
 			System.out.println("---END---");
 			
 			allResults.put(modelConfig, results);
@@ -102,6 +117,23 @@ public class MultipleRunsInitializer {
 	}
 
 
+	private static void writeLog(BufferedWriter logger,
+			List<EvaluationItem> itemstoBeEvaluated) throws IOException {
+		for(EvaluationItem ev:itemstoBeEvaluated){
+			logger.append("NEW ITEM");
+			logger.newLine();
+			for (String answer:ev.getRightAnswers()){
+				logger.append("Right Answer:"+answer);
+				logger.newLine();
+			}
+			for(Entry<String, Double> pr:ev.getPredictedAnswers().entrySet()){
+				logger.append("Predicted Answer:"+pr.getKey()+"---"+pr.getValue());
+				logger.newLine();
+
+			}
+		}
+		
+	}
 	private static Queue<BagOfWordsConfiguration> defineExperiments() {
 		Queue<BagOfWordsConfiguration> models = new LinkedList<BagOfWordsConfiguration>();
 		
