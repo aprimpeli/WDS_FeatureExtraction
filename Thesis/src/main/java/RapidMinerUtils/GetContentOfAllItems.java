@@ -27,7 +27,7 @@ public class GetContentOfAllItems {
 		
 		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase,"");
 		// TODO Auto-generated method stub
-		HashMap<String,List<String>> tokensOfAllHTML = HTMLPages.getHTMLToken(null,null);
+		HashMap<String,List<String>> tokensOfAllHTML = HTMLPages.getHTMLToken(null,null,"");
 		HashMap<String,List<String>> tokensOfAllCatalogEntities = ProductCatalogs.getCatalogTokens(productCategory, productCatalog, grams, preprocessing);
 	
 		

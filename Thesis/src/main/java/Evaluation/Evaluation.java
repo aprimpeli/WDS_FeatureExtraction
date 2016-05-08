@@ -21,7 +21,6 @@ public class Evaluation {
 	}
 	
 	public ResultItem getResultsOptimizingF1(List<EvaluationItem>  allLinks ) throws IOException{
-		
 		ResultItem bestResult= new ResultItem();
 		
 		for(double a=0; a<=1; a=a+0.001){
@@ -42,7 +41,6 @@ public class Evaluation {
 				}
 			}
 		}
-		
 		return bestResult;
 	}
 
@@ -53,11 +51,11 @@ public class Evaluation {
  		int numberOfAllLinks=0;
  		for(EvaluationItem item:allLinks){
  			for(Map.Entry<String, Double> entry:item.getPredictedAnswers().entrySet()){
+ 				
  				sum+=entry.getValue();
  				numberOfAllLinks++;
  			}
  		}
-		
 		double mean= sum/(double)numberOfAllLinks;
 		//calculate the standard deviation
 		double sdev = 0;
@@ -143,6 +141,8 @@ public class Evaluation {
 			if(entry.getValue()>=threshold) positives.add(entry.getKey());
 			else negatives.add(entry.getKey());
 		}
+
+
 		//implementation considering that only one answer is correct
 //		boolean answerInTruePositives= false;
 //				

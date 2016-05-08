@@ -82,6 +82,7 @@ public class SimilarityCalculator {
 		double minsize=0.0;
 		if(catalogVectorSet.size()<pageVectorSet.size()) minsize=catalogVectorSet.size();
 		else minsize=pageVectorSet.size();
+		if(minsize==0) return 0; //TODO
 		score = ((double) commonElements.size()) / ((double) minsize);
 		totalCommonElements+=commonElements.size();
 		return score;
@@ -96,6 +97,7 @@ public class SimilarityCalculator {
 		HashMap<String,Integer> vectorPageFrequencies = frequencies.getFrequencyOfWords(vectorpage);
 		HashMap<String,Integer> vectorCatalogFrequencies = frequencies.getFrequencyOfWords(vectorcatalog);
 		
+		if(vectorpage.size()==0) return 0;
 		//update the input lists
 		for (Map.Entry<String, Integer> pageGram :vectorPageFrequencies.entrySet() ){
 			if(((double)pageGram.getValue()/(double)vectorpage.size()) > model.getMaxFreq() || 
@@ -213,6 +215,7 @@ public class SimilarityCalculator {
 	    for(Map.Entry<String, Double> v1:vector1.entrySet()) normA+=Math.pow(v1.getValue(), 2);
 	    for(Map.Entry<String, Double> v2:vector2.entrySet()) normB+=Math.pow(v2.getValue(), 2);
 
+	    if(normA==0 || normB==0) return 0; //TODO
 	    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 	}
 	
@@ -274,7 +277,6 @@ public class SimilarityCalculator {
 			}
 			predictedAnswers.put(entry.getKey().toLowerCase(), score);
 			
-			//System.out.println("Page and "+entry.getKey()+" score:"+score);
 		}
 		
 		

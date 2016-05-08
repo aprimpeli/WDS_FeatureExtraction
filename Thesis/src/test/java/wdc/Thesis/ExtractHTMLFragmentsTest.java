@@ -16,14 +16,7 @@ public class ExtractHTMLFragmentsTest {
 	static boolean lowerCase=true;
 	static String htmlParsingElements="html_tables_lists";
 	
-	//@Test
-	public void test() throws IOException{
-		HTMLFragmentsExtractor extract = new HTMLFragmentsExtractor();
-		String tablecontent = extract.getTableText(file);
-//		System.out.println(tablecontent);
-		
-//		String listcontent = extract.getListText(file);
-	}
+	
 	
 	@Test
 	public void test2() throws IOException{

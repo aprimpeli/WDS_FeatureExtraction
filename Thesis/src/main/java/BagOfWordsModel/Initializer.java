@@ -40,7 +40,7 @@ public class Initializer {
 	//can be applies on top of everyone of the previous similarity types in order to calculate common words
 	static boolean onTopLevenshtein=true;
 	static double levenshteinThreshold=0.8;
-	
+	static String mode="wrapper";
 
 	
 	public static void main (String args[]) throws Exception{
@@ -60,7 +60,7 @@ public class Initializer {
 		System.out.println("The chosen type of weighting (not available for simple similarity method) is "+typeOfWeighting);
 		System.out.println("The bag of words model will be implemented on the basis of "+grams+" grams");
 		
-		HashMap<String,List<String>> tokensOfAllHTML = HTMLPages.getHTMLToken(modelConfig, preprocessing);
+		HashMap<String,List<String>> tokensOfAllHTML = HTMLPages.getHTMLToken(modelConfig, preprocessing,mode);
 		HashMap<String,List<String>> tokensOfAllCatalogEntities = ProductCatalogs.getCatalogTokens(modelConfig.getProductCategory(), modelConfig.getCatalog(), modelConfig.getGrams(), preprocessing);
 		SimilarityCalculator calculate = new SimilarityCalculator(modelConfig,preprocessing, tokensOfAllHTML, tokensOfAllCatalogEntities);
 		File folderHTML = new File(modelConfig.getHtmlFolder());

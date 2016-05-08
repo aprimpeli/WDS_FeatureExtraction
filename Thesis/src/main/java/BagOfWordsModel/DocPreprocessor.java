@@ -62,7 +62,9 @@ public class DocPreprocessor {
 	 */
 	public List<String> textProcessing (String filepath, String text, int grams, boolean isHTML,  PreprocessingConfiguration preprocessing, String labelledPath) throws IOException{
 		
-		Reader corpus= StringToReaderConverter(getText(isHTML, text, filepath, preprocessing, labelledPath));
+		String extractedText=getText(isHTML, text, filepath, preprocessing, labelledPath);
+		if(null==extractedText) return null;
+		Reader corpus= StringToReaderConverter(extractedText);
 		
 		List<String> processedWords = new ArrayList<String>();
 		TokenStream result=null;
@@ -119,21 +121,30 @@ public class DocPreprocessor {
 			if(preprocessing.getHtmlParsingType().equals("all_html"))
 				text= Jsoup.parse(text).text();
 			else if(preprocessing.getHtmlParsingType().equals("html_tables")){
-				HTMLFragmentsExtractor utils = new HTMLFragmentsExtractor();
+				HTMLFragmentsExtractor utils = new HTMLFragmentsExtractor(labelledpath);
 				text=utils.getTableText(filepath);
 			}
 			else if(preprocessing.getHtmlParsingType().equals("html_lists")){
-				HTMLFragmentsExtractor utils = new HTMLFragmentsExtractor();
+				HTMLFragmentsExtractor utils = new HTMLFragmentsExtractor(labelledpath);
 				text=utils.getListText(filepath);
 			}
 			else if(preprocessing.getHtmlParsingType().equals("html_tables_lists")){
-				HTMLFragmentsExtractor utils = new HTMLFragmentsExtractor();
+				HTMLFragmentsExtractor utils = new HTMLFragmentsExtractor(labelledpath);
 				StringBuilder allContent = new StringBuilder();
 				String listText=utils.getListText(filepath);
 				//System.out.println("LIST:"+listText);
 				String tableText=utils.getTableText(filepath);
 				//System.out.println("TABLE:"+tableText);
 				allContent.append(listText).append(tableText);
+				text = allContent.toString();
+				//System.out.println("ALL:"+text);
+			}
+			else if(preprocessing.getHtmlParsingType().equals("html_tables_lists_wrapper")){
+				HTMLFragmentsExtractor utils = new HTMLFragmentsExtractor(labelledpath);
+				StringBuilder allContent = new StringBuilder();
+				text=utils.getTableWithWrapperText(filepath);
+				if (null==text) return null;
+				allContent.append(text);
 				text = allContent.toString();
 				//System.out.println("ALL:"+text);
 			}

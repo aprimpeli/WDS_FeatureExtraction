@@ -24,17 +24,18 @@ import Utils.ProductCatalogs;
 public class MultipleRunsInitializer {
 
 	//FILEPATHS
-	static String productCategory="tv"; //tv, phone, headphone
-	static String catalog="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\ProductCatalog\\TVCatalog.json";
-	static String htmlFolder="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\HTML_Pages\\tvs";
-	static String labelled="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\CorrectedLabelledEntities\\TVsLabelledEntitiesProcessed.txt";
-	static String allExperimentsResultPath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\ExperimentsResults\\full_results\\MarkedUpContent\\tvs.csv";
+	static String productCategory="phone"; //tv, phone, headphone
+	static String catalog="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\ProductCatalog\\PhoneCatalog.json";
+	static String htmlFolder="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\HTML_Pages\\phones";
+	static String labelled="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\CorrectedLabelledEntities\\PhonesLabelledEntitiesProcessed.txt";
+	static String allExperimentsResultPath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\ExperimentsResults\\full_results\\WrapperMode\\phones_MarkedUpData.csv";
 	static String logFile="resources\\log\\logEvaluationItems";
+	static String mode="wrapper"; // define the mode (wrapper/normal). In the wrapper mode only the 4 plds for which a wrapper exists are considered (ebay, tesco, alibaba, overstock)
 	//PREPROCESSING
 	static boolean stemming=true;
 	static boolean stopWordRemoval=true;
 	static boolean lowerCase=true;
-	static String htmlParsingElements="marked_up_data"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data
+	static String htmlParsingElements="marked_up_data"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
 
 	//String evaluation type definition
 	static String evaluationType="optimizingF1"; //average, median, optimizingF1
@@ -57,7 +58,12 @@ public class MultipleRunsInitializer {
 			System.out.println("The chosen type of weighting (not available for simple similarity method) is "+modelConfig.getTypeOfWeighting());
 			System.out.println("The bag of words model will be implemented on the basis of "+modelConfig.getGrams()+" grams");
 			
-			HashMap<String,List<String>> tokensOfAllHTML = HTMLPages.getHTMLToken(modelConfig, preprocessing);
+			HashMap<String,List<String>> tokensOfAllHTML = HTMLPages.getHTMLToken(modelConfig, preprocessing, mode);
+			if(null==tokensOfAllHTML) {
+				System.out.println("Something went wrong. Check");
+				System.exit(0);
+			}
+
 			HashMap<String,List<String>> tokensOfAllCatalogEntities = ProductCatalogs.getCatalogTokens(modelConfig.getProductCategory(), modelConfig.getCatalog(), modelConfig.getGrams(), preprocessing);
 			SimilarityCalculator calculate = new SimilarityCalculator(modelConfig,preprocessing, tokensOfAllHTML, tokensOfAllCatalogEntities);
 			File folderHTML = new File(modelConfig.getHtmlFolder());
@@ -67,15 +73,18 @@ public class MultipleRunsInitializer {
 			List<EvaluationItem> ItemstoBeEvaluated = new ArrayList<EvaluationItem>();
 			
 			for (int i = 0; i < listOfHTML.length; i++) {
+				//if you are in wrapper mode do not consider all pages but only the ones that could be potentially parsed by the implemented wrappers
+				String pld = HTMLPages.getPLDFromHTMLPath(labelled, listOfHTML[i].getPath());
+		    	if(mode.equals("wrapper") && !(pld.contains("ebay")||pld.contains("tesco")||pld.contains("alibaba")||pld.contains("overstock")) ) continue;
 				
 				HashMap<String, Double> predictedAnswersForPage = new HashMap<String,Double>();
 		    	ArrayList<String> rightAnswers= calculate.getRightAnswer(modelConfig.getLabelled(), listOfHTML[i].getName());
 		    	if (rightAnswers.size()==0) {
-		    		System.out.println(listOfHTML[i]);
+		    		System.out.println("no answer defined:"+listOfHTML[i]);
 		    		continue;
 		    	}
 	
-		    	//get all the matches with the equivalent scores
+		    	//get all the matches with the equivalent scores		    	
 		    	predictedAnswersForPage = calculate.getPredictedAnswers(tokensOfAllHTML.get(listOfHTML[i].getName()));
 		    	
 		    	EvaluationItem toBeEvaluated= new EvaluationItem();
@@ -98,6 +107,7 @@ public class MultipleRunsInitializer {
 			else if (evaluationType.equals("median")) results= evaluate.getResultsWithMedianThreshold(ItemstoBeEvaluated); //*1.5
 			else if (evaluationType.equals("optimizingF1")) results=evaluate.getResultsOptimizingF1(ItemstoBeEvaluated);
 			else System.out.println("Wrong input for evaluation type. I can only handle average, median and optimizingF1");
+			
 			
 			//average common words
 			double avgCommonGrams=((double)calculate.totalCommonElements)/((double)htmlFolder.length()*(double)tokensOfAllCatalogEntities.size());
