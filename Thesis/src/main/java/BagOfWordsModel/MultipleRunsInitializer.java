@@ -24,30 +24,30 @@ import Utils.ProductCatalogs;
 public class MultipleRunsInitializer {
 
 	//FILEPATHS
-	static String productCategory="phone"; //tv, phone, headphone
-	static String catalog="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\ProductCatalog\\PhoneCatalog.json";
-	static String htmlFolder="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\HTML_Pages\\phones";
-	static String labelled="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\CorrectedLabelledEntities\\PhonesLabelledEntitiesProcessed.txt";
-	static String allExperimentsResultPath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\ExperimentsResults\\full_results\\WrapperMode\\phones_MarkedUpData.csv";
+	static String modelType="BagOfWordsModel";
+	static String productCategory="headphone"; //tv, phone, headphone
+	static String catalog="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\ProductCatalog\\HeadphoneCatalog.json";
+	static String htmlFolder="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\HTML_Pages\\heaphones";
+	static String labelled="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\CorrectedLabelledEntities\\HeadphonesLabelledEntitiesProcessed.txt";
+	static String allExperimentsResultPath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\ExperimentsResults\\full_results\\TablesandListsContent\\test_headphones.csv";
 	static String logFile="resources\\log\\logEvaluationItems";
 	static String mode="wrapper"; // define the mode (wrapper/normal). In the wrapper mode only the 4 plds for which a wrapper exists are considered (ebay, tesco, alibaba, overstock)
 	//PREPROCESSING
 	static boolean stemming=true;
 	static boolean stopWordRemoval=true;
 	static boolean lowerCase=true;
-	static String htmlParsingElements="marked_up_data"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
+	static String htmlParsingElements="html_tables_lists"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
 
 	//String evaluation type definition
 	static String evaluationType="optimizingF1"; //average, median, optimizingF1
 	public static void main (String args[]) throws Exception{
-		runMultipleInitializer();
-		
+		runMultipleInitializer();		
 	}
 	private static void runMultipleInitializer() throws JSONException, IOException{
-		LinkedHashMap<BagOfWordsConfiguration, ResultItem> allResults = new LinkedHashMap<BagOfWordsConfiguration,ResultItem>();
-		Queue<BagOfWordsConfiguration> allmodels = defineExperiments();
+		LinkedHashMap<ModelConfiguration, ResultItem> allResults = new LinkedHashMap<ModelConfiguration,ResultItem>();
+		Queue<ModelConfiguration> allmodels = defineExperiments();
 		
-		for(BagOfWordsConfiguration modelConfig:allmodels){
+		for(ModelConfiguration modelConfig:allmodels){
 		
 			PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements);
 			
@@ -73,6 +73,7 @@ public class MultipleRunsInitializer {
 			List<EvaluationItem> ItemstoBeEvaluated = new ArrayList<EvaluationItem>();
 			
 			for (int i = 0; i < listOfHTML.length; i++) {
+				System.out.println(listOfHTML[i].getPath());
 				//if you are in wrapper mode do not consider all pages but only the ones that could be potentially parsed by the implemented wrappers
 				String pld = HTMLPages.getPLDFromHTMLPath(labelled, listOfHTML[i].getPath());
 		    	if(mode.equals("wrapper") && !(pld.contains("ebay")||pld.contains("tesco")||pld.contains("alibaba")||pld.contains("overstock")) ) continue;
@@ -83,7 +84,6 @@ public class MultipleRunsInitializer {
 		    		System.out.println("no answer defined:"+listOfHTML[i]);
 		    		continue;
 		    	}
-	
 		    	//get all the matches with the equivalent scores		    	
 		    	predictedAnswersForPage = calculate.getPredictedAnswers(tokensOfAllHTML.get(listOfHTML[i].getName()));
 		    	
@@ -144,71 +144,71 @@ public class MultipleRunsInitializer {
 		}
 		
 	}
-	private static Queue<BagOfWordsConfiguration> defineExperiments() {
-		Queue<BagOfWordsConfiguration> models = new LinkedList<BagOfWordsConfiguration>();
+	private static Queue<ModelConfiguration> defineExperiments() {
+		Queue<ModelConfiguration> models = new LinkedList<ModelConfiguration>();
 		
-		models.add(new BagOfWordsConfiguration
-				(productCategory, catalog,htmlFolder,  labelled, 
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled, 
 				 "simple", "n/a", 1,0,  0,  false, 0));
-		models.add(new BagOfWordsConfiguration
-				(productCategory, catalog,htmlFolder,  labelled, 
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled, 
 				 "simple", "n/a", 2,0,  0,  false, 0));
-		models.add(new BagOfWordsConfiguration
-				(productCategory, catalog,htmlFolder,  labelled,  
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 				 "simple", "n/a", 3,0,  0,  false, 0));
-		models.add(new BagOfWordsConfiguration
-				(productCategory, catalog,htmlFolder,  labelled,  
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 				 "simple", "n/a", 2,0,  0,  true, 0.9));
-		models.add(new BagOfWordsConfiguration
-				(productCategory, catalog,htmlFolder,  labelled,  
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 				 "simple", "n/a", 2,0,  0,  true, 0.95));
-		models.add(new BagOfWordsConfiguration
-				(productCategory, catalog,htmlFolder,  labelled,  
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 				 "simple with frequency threshold", "n/a", 1,0.08, 0, false, 0));
-		models.add(new BagOfWordsConfiguration
-				(productCategory, catalog,htmlFolder,  labelled,  
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 				 "simple with frequency threshold", "n/a", 1,0.06, 0, false, 0));
-		models.add(new BagOfWordsConfiguration
-				(productCategory, catalog,htmlFolder,  labelled,  
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 				 "simple with frequency threshold", "n/a", 2,0.05,0,  false, 0));
-		models.add(new BagOfWordsConfiguration
-				(productCategory, catalog,htmlFolder,  labelled,  
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 				 "simple with frequency threshold", "n/a", 2,0.04, 0, false, 0));
-		models.add(new BagOfWordsConfiguration
-				(productCategory, catalog,htmlFolder,  labelled,  
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 				 "jaccard", "n/a", 2,0,  0,  false, 0));
-		models.add(new BagOfWordsConfiguration
-				(productCategory, catalog,htmlFolder,  labelled,  
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 				 "jaccard", "n/a", 3,0,  0,  false, 0));
-		models.add(new BagOfWordsConfiguration
-				(productCategory, catalog,htmlFolder,  labelled,  
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 				 "jaccard", "n/a", 4,0,  0,  false, 0));
-		models.add(new BagOfWordsConfiguration
-				(productCategory, catalog,htmlFolder,  labelled,  
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 				 "cosine", "simple", 1,0,  0,  false, 0));
-		models.add(new BagOfWordsConfiguration
-				(productCategory, catalog,htmlFolder,  labelled,  
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 				 "cosine", "simple", 2,0,  0,  false, 0));
-		models.add(new BagOfWordsConfiguration
-				(productCategory, catalog,htmlFolder,  labelled,  
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 				 "cosine", "simple", 3,0,  0,  false, 0));
-		models.add(new BagOfWordsConfiguration
-				(productCategory, catalog,htmlFolder,  labelled,  
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 				 "cosine", "simple", 2,0,  0,  true, 0.6));
-		models.add(new BagOfWordsConfiguration
-				(productCategory, catalog,htmlFolder,  labelled,  
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 				 "cosine", "tfidf", 1,0,  0,  false, 0));
-		models.add(new BagOfWordsConfiguration
-				(productCategory, catalog,htmlFolder,  labelled,  
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 				 "cosine", "tfidf", 2,0,  0,  false, 0));
-		models.add(new BagOfWordsConfiguration
-				(productCategory, catalog,htmlFolder,  labelled,  
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 				 "cosine", "tfidf", 3,0,  0,  false, 0));
-		models.add(new BagOfWordsConfiguration
-				(productCategory, catalog,htmlFolder,  labelled,  
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 				 "cosine", "tfidf", 2,0,  0,  true, 0.6));
-		models.add(new BagOfWordsConfiguration
-				(productCategory, catalog,htmlFolder,  labelled,  
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 				 "cosine", "tfidf", 2,0,  0,  true, 0.8));
 		
 		

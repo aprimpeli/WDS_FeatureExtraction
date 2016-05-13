@@ -2,8 +2,16 @@ package BagOfWordsModel;
 
 import java.util.HashMap;
 
-public class BagOfWordsConfiguration {
+public class ModelConfiguration {
 
+	private String modelType;
+	public String getModelType() {
+		return modelType;
+	}
+
+	public void setModelType(String modelType) {
+		this.modelType = modelType;
+	}
 	private String productCategory; //tv, phone, headphone
 	private String catalog;
 	private String htmlFolder;
@@ -43,7 +51,7 @@ public class BagOfWordsConfiguration {
 		this.vectorCatalogFrequencies = vectorCatalogFrequencies;
 	}
 
-	public BagOfWordsConfiguration(String productCategory, String catalog,
+	public ModelConfiguration(String modelType, String productCategory, String catalog,
 			String htmlFolder, String labelled, 
 			String similarityType, String typeOfWeighting, int grams,
 			double maxFreq, double minFreq, boolean onTopLevenshtein,
@@ -65,7 +73,7 @@ public class BagOfWordsConfiguration {
 	private boolean onTopLevenshtein;
 	private double levenshteinThreshold;
 	
-	public BagOfWordsConfiguration(){
+	public ModelConfiguration(){
 		
 	}
 	

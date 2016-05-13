@@ -8,7 +8,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import BagOfWordsModel.BagOfWordsConfiguration;
+import BagOfWordsModel.ModelConfiguration;
 import BagOfWordsModel.PreprocessingConfiguration;
 import BagOfWordsModel.SimilarityCalculator;
 
@@ -99,7 +99,7 @@ public class SimilarityComputationTest {
 		queryCorpus.put("query1",query1);
 		queryCorpus.put("query2",query2);
 		
-		BagOfWordsConfiguration modelConfig= new BagOfWordsConfiguration(productCategory, catalog,
+		ModelConfiguration modelConfig= new ModelConfiguration("BagOfWordsModel",productCategory, catalog,
 				 htmlFolder,  labelled,  
 				 similarityType, typeOfWeighting, grams,
 				 maxFreq,  minFreq,  onTopLevenshtein,

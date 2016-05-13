@@ -39,20 +39,8 @@ public class ProductCatalogs {
 
 		DocPreprocessor processText = new DocPreprocessor();
 		HashMap<String, List<String>> catalogProducts = new HashMap<String,List<String>>();
-		String headItem="";
-		if(productCategory.equals("phone")){
-			headItem="phones";
-		}
-		else if (productCategory.equals("headphone")){
-			headItem="headphones";
-		}
-		else if (productCategory.equals("tv"))		{
-			headItem="tvs";
-		}			
-		else {
-			System.out.println("Cannot retrieve properties for "+productCategory+". The catalogs stored can handle the following product categories: phones, headphone and tv ");			
-			System.exit(0);
-		}
+		String headItem=getHeadItem(productCategory);
+		
 		ArrayList<String> properties = new ArrayList<String>();
 		
 		properties = getPropertiesFromFile(productCategory);
@@ -109,4 +97,22 @@ public class ProductCatalogs {
 			 return null;
 		 }
 	}
+	
+	public static String getHeadItem(String productCategory){
+		if(productCategory.equals("phone")){
+			return "phones";
+		}
+		else if (productCategory.equals("headphone")){
+			 return "headphones";
+		}
+		else if (productCategory.equals("tv"))		{
+			return "tvs";
+		}			
+		else {
+			System.out.println("Cannot retrieve properties for "+productCategory+". The catalogs stored can handle the following product categories: phone, headphone and tv ");			
+			System.exit(0);
+			return null;
+		}
 	}
+}
+

@@ -45,7 +45,7 @@ public class Initializer {
 	
 	public static void main (String args[]) throws Exception{
 		
-		BagOfWordsConfiguration modelConfig= new BagOfWordsConfiguration(productCategory, catalog,
+		ModelConfiguration modelConfig= new ModelConfiguration("BagOfWords", productCategory, catalog,
 				 htmlFolder,  labelled, 
 				 similarityType, typeOfWeighting, grams,
 				 maxFreq,  minFreq,  onTopLevenshtein,

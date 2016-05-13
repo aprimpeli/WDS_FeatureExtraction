@@ -34,7 +34,6 @@ public class HTMLFragmentsExtractor {
 		    String list_text=Jsoup.parse(list.html()).text(); 
 		    allListContent.append(list_text);
 		}
-		//System.out.println(allListContent.toString());
 		return allListContent.toString();
 	}
 	
@@ -48,7 +47,6 @@ public class HTMLFragmentsExtractor {
 			//exclude nested elements
 			
 		    String table_text=Jsoup.parse(table.html()).text(); 
-		    //System.out.println(table.html());	
 
 		    allTablesContent.append(table_text);
 			//System.out.println(table_text);		     

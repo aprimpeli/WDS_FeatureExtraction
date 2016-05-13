@@ -16,18 +16,20 @@ import org.json.JSONObject;
 
 public class SimilarityCalculator {
 	
-	static BagOfWordsConfiguration model;
+	static ModelConfiguration model;
 	static PreprocessingConfiguration preprocessing;
 	static HashMap<String,List<String>> vectorCatalogEntities;
 	List<List<String>> CatalogEntitiesAsList;
 	List<List<String>> PagesAsList;
 	int totalCommonElements;
+	static boolean LevenshteinOnTop;
 	
-	public SimilarityCalculator() {
-	}
+	public SimilarityCalculator(){}
 	
-	public SimilarityCalculator(BagOfWordsConfiguration modelConfig, PreprocessingConfiguration preprocessing, HashMap<String,List<String>> pagesTokens,HashMap<String,List<String>> catalogTokens ) {
+	
+	public SimilarityCalculator(ModelConfiguration modelConfig, PreprocessingConfiguration preprocessing, HashMap<String,List<String>> pagesTokens,HashMap<String,List<String>> catalogTokens ) {
 		SimilarityCalculator.model = modelConfig;
+		SimilarityCalculator.LevenshteinOnTop=model.isOnTopLevenshtein();
 		SimilarityCalculator.preprocessing=preprocessing;				
 		SimilarityCalculator.vectorCatalogEntities = catalogTokens;
 		Weightening weights = new Weightening();
@@ -53,6 +55,10 @@ public class SimilarityCalculator {
 //		
 //		//precalculation of words vectors after frequency threshold
 	}
+	public SimilarityCalculator(ModelConfiguration modelConfig) {
+		SimilarityCalculator.model=modelConfig;
+	}
+
 	/**
 	 * @param catalogVector
 	 * @param pageVector
@@ -67,11 +73,12 @@ public class SimilarityCalculator {
 		
 		double score = 0;
 		Set<String> commonElements = new HashSet<String>();
-		if(model.isOnTopLevenshtein()){
+		if(SimilarityCalculator.LevenshteinOnTop){
 			for(String gram1:catalogVectorSet){
-				for(String gram2:pageVectorSet)
+				for(String gram2:pageVectorSet){
 					if(commonWithLevenshteinSimilarity(gram1, gram2, model.getLevenshteinThreshold()))
 						commonElements.add(gram1);
+				}
 			}			
 		}
 		else{
@@ -136,7 +143,7 @@ public class SimilarityCalculator {
 				for (int j=0;j<catalogTokens.length; j++) tokensOfCatalogGram.add(catalogTokens[j]);
 				
 				ArrayList<String> commonElements = new ArrayList<String>(tokensOfPageGram);
-				if(model.isOnTopLevenshtein()){
+				if(SimilarityCalculator.LevenshteinOnTop){
 					for(String gram1:tokensOfCatalogGram){
 						for(String gram2:tokensOfPageGram)
 							if(commonWithLevenshteinSimilarity(gram1, gram2, model.getLevenshteinThreshold()))
@@ -166,7 +173,7 @@ public class SimilarityCalculator {
 		HashMap<String,Double> pageWeights = new HashMap<String,Double>();
 		
 		Set<String> commonWords = new HashSet<String>();
-		if(model.isOnTopLevenshtein()){
+		if(SimilarityCalculator.LevenshteinOnTop){
 			for(String gram1:catalogVector){
 				for(String gram2:pageVector)
 					if(commonWithLevenshteinSimilarity(gram1, gram2, model.getLevenshteinThreshold()))
@@ -258,6 +265,7 @@ public class SimilarityCalculator {
 		HashMap<String, Double> predictedAnswers = new HashMap<String,Double>();
 		
 		for (Map.Entry<String, List<String>> entry:vectorCatalogEntities.entrySet()){
+			System.out.println("catalog:"+entry.getKey());
 			double score =0.0;
 			if(model.getSimilarityType().equals("simple"))
 				score=simpleContainmentSimilarity(entry.getValue(), vectorpage);

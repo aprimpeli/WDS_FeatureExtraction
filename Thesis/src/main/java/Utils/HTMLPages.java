@@ -11,13 +11,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import de.dwslab.dwslib.util.uri.DomainUtil;
-import BagOfWordsModel.BagOfWordsConfiguration;
+import BagOfWordsModel.ModelConfiguration;
 import BagOfWordsModel.DocPreprocessor;
 import BagOfWordsModel.PreprocessingConfiguration;
 
 public class HTMLPages {
 
-	public static HashMap<String, List<String>> getHTMLToken(BagOfWordsConfiguration model, PreprocessingConfiguration preprocessing, String mode){
+	public static HashMap<String, List<String>> getHTMLToken(ModelConfiguration model, PreprocessingConfiguration preprocessing, String mode){
 		  try{
 			HashMap<String,List<String>> tokensOfPages = new HashMap<String,List<String>>();
 			File folderHTML = new File(model.getHtmlFolder());
@@ -28,7 +28,10 @@ public class HTMLPages {
 		    	String pld= getPLDFromHTMLPath(model.getLabelled(), listOfHTML[i].getPath());
 		    	if(mode.equals("wrapper") && !(pld.contains("ebay")|| pld.contains("overstock")||pld.contains("alibaba")||pld.contains("tesco"))) continue;
 				List<String> tokenizedValue = processText.textProcessing(listOfHTML[i].getPath(), null, model.getGrams(), true, preprocessing,model.getLabelled());
-				if (null==tokenizedValue) continue;
+				if (null==tokenizedValue) {
+					System.out.println("The page "+listOfHTML[i].getName()+" had no content");
+					continue;
+				}
 				tokensOfPages.put(listOfHTML[i].getName(), tokenizedValue);
 		    }
 			return tokensOfPages;      
