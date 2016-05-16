@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.json.JSONException;
 
@@ -27,19 +28,19 @@ public class MultipleRunsInitializerDictionary {
 
 	//FILEPATHS
 	static String modelType="DictionaryApproach";
-	static String productCategory="headphone"; //tv, phone, headphone
-	static String catalog="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\ProductCatalog\\HeadphoneCatalog.json";
-	static String htmlFolder="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\HTML_Pages\\headphones_test";
-	static String labelled="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\CorrectedLabelledEntities\\HeadphonesLabelledEntitiesProcessed.txt";
-	static String allExperimentsResultPath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\ExperimentsResults\\DictionaryApproach\\TablesandListsContent\\headphones.csv";
+	static String productCategory="phone"; //tv, phone, headphone
+	static String catalog="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\ProductCatalog\\PhoneCatalog.json";
+	static String htmlFolder="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\HTML_Pages\\phones";
+	static String labelled="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\CorrectedLabelledEntities\\PhonesLabelledEntitiesProcessed.txt";
+	static String allExperimentsResultPath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\ExperimentsResults\\DictionaryApproach\\MarkedUpContent\\phones.csv";
 	static String logFile="resources\\log\\logEvaluationItemsDictionary";
 	static String mode="normal"; // define the mode (wrapper/normal). In the wrapper mode only the 4 plds for which a wrapper exists are considered (ebay, tesco, alibaba, overstock)
 
 	//PREPROCESSING
-	static boolean stemming=true;
-	static boolean stopWordRemoval=true;
+	static boolean stemming=false;
+	static boolean stopWordRemoval=false;
 	static boolean lowerCase=true;
-	static String htmlParsingElements="all_html"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
+	static String htmlParsingElements="marked_up_data"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
 
 	//String evaluation type definition
 	static String evaluationType="optimizingF1"; //average, median, optimizingF1
@@ -49,7 +50,6 @@ public class MultipleRunsInitializerDictionary {
 	}
 	
 	private static void runMultipleInitializer() throws JSONException, IOException{
-		
 		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements);
 		LinkedHashMap<ModelConfiguration, ResultItem> allResults = new LinkedHashMap<ModelConfiguration,ResultItem>();
 		Queue<ModelConfiguration> allmodels = defineExperiments();
@@ -69,7 +69,6 @@ public class MultipleRunsInitializerDictionary {
 			
 			SimilarityCalculator calculate = new SimilarityCalculator();
 			File folderHTML = new File(modelConfig.getHtmlFolder());
-			System.out.println(folderHTML.getPath());
 			File[] listOfHTML = folderHTML.listFiles();
 			ResultItem results= new ResultItem();
 			List<EvaluationItem> ItemstoBeEvaluated = new ArrayList<EvaluationItem>();
@@ -90,13 +89,15 @@ public class MultipleRunsInitializerDictionary {
 				FeatureTagger tag = new FeatureTagger();
 				InputPreprocessor process = new InputPreprocessor();
 				String htmlInput = process.textProcessing(listOfHTML[i].getPath(), null, true, preprocessing, modelConfig.getLabelled());
-				
 				HashMap<String, ArrayList<String>> tagged = tag.setFeatureTagging(htmlInput, dictionary.getDictionary());
-				tag.printTagged(tagged);
+				//tag.printTagged(tagged);
 				HashMap<String, ArrayList<String>> reversed = tag.reverseTaggedWords(tagged);
-				tag.printTagged(reversed);
+				if (reversed.size()==0) {
+					System.out.println("No tagging could be done for the page:"+listOfHTML[i].getPath());
+				}
+				//tag.printTagged(reversed);
 				FeatureSimilarityComputation sim = new FeatureSimilarityComputation( modelConfig.isOnTopLevenshtein(),modelConfig.getSimilarityType());
-		    	predictedAnswersForPage = sim.getPredictedAnswersinDictionaryApproach(reversed ,dictionary,modelConfig);
+		    	predictedAnswersForPage = sim.getPredictedAnswersinDictionaryApproach(reversed ,dictionary,modelConfig,listOfHTML[i].getPath());
 		    	
 		    	EvaluationItem toBeEvaluated= new EvaluationItem();
 		    	toBeEvaluated.setPredictedAnswers(predictedAnswersForPage);
@@ -157,13 +158,8 @@ public class MultipleRunsInitializerDictionary {
 				 "simple", "n/a", 0,0,  0,  false, 0));
 		models.add(new ModelConfiguration
 				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-				 "simple", "n/a", 0,0,  0,  true, 0.9));
-		models.add(new ModelConfiguration
-				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-				 "simple", "n/a", 0,0,  0,  true, 0.95));
-		models.add(new ModelConfiguration
-				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 				 "jaccard", "n/a", 0,0,  0,  false, 0));
+
 		return models;
 	}
 	

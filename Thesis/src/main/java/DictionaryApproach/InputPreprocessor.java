@@ -44,6 +44,7 @@ public class InputPreprocessor {
 		
 		while(result.incrementToken()){
 			String token=((CharTermAttribute)result.getAttribute(CharTermAttribute.class)).toString();		
+
 			processedText+=token+" ";	
 		}	
 		

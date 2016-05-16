@@ -38,7 +38,8 @@ public class FeatureTagger {
 		HashMap<String, ArrayList<String>> taggedWords= new HashMap<String, ArrayList<String>>();
 		for(Map.Entry<String, Set<String>> dictEntry:dictionary.entrySet()){
 			for(String value:dictEntry.getValue()){
-				if(input.contains(value)) {
+				//if the input contains this as a token - not inside a word example: clear and cleared
+				if(input.contains(" "+value+" ")) {
 					if(null == taggedWords.get(value)) taggedWords.put(value, new ArrayList<String>());
 					taggedWords.get(value).add(dictEntry.getKey());
 				}

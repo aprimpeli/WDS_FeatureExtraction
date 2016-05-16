@@ -26,6 +26,10 @@ public class Evaluation {
 		for(double a=0; a<=1; a=a+0.001){
 			currentResults= new ResultItem();
 			double threshold = defineThresholdWitha(allLinks,a);
+			if(Double.isNaN(threshold)) {
+				System.out.println("The threshold could not be defined. The program will unsuccessfully exit.");
+				System.exit(0);
+			}
 			currentResults.setA(a);
 			currentResults.setThreshold(threshold);
 			for(EvaluationItem item:allLinks){
@@ -66,6 +70,7 @@ public class Evaluation {
 		}
 		
 		sdev=sdev/(double)numberOfAllLinks;
+
 		//define threshold
 		double threshold= mean+a*sdev;
 		

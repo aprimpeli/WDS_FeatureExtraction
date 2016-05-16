@@ -31,7 +31,7 @@ public class TestDictionaryApproach {
 		HashMap<String, ArrayList<String>> reversed = tag.reverseTaggedWords(tagged);
 		tag.printTagged(reversed);
 		FeatureSimilarityComputation sim = new FeatureSimilarityComputation(false, "simple");
-		HashMap<String, Double> answers = sim.getPredictedAnswersinDictionaryApproach(reversed, dictionary,null);
+		HashMap<String, Double> answers = sim.getPredictedAnswersinDictionaryApproach(reversed, dictionary,null,"");
 		for(Map.Entry<String, Double> answer:answers.entrySet())
 			System.out.println(answer.getKey()+"---"+answer.getValue());
 		

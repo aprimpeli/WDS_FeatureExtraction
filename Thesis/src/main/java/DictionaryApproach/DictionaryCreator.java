@@ -58,18 +58,22 @@ public class DictionaryCreator {
 					if (value.contains("|")){
 						ArrayList<String> values = new ArrayList<String>(Arrays.asList(value.split("\\s*\\|\\s*")));
 						Set<String> uniqueValues = new HashSet<String>(values);
+						Set<String> newValues = new HashSet<String>();
 						for(String v:uniqueValues){
 							String processedValue = process.textProcessing(null, v, false, preprocessing, labelledPath);
-							uniqueValues.remove(v);
-							uniqueValues.add(processedValue);
+							//ignore the very short tokens
+							if(processedValue.length()>3)
+								newValues.add(processedValue);
 						}
-						dictionary.get(property).addAll(uniqueValues);
-						featureValues.get(property).addAll(uniqueValues);
+						dictionary.get(property).addAll(newValues);
+						featureValues.get(property).addAll(newValues);
 					}
 					else {
 						String processedValue = process.textProcessing(null, value, false, preprocessing, labelledPath);
-						dictionary.get(property).add(processedValue);
-						featureValues.get(property).add(processedValue);
+						if(processedValue.length()>3){
+							dictionary.get(property).add(processedValue);
+							featureValues.get(property).add(processedValue);
+						}					
 					}
 				}
 			}
@@ -78,7 +82,7 @@ public class DictionaryCreator {
 		}
 		CompleteDictionary.setDictionary(dictionary);
 		CompleteDictionary.setProductEntities(allCatalogProductEntities);
-		printDictionary(dictionary);
+		//printDictionary(dictionary);
 		return CompleteDictionary;
 
 
