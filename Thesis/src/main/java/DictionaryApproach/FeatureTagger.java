@@ -25,8 +25,7 @@ public class FeatureTagger {
 		tokenizedInput= new HashMap<Integer,List<String>>();
 		DocPreprocessor process= new DocPreprocessor();
 		for (int i=1; i<10; i++){
-			//List<String> grams = process.textProcessing(htmlPath, null, i, isHTML, config, labelledPath);
-			List<String> grams = process.textProcessing(null, "this is iphone 4s in gold color it s a smartphone with 5 Megapixel camera", i, false, config, labelledPath);			
+			List<String> grams = process.textProcessing(htmlPath, null, i, isHTML, config, labelledPath);
 			tokenizedInput.put(i, grams);
 		}
 		
@@ -79,17 +78,15 @@ public class FeatureTagger {
 						System.out.println("The input wont be tokenized for "+gramsOfValue+windowSize+" grams. That's too much and wont make sense. Next value.");
 						continue;
 					}
-//					HashMap<String, Double> initialCandidates = getTopCandidates(value, gramsOfValue+windowSize, preprocessing, 
-//							0.6, 0.7, htmlPath, null, model.getLabelled(), true);
+					HashMap<String, Double> initialCandidates = getTopCandidates(value, gramsOfValue+windowSize, preprocessing, 
+							0.6, 0.7, htmlPath, null, model.getLabelled(), true);
 					
-					HashMap<String, Double> initialCandidates = getTopCandidates(value, gramsOfValue, preprocessing, 
-							0.6, 0.7, null, "this is iphone 4s in gold color it s a smartphone with 5 Megapixel camera", model.getLabelled(), false);
 							
 					HashMap<String, Double> finalCandidates = new HashMap<String, Double>();
 			       //for the top candidates try to reduce the window size till you get the best scores meet the thresold
 			        for (Entry<String, Double> candidate : initialCandidates.entrySet())
 			        {
-			            for(int i=gramsOfValue; i>=gramsOfValue+windowSize; i++){ //reduce window size
+			            for(int i=gramsOfValue+windowSize-1; i>=1; i--){ //reduce window size
 			            	
 			            	finalCandidates.putAll(getTopCandidates(value, i, preprocessing, 0.8, 0.8, null, candidate.getKey(), model.getLabelled(), false));
 			            }

@@ -28,10 +28,10 @@ public class MultipleRunsInitializerDictionary {
 
 	//FILEPATHS
 	static String modelType="DictionaryApproach";
-	static String productCategory="phone"; //tv, phone, headphone
-	static String catalog="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\ProductCatalog\\PhoneCatalog.json";
+	static String productCategory="headphone"; //tv, phone, headphone
+	static String catalog="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\ProductCatalog\\HeadphoneCatalog.json";
 	static String htmlFolder="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\HTML_Pages\\headphones_test";
-	static String labelled="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\CorrectedLabelledEntities\\PhonesLabelledEntitiesProcessed.txt";
+	static String labelled="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\CorrectedLabelledEntities\\HeadphonesLabelledEntitiesProcessed.txt";
 	static String allExperimentsResultPath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\ExperimentsResults\\DictionaryApproach\\MarkedUpContent\\headphones.csv";
 	static String logFile="resources\\log\\logEvaluationItemsDictionary";
 	static String mode="normal"; // define the mode (wrapper/normal). In the wrapper mode only the 4 plds for which a wrapper exists are considered (ebay, tesco, alibaba, overstock)
@@ -44,7 +44,7 @@ public class MultipleRunsInitializerDictionary {
 	static boolean stemming=false;
 	static boolean stopWordRemoval=false;
 	static boolean lowerCase=true;
-	static String htmlParsingElements="all_html"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
+	static String htmlParsingElements="html_tables"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
 
 	//String evaluation type definition
 	static String evaluationType="optimizingF1"; //average, median, optimizingF1
@@ -64,7 +64,7 @@ public class MultipleRunsInitializerDictionary {
 		
 		for(ModelConfiguration modelConfig:allmodels){
 
-			dictionary=creator.createDictionary(catalog, productCategory,preprocessing, labelled, idfThresholdForcatalog, modelConfig.getGrams() );
+			dictionary=creator.createDictionary(catalog, productCategory,preprocessing, labelled, idfThresholdForcatalog);
 			//creator.printDictionary(dictionary.getDictionary());
 			
 			System.out.println("---START---");
@@ -80,15 +80,14 @@ public class MultipleRunsInitializerDictionary {
 			
 			for (int i = 0; i < listOfHTML.length; i++) {
 				//if you are in wrapper mode do not consider all pages but only the ones that could be potentially parsed by the implemented wrappers
-				String pld="ebay";
-//				String pld = HTMLPages.getPLDFromHTMLPath(labelled, listOfHTML[i].getPath());
+				String pld = HTMLPages.getPLDFromHTMLPath(labelled, listOfHTML[i].getPath());
 		    	if(mode.equals("wrapper") && !(pld.contains("ebay")||pld.contains("tesco")||pld.contains("alibaba")||pld.contains("overstock")) ) continue;
 				
 		    	ArrayList<String> rightAnswers= calculate.getRightAnswer(modelConfig.getLabelled(), listOfHTML[i].getName());
-//		    	if (rightAnswers.size()==0) {
-//		    		System.out.println("no answer defined:"+listOfHTML[i]);
-//		    		continue;
-//		    	}
+		    	if (rightAnswers.size()==0) {
+		    		System.out.println("no answer defined:"+listOfHTML[i]);
+		    		continue;
+		    	}
 		    	//get all the matches with the equivalent scores	
 				HashMap<String, Double> predictedAnswersForPage = new HashMap<String,Double>();
 				//do the tagging step

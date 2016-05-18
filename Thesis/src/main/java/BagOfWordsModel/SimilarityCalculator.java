@@ -307,7 +307,16 @@ public class SimilarityCalculator {
     }
 
 
-	
+	public static double getLevenshteinDistance(String a, String b){
+		int distance = org.apache.commons.lang.StringUtils.getLevenshteinDistance(a, b);
+        double similarity= 0;
+        if(a.length()>b.length())
+        	similarity=1.0-((double)distance/a.length());
+        else
+        	similarity=1.0-((double)distance/b.length());
+        
+        return similarity;
+	}
 
 	/**
 	 * @return
@@ -315,7 +324,7 @@ public class SimilarityCalculator {
 	 * @throws IOException
 	 * Can return yes/no/N/A 
 	 * */
-	public String didIGuessRight(String rightAnswer, String predictedAnswer ) throws JSONException, IOException{
+ 	public String didIGuessRight(String rightAnswer, String predictedAnswer ) throws JSONException, IOException{
 		
 				
 		//String rightAnswer = getRightAnswer(nodeID, labelledEntitiesPath);

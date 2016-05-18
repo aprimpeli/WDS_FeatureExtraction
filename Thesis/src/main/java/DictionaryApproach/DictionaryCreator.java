@@ -39,7 +39,7 @@ public class DictionaryCreator {
 //		dict.printDictionary(Dictionary);
 	}
 
-	public Dictionary createDictionary(String pathToCatalog, String productCategory, PreprocessingConfiguration preprocessing, String labelledPath, double idfWeightThreshold, int grams) 
+	public Dictionary createDictionary(String pathToCatalog, String productCategory, PreprocessingConfiguration preprocessing, String labelledPath, double idfWeightThreshold) 
 			throws JSONException, IOException{
 		
 		Dictionary CompleteDictionary = new Dictionary();
