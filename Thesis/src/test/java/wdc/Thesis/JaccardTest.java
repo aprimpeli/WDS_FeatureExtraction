@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import BagOfWordsModel.ModelConfiguration;
 import BagOfWordsModel.SimilarityCalculator;
 
 public class JaccardTest {
@@ -12,24 +13,16 @@ public class JaccardTest {
 	@Test
 	public void runTest(){
 		List<String> doc1 = new ArrayList<String>(){{
-			add("apple apple");
-			add("apple cake");
-			add("cake cut");
-			add("cut recipe");
-			add("recipe cake");
-			add("recipe cake");
-
-			
+			add("studio live monitoring impedance 38ohm");		
 		}};	
 		List<String> doc2 = new ArrayList<String>(){{
-			add("cake apple");
-			add("apple recipe");
-			add("recipe cut");
-			add("recipe cake");
+			add("20 ohm");
 
 		}};	
-	
-		SimilarityCalculator test = new SimilarityCalculator();
+		ModelConfiguration config = new ModelConfiguration();
+		config.setLevenshteinThreshold(0.1);
+		config.setOnTopLevenshtein(true);
+		SimilarityCalculator test = new SimilarityCalculator(config);
 		double score = test.jaccardSimilarity(doc1, doc2);
 		System.out.println(score);
 	}

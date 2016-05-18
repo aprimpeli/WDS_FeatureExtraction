@@ -22,14 +22,12 @@ public class SimilarityCalculator {
 	List<List<String>> CatalogEntitiesAsList;
 	List<List<String>> PagesAsList;
 	int totalCommonElements;
-	static boolean LevenshteinOnTop;
 	
 	public SimilarityCalculator(){}
 	
 	
 	public SimilarityCalculator(ModelConfiguration modelConfig, PreprocessingConfiguration preprocessing, HashMap<String,List<String>> pagesTokens,HashMap<String,List<String>> catalogTokens ) {
 		SimilarityCalculator.model = modelConfig;
-		SimilarityCalculator.LevenshteinOnTop=model.isOnTopLevenshtein();
 		SimilarityCalculator.preprocessing=preprocessing;				
 		SimilarityCalculator.vectorCatalogEntities = catalogTokens;
 		Weightening weights = new Weightening();
@@ -73,7 +71,7 @@ public class SimilarityCalculator {
 		
 		double score = 0;
 		Set<String> commonElements = new HashSet<String>();
-		if(SimilarityCalculator.LevenshteinOnTop){
+		if(SimilarityCalculator.model.isOnTopLevenshtein()){
 			for(String gram1:catalogVectorSet){
 				for(String gram2:pageVectorSet){
 					if(commonWithLevenshteinSimilarity(gram1, gram2, model.getLevenshteinThreshold()))
@@ -142,8 +140,8 @@ public class SimilarityCalculator {
 				String [] catalogTokens = catalogGram.split("\\s+");
 				for (int j=0;j<catalogTokens.length; j++) tokensOfCatalogGram.add(catalogTokens[j]);
 				
-				ArrayList<String> commonElements = new ArrayList<String>(tokensOfPageGram);
-				if(SimilarityCalculator.LevenshteinOnTop){
+				ArrayList<String> commonElements = new ArrayList<String>();
+				if(SimilarityCalculator.model.isOnTopLevenshtein()){
 					for(String gram1:tokensOfCatalogGram){
 						for(String gram2:tokensOfPageGram)
 							if(commonWithLevenshteinSimilarity(gram1, gram2, model.getLevenshteinThreshold()))
@@ -173,7 +171,7 @@ public class SimilarityCalculator {
 		HashMap<String,Double> pageWeights = new HashMap<String,Double>();
 		
 		Set<String> commonWords = new HashSet<String>();
-		if(SimilarityCalculator.LevenshteinOnTop){
+		if(SimilarityCalculator.model.isOnTopLevenshtein()){
 			for(String gram1:catalogVector){
 				for(String gram2:pageVector)
 					if(commonWithLevenshteinSimilarity(gram1, gram2, model.getLevenshteinThreshold()))
@@ -304,7 +302,7 @@ public class SimilarityCalculator {
         else
         	similarity=1.0-((double)distance/b.length());
         
-        
+        //System.out.println(a+"---"+b+":"+similarity);
         return (similarity>=threshold);
     }
 

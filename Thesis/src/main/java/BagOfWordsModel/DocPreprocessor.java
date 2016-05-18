@@ -175,7 +175,6 @@ public class DocPreprocessor {
 	 * Gets the path of a file and transforms it to a string variableS
 	 */
 	public static String fileToText (String filepath) throws IOException{
-		
 		byte[] encoded = Files.readAllBytes(Paths.get(filepath));
 		  return new String(encoded, StandardCharsets.UTF_8);	
 	}
@@ -183,6 +182,32 @@ public class DocPreprocessor {
 	public void printList (List<String> list){
 		System.out.println("SIZE of word list:"+list.size());
 		for (String l:list) System.out.println(l);
+	}
+	
+	public int getGramsOfValue(String value, PreprocessingConfiguration preprocessing) throws IOException {
+		
+		Reader corpus= StringToReaderConverter(value);
+		
+		List<String> processedWords = new ArrayList<String>();
+		TokenStream result=null;
+		
+		final Tokenizer source = new StandardTokenizer(Version.LUCENE_36, corpus);
+		result = new StandardFilter(Version.LUCENE_36, source);
+					
+		if (preprocessing.isLowerCase())
+			result = new LowerCaseFilter(Version.LUCENE_36, result);
+		if (preprocessing.isStopWordRemoval())
+		     result = new StopFilter(Version.LUCENE_36, result, StopAnalyzer.ENGLISH_STOP_WORDS_SET);
+		if (preprocessing.isStemming())
+		     result = new PorterStemFilter(result);
+		
+		
+		while(result.incrementToken()){
+			String token=((CharTermAttribute)result.getAttribute(CharTermAttribute.class)).toString();		
+			processedWords.add(token);	
+		}	
+		result.close();
+		return processedWords.size();
 	}
 	
 		

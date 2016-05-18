@@ -30,17 +30,21 @@ public class MultipleRunsInitializerDictionary {
 	static String modelType="DictionaryApproach";
 	static String productCategory="phone"; //tv, phone, headphone
 	static String catalog="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\ProductCatalog\\PhoneCatalog.json";
-	static String htmlFolder="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\HTML_Pages\\phones";
+	static String htmlFolder="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\HTML_Pages\\headphones_test";
 	static String labelled="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\CorrectedLabelledEntities\\PhonesLabelledEntitiesProcessed.txt";
-	static String allExperimentsResultPath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\ExperimentsResults\\DictionaryApproach\\MarkedUpContent\\phones.csv";
+	static String allExperimentsResultPath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\ExperimentsResults\\DictionaryApproach\\MarkedUpContent\\headphones.csv";
 	static String logFile="resources\\log\\logEvaluationItemsDictionary";
 	static String mode="normal"; // define the mode (wrapper/normal). In the wrapper mode only the 4 plds for which a wrapper exists are considered (ebay, tesco, alibaba, overstock)
-
+	//TODO
+	static String taggingSimType=""; //exact, jaccard on top edit distance
+	static double idfThresholdForcatalog=0.0;
+	static int windowSize= 3;
+	
 	//PREPROCESSING
 	static boolean stemming=false;
 	static boolean stopWordRemoval=false;
 	static boolean lowerCase=true;
-	static String htmlParsingElements="marked_up_data"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
+	static String htmlParsingElements="all_html"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
 
 	//String evaluation type definition
 	static String evaluationType="optimizingF1"; //average, median, optimizingF1
@@ -57,10 +61,11 @@ public class MultipleRunsInitializerDictionary {
 		//create the dictionary
 		Dictionary dictionary = new Dictionary();
 		DictionaryCreator creator= new DictionaryCreator();
-		dictionary=creator.createDictionary(catalog, productCategory,preprocessing, labelled );
 		
 		for(ModelConfiguration modelConfig:allmodels){
-			
+
+			dictionary=creator.createDictionary(catalog, productCategory,preprocessing, labelled, idfThresholdForcatalog, modelConfig.getGrams() );
+			//creator.printDictionary(dictionary.getDictionary());
 			
 			System.out.println("---START---");
 			System.out.println("The dictionary approach will be executed for the product category "+ productCategory);
@@ -75,21 +80,24 @@ public class MultipleRunsInitializerDictionary {
 			
 			for (int i = 0; i < listOfHTML.length; i++) {
 				//if you are in wrapper mode do not consider all pages but only the ones that could be potentially parsed by the implemented wrappers
-				String pld = HTMLPages.getPLDFromHTMLPath(labelled, listOfHTML[i].getPath());
+				String pld="ebay";
+//				String pld = HTMLPages.getPLDFromHTMLPath(labelled, listOfHTML[i].getPath());
 		    	if(mode.equals("wrapper") && !(pld.contains("ebay")||pld.contains("tesco")||pld.contains("alibaba")||pld.contains("overstock")) ) continue;
 				
 		    	ArrayList<String> rightAnswers= calculate.getRightAnswer(modelConfig.getLabelled(), listOfHTML[i].getName());
-		    	if (rightAnswers.size()==0) {
-		    		System.out.println("no answer defined:"+listOfHTML[i]);
-		    		continue;
-		    	}
+//		    	if (rightAnswers.size()==0) {
+//		    		System.out.println("no answer defined:"+listOfHTML[i]);
+//		    		continue;
+//		    	}
 		    	//get all the matches with the equivalent scores	
 				HashMap<String, Double> predictedAnswersForPage = new HashMap<String,Double>();
 				//do the tagging step
-				FeatureTagger tag = new FeatureTagger();
-				InputPreprocessor process = new InputPreprocessor();
-				String htmlInput = process.textProcessing(listOfHTML[i].getPath(), null, true, preprocessing, modelConfig.getLabelled());
-				HashMap<String, ArrayList<String>> tagged = tag.setFeatureTagging(htmlInput, dictionary.getDictionary());
+				FeatureTagger tag = new FeatureTagger(listOfHTML[i].getPath(),true, preprocessing,modelConfig.getLabelled());
+				ModelConfiguration modelForTagging = new ModelConfiguration();
+				modelForTagging.setOnTopLevenshtein(true);
+				modelForTagging.setLevenshteinThreshold(0.5);
+				modelForTagging.setSimilarityType("jaccard");
+				HashMap<String, ArrayList<String>> tagged = tag.setFeatureTagging(windowSize, listOfHTML[i].getPath(), dictionary.getDictionary(),preprocessing, modelForTagging);
 				//tag.printTagged(tagged);
 				HashMap<String, ArrayList<String>> reversed = tag.reverseTaggedWords(tagged);
 				if (reversed.size()==0) {
@@ -155,10 +163,10 @@ public class MultipleRunsInitializerDictionary {
 		
 		models.add(new ModelConfiguration
 				(modelType,productCategory, catalog,htmlFolder,  labelled, 
-				 "simple", "n/a", 0,0,  0,  false, 0));
+				 "simple", "n/a", 1,0,  0,  false, 0));
 		models.add(new ModelConfiguration
 				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-				 "jaccard", "n/a", 0,0,  0,  false, 0));
+				 "jaccard", "n/a", 1,0,  0,  false, 0));
 
 		return models;
 	}
