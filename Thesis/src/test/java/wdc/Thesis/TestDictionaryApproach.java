@@ -37,7 +37,7 @@ public class TestDictionaryApproach {
 	public void runTest() throws JSONException, IOException{
 		String catalog="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\"
 				+ "LabelledDataProfiling\\ProductCatalog\\PhoneCatalog.json";
-		String text="this is i phone4s in gold color it s a smartphone with 5Megapixel camera";
+		String text="this is i phone6 in gold color it s a smartphone with 5Megapixel camera";
 		DictionaryCreator dict = new DictionaryCreator();
 		Dictionary dictionary = new Dictionary();
 		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements);
@@ -57,23 +57,36 @@ public class TestDictionaryApproach {
 		for(Map.Entry<String, Set<String>> dictEntry:dictionary.getDictionary().entrySet()){
 			for(final String value:dictEntry.getValue()){
 				
+				if(value.length()<3) continue;
+				
 				int gramsOfValue=processdoc.getGramsOfValue(value, preprocessing);
 				if (!tokenizedInput.containsKey(gramsOfValue+windowSize)){
 					System.out.println("The input wont be tokenized for "+gramsOfValue+windowSize+" grams. That's too much and wont make sense. Next value.");
 					continue;
 				}
 				HashMap<String, Double> initialCandidates = getTopCandidates(value, gramsOfValue+windowSize, preprocessing, 
-						0.2, 0.6, null, text, labelled, false);
+						 0.6 , null, text, labelled, false, 3);
 				
 						
 				HashMap<String, Double> finalCandidates = new HashMap<String, Double>();
 		       //for the top candidates try to reduce the window size till you get the best scores meet the thresold
 		        for (Entry<String, Double> candidate : initialCandidates.entrySet())
 		        {
-		            for(int i=gramsOfValue+windowSize-1; i>=1; i--){ //reduce window size
-		            	
-		            	finalCandidates.putAll(getTopCandidates(value, i, preprocessing, 0.8, 0.8, null, candidate.getKey(), labelled, false));
+		        	String maxCandidate="";
+		        	double maxScore=0.0;
+		            for(int i=gramsOfValue+windowSize; i>=1; i--){ //reduce window size
+		            	HashMap<String, Double> tempCandidates=getTopCandidates(value, i, preprocessing,  0.8, null, candidate.getKey(), labelled, false, 3);
+		            	for (Entry<String,Double> c:tempCandidates.entrySet()){
+		            		if (c.getValue()>maxScore) {
+		            			maxScore=c.getValue();
+		            			maxCandidate=c.getKey();
+		            		}
+		            		
+		            	}
 		            }
+		            if (maxScore>0.4) finalCandidates.put(maxCandidate,maxScore);
+	            	
+
 		        }
 			       
 				for(Entry<String, Double> candidate : finalCandidates.entrySet())  {
@@ -86,8 +99,8 @@ public class TestDictionaryApproach {
 
 		
 	}
-	public HashMap<String,Double> getTopCandidates(final String valueToCompare, int gramsToTokenize, PreprocessingConfiguration preprocessing, double levThreshold, double simThreshold, String htmlPath, 
-			String text, String labelledPath, boolean isHTML) throws IOException{
+	public HashMap<String,Double> getTopCandidates(final String valueToCompare, int gramsToTokenize, PreprocessingConfiguration preprocessing,  double simThreshold, String htmlPath, 
+			String text, String labelledPath, boolean isHTML, int pruneLength) throws IOException{
 		
 		DocPreprocessor process = new DocPreprocessor();
 		List<String> gramsOfCorpus = new ArrayList<String>();
@@ -99,13 +112,13 @@ public class TestDictionaryApproach {
     	
     	ModelConfiguration model = new ModelConfiguration();
     	model.setOnTopLevenshtein(true);
-    	model.setLevenshteinThreshold(levThreshold);
     	HashMap<String,Double> topCandidates = new HashMap<String,Double>();
     	
-    	
+    	List<String> gramsOfValue = process.textProcessing(null, valueToCompare, 1, false, preprocessing, labelledPath);
     	for(final String unique:uniqueGrams){
-    		SimilarityCalculator calculate = new SimilarityCalculator(model);
-			double score = calculate.simpleContainmentSimilarity(new ArrayList<String>() {{add(unique);}}, new ArrayList<String>() {{add(valueToCompare);}});
+    		if (unique.length()<pruneLength) continue;
+    		List<String> gramsOfUnique = process.textProcessing(null, unique, 1, false, preprocessing, labelledPath);
+			double score = SimilarityCalculator.getMongeElkanSimilarity(gramsOfUnique, gramsOfValue, "jaroWrinkler");
 			if(score>simThreshold) topCandidates.put(unique, score);
     	}
     	return topCandidates;

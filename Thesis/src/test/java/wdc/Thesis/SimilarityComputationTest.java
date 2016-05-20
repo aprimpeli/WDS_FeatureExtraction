@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import BagOfWordsModel.DocPreprocessor;
 import BagOfWordsModel.ModelConfiguration;
 import BagOfWordsModel.PreprocessingConfiguration;
 import BagOfWordsModel.SimilarityCalculator;
@@ -40,8 +41,8 @@ public class SimilarityComputationTest {
 		//can be applies on top of everyone of the previous similarity types in order to calculate common words
 		static boolean onTopLevenshtein=false;
 		static double levenshteinThreshold=0.8;
-	@Test
-	public void runSimilarityTest() throws IOException{
+
+		public void runSimilarityTest() throws IOException{
 		List<String> doc1 = new ArrayList<String>(){{
 			add("apple");
 			add("apple");
@@ -112,5 +113,18 @@ public class SimilarityComputationTest {
 		for(Map.Entry<String,List<String>> query: queryCorpus.entrySet()){
 			calculate.getPredictedAnswers(query.getValue());
 		}
+	}
+
+	@Test
+	public void MongeElkanTest() throws IOException{
+		String a="5mp";
+		String b="5megapixel";
+		
+		DocPreprocessor process = new DocPreprocessor();
+		PreprocessingConfiguration config = new PreprocessingConfiguration(false, false, true, "");
+		List<String> gramsa = process.textProcessing(null, a, 1, false, config, "");
+		List<String> gramsb = process.textProcessing(null, b, 1, false, config, "");
+
+		System.out.println(SimilarityCalculator.getMongeElkanSimilarity(gramsa, gramsb, "default"));
 	}
 }

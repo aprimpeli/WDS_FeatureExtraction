@@ -56,15 +56,15 @@ public class FeatureTagger {
 	 * @throws IOException 
 	 * 
 	 */
-	public HashMap<String, ArrayList<String>> setFeatureTagging(int windowSize, String htmlPath, HashMap<String,Set<String>> dictionary,  PreprocessingConfiguration preprocessing,  ModelConfiguration model) throws IOException{
+	public HashMap<String, ArrayList<String>> setFeatureTagging(String htmlPath, HashMap<String,Set<String>> dictionary,  PreprocessingConfiguration preprocessing, DictionaryApproachModel model) throws IOException{
 		
 		InputPreprocessor processInput = new InputPreprocessor();
 		DocPreprocessor processdoc = new DocPreprocessor();
 		HashMap<String, ArrayList<String>> taggedWords= new HashMap<String, ArrayList<String>>();
 		for(Map.Entry<String, Set<String>> dictEntry:dictionary.entrySet()){
 			for(final String value:dictEntry.getValue()){
-				if (model.getSimilarityType().equals("exact")){
-					String htmlInput = processInput.textProcessing(htmlPath, "", true, preprocessing, model.getLabelled());
+				if (model.getSimType().equals("exact")){
+					String htmlInput = processInput.textProcessing(htmlPath, "", true, preprocessing, model.getLabelledPath());
 
 					//if the input contains this as a token - not inside a word example: clear and cleared
 					if(htmlInput.contains(" "+value+" ")) {
@@ -74,58 +74,72 @@ public class FeatureTagger {
 				}
 				else {
 					int gramsOfValue=processdoc.getGramsOfValue(value, preprocessing);
-					if (!tokenizedInput.containsKey(gramsOfValue+windowSize)){
-						System.out.println("The input wont be tokenized for "+gramsOfValue+windowSize+" grams. That's too much and wont make sense. Next value.");
+					if (!tokenizedInput.containsKey(gramsOfValue+model.getWindowSize())){
+//						System.out.println("The input wont be tokenized for "+gramsOfValue+model.getWindowSize()+" grams. That's too much and wont make sense. Next value.");
+//						System.out.println("Value:"+value);
+//						System.out.println("Property:"+dictEntry.getKey());
 						continue;
 					}
-					HashMap<String, Double> initialCandidates = getTopCandidates(value, gramsOfValue+windowSize, preprocessing, 
-							0.6, 0.7, htmlPath, null, model.getLabelled(), true);
 					
-							
+					HashMap<String, Double> initialCandidates = getTopCandidates(value, gramsOfValue+model.getWindowSize(), preprocessing, htmlPath, null, true, model);
+								
 					HashMap<String, Double> finalCandidates = new HashMap<String, Double>();
-			       //for the top candidates try to reduce the window size till you get the best scores meet the thresold
-			        for (Entry<String, Double> candidate : initialCandidates.entrySet())
+			       //for the top candidates try to reduce the window size till you get the best scores meet the threshold
+					for (Entry<String, Double> candidate : initialCandidates.entrySet())
 			        {
-			            for(int i=gramsOfValue+windowSize-1; i>=1; i--){ //reduce window size
-			            	
-			            	finalCandidates.putAll(getTopCandidates(value, i, preprocessing, 0.8, 0.8, null, candidate.getKey(), model.getLabelled(), false));
+			        	String maxCandidate="";
+			        	double maxScore=0.0;
+			            for(int i=gramsOfValue+model.getWindowSize(); i>=1; i--){ //reduce window size
+			            	HashMap<String, Double> tempCandidates=getTopCandidates(value, i, preprocessing,  null, candidate.getKey(),  false, model);
+			            	for (Entry<String,Double> c:tempCandidates.entrySet()){
+			            		if (c.getValue()>maxScore) {
+			            			maxScore=c.getValue();
+			            			maxCandidate=c.getKey();
+			           		}
+			            		
+			            	}
 			            }
-			        }
-			       
-				        
+			            if (maxScore>0.0) finalCandidates.put(maxCandidate,maxScore);
+
+			        }	
+					if (finalCandidates.size()>0){
+						for(Map.Entry<String, Double> c: finalCandidates.entrySet()){
+							if(null == taggedWords.get(c.getKey())) taggedWords.put(c.getKey(), new ArrayList<String>());
+							taggedWords.get(c.getKey()).add(dictEntry.getKey());
+						}
+					}
+					
 				}
 			}
 		}
 		
-		
+		System.out.println("Size of tagged words:"+taggedWords.size());
 		return taggedWords;
 	}
 	
-	public HashMap<String,Double> getTopCandidates(final String valueToCompare, int gramsToTokenize, PreprocessingConfiguration preprocessing, double levThreshold, double simThreshold, String htmlPath, 
-			String text, String labelledPath, boolean isHTML) throws IOException{
+	
+	
+	public HashMap<String,Double> getTopCandidates(final String valueToCompare, int gramsToTokenize, PreprocessingConfiguration preprocessing,  String htmlPath, 
+			String text, boolean isHTML,DictionaryApproachModel model) throws IOException{
 		
 		DocPreprocessor process = new DocPreprocessor();
 		List<String> gramsOfCorpus = new ArrayList<String>();
+		HashMap<String,Double> topCandidates = new HashMap<String,Double>();
 		
 		if(isHTML) gramsOfCorpus=tokenizedInput.get(gramsToTokenize); //precalculated tokenization no need to compute it every time for the main input
-		else gramsOfCorpus = process.textProcessing(htmlPath, text, gramsToTokenize, isHTML, preprocessing, labelledPath);
+		else gramsOfCorpus = process.textProcessing(htmlPath, text, gramsToTokenize, isHTML, preprocessing, model.getLabelledPath());
     	
 		Set<String> uniqueGrams = new HashSet<String>(gramsOfCorpus);
     	
-    	ModelConfiguration model = new ModelConfiguration();
-    	model.setOnTopLevenshtein(true);
-    	model.setLevenshteinThreshold(levThreshold);
-    	HashMap<String,Double> topCandidates = new HashMap<String,Double>();
-    	
-    	
+    	List<String> gramsOfValue = process.textProcessing(null, valueToCompare, 1, false, preprocessing, model.getLabelledPath());
     	for(final String unique:uniqueGrams){
-    		SimilarityCalculator calculate = new SimilarityCalculator(model);
-			double score = calculate.simpleContainmentSimilarity(new ArrayList<String>() {{add(unique);}}, new ArrayList<String>() {{add(valueToCompare);}});
-			if(score>simThreshold) topCandidates.put(unique, score);
+    		if (unique.length()<model.getPruneLength()) continue;
+    		List<String> gramsOfUnique = process.textProcessing(null, unique, 1, false, preprocessing, model.getLabelledPath());
+			double score = SimilarityCalculator.getMongeElkanSimilarity(gramsOfUnique, gramsOfValue, model.getEditDistanceType());
+			if(score>model.getSimThreshold()) topCandidates.put(unique, score);
     	}
     	return topCandidates;
 	}
-	
 	public void printTagged(HashMap<String,ArrayList<String> >dictionary){
 		for(Map.Entry<String, ArrayList<String>> entry:dictionary.entrySet()){
 			String prop=entry.getKey();

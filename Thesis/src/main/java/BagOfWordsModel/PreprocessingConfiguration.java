@@ -32,6 +32,7 @@ public class PreprocessingConfiguration {
 		this.lowerCase = lowerCase;
 		this.htmlParsingType=htmlParsingElements;
 	}
+
 	public String getHtmlParsingType() {
 		return htmlParsingType;
 	}

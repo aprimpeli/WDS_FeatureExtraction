@@ -12,9 +12,20 @@ import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.simmetrics.StringMetric;
+import org.simmetrics.builders.StringMetricBuilder;
+import org.simmetrics.builders.StringMetricBuilder.CollectionMetricInitialSimplifierStep;
+import org.simmetrics.metrics.JaroWinkler;
+import org.simmetrics.metrics.Levenshtein;
+import org.simmetrics.metrics.MongeElkan;
+import org.simmetrics.metrics.SmithWatermanGotoh;
+import org.simmetrics.metrics.StringMetrics;
+import org.simmetrics.simplifiers.Soundex;
+import org.simmetrics.tokenizers.Tokenizers;
+import org.simmetrics.*;
 
 
-public class SimilarityCalculator {
+public class SimilarityCalculator { 
 	
 	static ModelConfiguration model;
 	static PreprocessingConfiguration preprocessing;
@@ -318,6 +329,27 @@ public class SimilarityCalculator {
         return similarity;
 	}
 
+	
+	public static double getMongeElkanSimilarity(List<String> a, List<String> b, String editDistanceMeasure) throws IOException{
+		MongeElkan sim;
+		
+		if(editDistanceMeasure.equals("default"))
+			sim = new MongeElkan(StringMetrics.mongeElkan()) ;
+		
+		else if (editDistanceMeasure.equals("levenshtein"))
+			sim = new MongeElkan(StringMetricBuilder.with(new MongeElkan(new Levenshtein())).tokenize(Tokenizers.whitespace()).build());
+		
+		else if (editDistanceMeasure.equals("jaroWrinkler"))
+			sim = new MongeElkan(StringMetricBuilder.with(new MongeElkan(new JaroWinkler())).tokenize(Tokenizers.whitespace()).build());
+		else {
+			System.out.println("No defined edit measure for MongeElkan similarity");
+			return 0;
+		}
+		
+		return sim.compare(a,b);
+	}
+	
+	
 	/**
 	 * @return
 	 * @throws JSONException

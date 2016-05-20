@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import BagOfWordsModel.ModelConfiguration;
+import DictionaryApproach.DictionaryApproachModel;
 
 public class ReportGenarator {
 
@@ -41,6 +42,53 @@ public class ReportGenarator {
 				else lineToAppend+=";"+evaluation.getA();
 				lineToAppend+=";"+evaluation.getThreshold();
 				lineToAppend+=";"+evaluation.getAvgCommonGrams();
+
+				bw.append(lineToAppend);
+				bw.newLine();
+
+			}
+			bw.flush();
+			bw.close();
+			System.out.println("Done");
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void generateReportDictionaryApproach(HashMap<DictionaryApproachModel, ResultItem> results, String filePath){
+		
+		try {
+
+
+			File file = new File(filePath);
+			FileWriter fw = new FileWriter(file.getAbsoluteFile());
+			BufferedWriter bw = new BufferedWriter(fw);
+			bw.append("Similarity Method;Size of words prune threshold;Edit Distance Measure;Similarity Threshold;Window Size;Precision;Recall;F1;Step a;Threshold");
+			bw.newLine();
+			for(Map.Entry<DictionaryApproachModel,ResultItem> result:results.entrySet()){
+				String lineToAppend="";
+				DictionaryApproachModel model= result.getKey();
+				ResultItem evaluation=result.getValue();
+				lineToAppend = model.getSimType();
+				if(!model.getSimType().equals("exact")) {
+					lineToAppend+=";"+model.getPruneLength();
+					lineToAppend+=";"+model.getEditDistanceType();
+					lineToAppend+=";"+model.getSimThreshold();
+					lineToAppend+=";"+model.getWindowSize();
+				}
+				else {
+					lineToAppend+=";n/a";
+					lineToAppend+=";n/a";
+					lineToAppend+=";n/a";
+					lineToAppend+=";n/a";
+				}
+				lineToAppend+=";"+evaluation.getPrecision();
+				lineToAppend+=";"+evaluation.getRecall();
+				lineToAppend+=";"+evaluation.getF1();
+				if(evaluation.getA()==-1) lineToAppend+=";n/a";
+				else lineToAppend+=";"+evaluation.getA();
+				lineToAppend+=";"+evaluation.getThreshold();
 
 				bw.append(lineToAppend);
 				bw.newLine();

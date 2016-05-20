@@ -1,5 +1,6 @@
 package DictionaryApproach;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,18 +11,16 @@ import BagOfWordsModel.SimilarityCalculator;
 
 public class FeatureSimilarityComputation {
 
-	static boolean LevenshteinOnTop;
-	static String simType;
-	 public FeatureSimilarityComputation(boolean levenshtein , String simType) {
-		FeatureSimilarityComputation.LevenshteinOnTop=levenshtein;
-		FeatureSimilarityComputation.simType=simType;
+
+	 public FeatureSimilarityComputation() {
+		
 	}
 	
 	public HashMap<String,Double> getPredictedAnswersinDictionaryApproach
-	(HashMap<String,ArrayList<String>> featureValuesOfPage, Dictionary dictionary, ModelConfiguration model, String htmlPath){
+	(HashMap<String,ArrayList<String>> featureValuesOfPage, Dictionary dictionary, DictionaryApproachModel model, String htmlPath) throws IOException{
 		
 		HashMap<String, Double> predictedAnswers = new HashMap<String, Double>();
-		SimilarityCalculator calculate = new SimilarityCalculator(model);
+		SimilarityCalculator calculate = new SimilarityCalculator();
 		
 		for (ProductEntity product:dictionary.getProductEntities()){
 			double score=0.0;
@@ -32,17 +31,15 @@ public class FeatureSimilarityComputation {
 					List<String> valuesOfPage = featureValue.getValue();
 					List<String> valuesOfcatalog= product.getFeatureValues().get(featureValue.getKey());
 					double currentScore=0.0;
-					if(simType.equals("simple")){
+					if(model.getSimType().equals("simple")){
 						
 						currentScore=calculate.simpleContainmentSimilarity(valuesOfcatalog, valuesOfPage);				
 					}
-					else if (simType.equals("jaccard")){
-						currentScore=calculate.jaccardSimilarity(valuesOfcatalog, valuesOfPage);
+					else {
+						
+						currentScore=calculate.getMongeElkanSimilarity(valuesOfcatalog, valuesOfPage, model.getEditDistanceType());
 					}				
-					else{
-						System.out.println("The similarity type "+simType+" cannot be handled. Available options are jaccard and simple. The program will end.");
-						System.exit(0);
-					}				
+									
 					if(!Double.isNaN(currentScore))	score+=currentScore;
 					else {
 						System.out.println("Score between "+product.getName()+" and "+htmlPath+ " could not be defined");
