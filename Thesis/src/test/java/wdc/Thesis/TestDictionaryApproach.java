@@ -42,7 +42,7 @@ public class TestDictionaryApproach {
 		Dictionary dictionary = new Dictionary();
 		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements);
 
-		dictionary=dict.createDictionary(catalog, "phone",preprocessing, labelled, idfThresholdForcatalog);		
+		dictionary=dict.createDictionary(catalog, "phone",preprocessing, labelled, idfThresholdForcatalog,true);		
 		
 		tokenizedInput = new HashMap<Integer, List<String>> ();
 		DocPreprocessor process= new DocPreprocessor();

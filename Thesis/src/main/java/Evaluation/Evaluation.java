@@ -143,7 +143,7 @@ public class Evaluation {
 		ArrayList<String> negatives = new ArrayList<String>();
 		
 		for(Map.Entry<String, Double> entry:predicted.entrySet()){
-			if(entry.getValue()>=threshold) positives.add(entry.getKey());
+			if(entry.getValue()>threshold) positives.add(entry.getKey());
 			else negatives.add(entry.getKey());
 		}
 

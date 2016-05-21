@@ -20,7 +20,10 @@ public class FeatureSimilarityComputation {
 	(HashMap<String,ArrayList<String>> featureValuesOfPage, Dictionary dictionary, DictionaryApproachModel model, String htmlPath) throws IOException{
 		
 		HashMap<String, Double> predictedAnswers = new HashMap<String, Double>();
-		SimilarityCalculator calculate = new SimilarityCalculator();
+		ModelConfiguration exactSimModelconfig = new ModelConfiguration();
+		exactSimModelconfig.setOnTopLevenshtein(false);
+		SimilarityCalculator calculateExact = new SimilarityCalculator(exactSimModelconfig);
+		SimilarityCalculator calculateNonExact = new SimilarityCalculator();
 		
 		for (ProductEntity product:dictionary.getProductEntities()){
 			double score=0.0;
@@ -31,13 +34,13 @@ public class FeatureSimilarityComputation {
 					List<String> valuesOfPage = featureValue.getValue();
 					List<String> valuesOfcatalog= product.getFeatureValues().get(featureValue.getKey());
 					double currentScore=0.0;
-					if(model.getSimType().equals("simple")){
+					if(model.getSimType().equals("exact")){
 						
-						currentScore=calculate.simpleContainmentSimilarity(valuesOfcatalog, valuesOfPage);				
+						currentScore=calculateExact.simpleContainmentSimilarity(valuesOfcatalog, valuesOfPage);				
 					}
 					else {
 						
-						currentScore=calculate.getMongeElkanSimilarity(valuesOfcatalog, valuesOfPage, model.getEditDistanceType());
+						currentScore=calculateNonExact.getMongeElkanSimilarity(valuesOfcatalog, valuesOfPage, model.getEditDistanceType());
 					}				
 									
 					if(!Double.isNaN(currentScore))	score+=currentScore;

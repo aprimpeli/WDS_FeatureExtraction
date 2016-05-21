@@ -39,7 +39,7 @@ public class DictionaryCreator {
 //		dict.printDictionary(Dictionary);
 	}
 
-	public Dictionary createDictionary(String pathToCatalog, String productCategory, PreprocessingConfiguration preprocessing, String labelledPath, double idfWeightThreshold) 
+	public Dictionary createDictionary(String pathToCatalog, String productCategory, PreprocessingConfiguration preprocessing, String labelledPath, double idfWeightThreshold, boolean idfFiltering) 
 			throws JSONException, IOException{
 		
 		Dictionary CompleteDictionary = new Dictionary();
@@ -53,7 +53,8 @@ public class DictionaryCreator {
 		JSONArray catalogEntities = catalog.getJSONArray(Utils.ProductCatalogs.getHeadItem(productCategory));
 		
 		//TODO idf to ignore some of the values of the dictionary
-		//HashMap<String, Double> valuesIDFs = getIDFsForCatalogValues( pathToCatalog,  productCategory,  preprocessing, grams);
+		ArrayList<String> unimportantValues = new ArrayList<String>();
+		if(idfFiltering) unimportantValues = getIDFsForCatalogValues(pathToCatalog, productCategory,  preprocessing, idfWeightThreshold);
 		
 		for(int i = 0 ; i < catalogEntities.length() ; i++){
 			ProductEntity product = new ProductEntity();
@@ -76,19 +77,18 @@ public class DictionaryCreator {
 						Set<String> newValues = new HashSet<String>();
 						for(String v:uniqueValues){
 							String processedValue = process.textProcessing(null, v, false, preprocessing, labelledPath);
-							//ignore the very short tokens
-							if(processedValue.length()>3)
-								newValues.add(processedValue);
+							if(unimportantValues.equals(processedValue)) continue;
+							newValues.add(processedValue);
 						}
 						dictionary.get(property).addAll(newValues);
 						featureValues.get(property).addAll(newValues);
 					}
 					else {
 						String processedValue = process.textProcessing(null, value, false, preprocessing, labelledPath);
-						if(processedValue.length()>3){
-							dictionary.get(property).add(processedValue);
-							featureValues.get(property).add(processedValue);
-						}					
+						if(unimportantValues.equals(processedValue)) continue;
+						dictionary.get(property).add(processedValue);
+						featureValues.get(property).add(processedValue);
+											
 					}
 				}
 			}
@@ -103,18 +103,22 @@ public class DictionaryCreator {
 
 	}
 	
-	private HashMap<String, Double> getIDFsForCatalogValues(
+	private ArrayList<String> getIDFsForCatalogValues(
 			String pathToCatalog, String productCategory,
-			PreprocessingConfiguration preprocessing, int grams) throws IOException {
+			PreprocessingConfiguration preprocessing, double idfThreshold) throws IOException {
 
-		HashMap<String, List<String>> catalogTokens= ProductCatalogs.getCatalogTokens(productCategory, pathToCatalog, grams, preprocessing);
+		HashMap<String, List<String>> catalogTokens= ProductCatalogs.getCatalogTokens(productCategory, pathToCatalog, 1, preprocessing);
 		ArrayList<List<String>> CatalogEntitiesAsList = new ArrayList<List<String>>();
 		for(Map.Entry<String,List<String>> v:catalogTokens.entrySet() ) CatalogEntitiesAsList.add(v.getValue());
 		
 		Weightening weights = new Weightening();
 		HashMap<String,Double> weightsOfTerms = weights.getIDFWeighting(CatalogEntitiesAsList);
 		
-		return weightsOfTerms;
+		ArrayList<String> unimportant = new ArrayList<String>();
+		for(Map.Entry<String,Double> term:weightsOfTerms.entrySet()){
+			if(term.getValue()<idfThreshold) unimportant.add(term.getKey());
+		}
+		return unimportant;
 	}
 
 	public void printDictionary(HashMap<String,Set<String> >dictionary){

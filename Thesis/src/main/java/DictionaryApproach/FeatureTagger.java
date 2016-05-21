@@ -14,21 +14,14 @@ import java.util.Set;
 import org.json.JSONException;
 
 import BagOfWordsModel.DocPreprocessor;
-import BagOfWordsModel.ModelConfiguration;
 import BagOfWordsModel.PreprocessingConfiguration;
 import BagOfWordsModel.SimilarityCalculator;
 
 public class FeatureTagger {
 	
 	HashMap<Integer, List<String>> tokenizedInput;
-	public FeatureTagger(String htmlPath, boolean isHTML, PreprocessingConfiguration config, String labelledPath) throws IOException{
-		tokenizedInput= new HashMap<Integer,List<String>>();
-		DocPreprocessor process= new DocPreprocessor();
-		for (int i=1; i<10; i++){
-			List<String> grams = process.textProcessing(htmlPath, null, i, isHTML, config, labelledPath);
-			tokenizedInput.put(i, grams);
-		}
-		
+	public FeatureTagger(HashMap<Integer, List<String>> tok) {
+			this.tokenizedInput=tok;
 	}
 	
 	
@@ -61,23 +54,27 @@ public class FeatureTagger {
 		InputPreprocessor processInput = new InputPreprocessor();
 		DocPreprocessor processdoc = new DocPreprocessor();
 		HashMap<String, ArrayList<String>> taggedWords= new HashMap<String, ArrayList<String>>();
-		for(Map.Entry<String, Set<String>> dictEntry:dictionary.entrySet()){
-			for(final String value:dictEntry.getValue()){
-				if (model.getSimType().equals("exact")){
-					String htmlInput = processInput.textProcessing(htmlPath, "", true, preprocessing, model.getLabelledPath());
+		if (model.getSimType().equals("exact")){
+			String htmlInput = processInput.textProcessing(htmlPath, null, true, preprocessing, model.getLabelledPath());
+			for(Map.Entry<String, Set<String>> dictEntry:dictionary.entrySet()){
+				for(final String value:dictEntry.getValue()){
 
-					//if the input contains this as a token - not inside a word example: clear and cleared
-					if(htmlInput.contains(" "+value+" ")) {
-						if(null == taggedWords.get(value)) taggedWords.put(value, new ArrayList<String>());
-						taggedWords.get(value).add(dictEntry.getKey());
+						//if the input contains this as a token - not inside a word example: clear and cleared
+						if(htmlInput.contains(" "+value+" ")) {
+							if(null == taggedWords.get(value)) taggedWords.put(value, new ArrayList<String>());
+							taggedWords.get(value).add(dictEntry.getKey());
+						}
 					}
-				}
-				else {
+			}
+		}
+		else{
+			for(Map.Entry<String, Set<String>> dictEntry:dictionary.entrySet()){
+				for(final String value:dictEntry.getValue()){
 					int gramsOfValue=processdoc.getGramsOfValue(value, preprocessing);
 					if (!tokenizedInput.containsKey(gramsOfValue+model.getWindowSize())){
-//						System.out.println("The input wont be tokenized for "+gramsOfValue+model.getWindowSize()+" grams. That's too much and wont make sense. Next value.");
-//						System.out.println("Value:"+value);
-//						System.out.println("Property:"+dictEntry.getKey());
+		//				System.out.println("The input wont be tokenized for "+gramsOfValue+model.getWindowSize()+" grams. That's too much and wont make sense. Next value.");
+		//				System.out.println("Value:"+value);
+		//				System.out.println("Property:"+dictEntry.getKey());
 						continue;
 					}
 					
@@ -100,7 +97,7 @@ public class FeatureTagger {
 			            	}
 			            }
 			            if (maxScore>0.0) finalCandidates.put(maxCandidate,maxScore);
-
+		
 			        }	
 					if (finalCandidates.size()>0){
 						for(Map.Entry<String, Double> c: finalCandidates.entrySet()){
@@ -108,9 +105,9 @@ public class FeatureTagger {
 							taggedWords.get(c.getKey()).add(dictEntry.getKey());
 						}
 					}
-					
+			
 				}
-			}
+			}			
 		}
 		
 		System.out.println("Size of tagged words:"+taggedWords.size());
@@ -133,6 +130,7 @@ public class FeatureTagger {
     	
     	List<String> gramsOfValue = process.textProcessing(null, valueToCompare, 1, false, preprocessing, model.getLabelledPath());
     	for(final String unique:uniqueGrams){
+    		//TODO: structure fltering methods
     		if (unique.length()<model.getPruneLength()) continue;
     		List<String> gramsOfUnique = process.textProcessing(null, unique, 1, false, preprocessing, model.getLabelledPath());
 			double score = SimilarityCalculator.getMongeElkanSimilarity(gramsOfUnique, gramsOfValue, model.getEditDistanceType());

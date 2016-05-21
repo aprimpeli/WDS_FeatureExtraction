@@ -10,7 +10,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import de.dwslab.dwslib.util.uri.DomainUtil;
 import BagOfWordsModel.ModelConfiguration;
 import BagOfWordsModel.DocPreprocessor;
 import BagOfWordsModel.PreprocessingConfiguration;
