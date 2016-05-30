@@ -4,23 +4,23 @@ public class DictionaryApproachModel {
 
 	
 	public DictionaryApproachModel(String simType, int windowSize,
-			String labelledPath, double simThreshold, String editDistanceType,
+			String labelledPath,  double finalSimThreshold, String editDistanceType,
 			int pruneLength) {
 		super();
 		this.simType = simType;
 		this.windowSize = windowSize;
 		this.labelledPath = labelledPath;
-		this.simThreshold = simThreshold;
 		this.editDistanceType = editDistanceType;
 		this.pruneLength = pruneLength;
+		this.finalSimThreshold=finalSimThreshold;
 	}
 	
 	private String simType;
 	private int windowSize;
 	private String labelledPath;
-	private double simThreshold;
 	private String editDistanceType;
 	private int pruneLength;
+	private double  finalSimThreshold;
 	
 	public String getSimType() {
 		return simType;
@@ -40,12 +40,7 @@ public class DictionaryApproachModel {
 	public void setLabelledPath(String labelledPath) {
 		this.labelledPath = labelledPath;
 	}
-	public double getSimThreshold() {
-		return simThreshold;
-	}
-	public void setSimThreshold(double simThreshold) {
-		this.simThreshold = simThreshold;
-	}
+	
 	public String getEditDistanceType() {
 		return editDistanceType;
 	}
@@ -57,6 +52,12 @@ public class DictionaryApproachModel {
 	}
 	public void setPruneLength(int pruneLength) {
 		this.pruneLength = pruneLength;
+	}
+	public double getFinalSimThreshold() {
+		return finalSimThreshold;
+	}
+	public void setFinalSimThreshold(double finalSimThreshold) {
+		this.finalSimThreshold = finalSimThreshold;
 	}
 	
 	

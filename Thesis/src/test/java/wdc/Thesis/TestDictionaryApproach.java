@@ -23,7 +23,7 @@ import DictionaryApproach.FeatureTagger;
 import DictionaryApproach.InputPreprocessor;
 
 public class TestDictionaryApproach {
-	static String labelled="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\CorrectedLabelledEntities\\PhonesLabelledEntitiesProcessed.txt";
+	static String labelled="C:\\Users\\Johannes\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\CorrectedLabelledEntities\\PhonesLabelledEntitiesProcessed.txt";
 	static double idfThresholdForcatalog=0.0;
 	static int windowSize = 2;
 	//PREPROCESSING
@@ -35,9 +35,10 @@ public class TestDictionaryApproach {
 	
 	@Test
 	public void runTest() throws JSONException, IOException{
-		String catalog="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\"
+		String catalog="C:\\Users\\Johannes\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\"
 				+ "LabelledDataProfiling\\ProductCatalog\\PhoneCatalog.json";
-		String text="this is i phone6 in gold color it s a smartphone with 5Megapixel camera";
+		//String text="this is i phone6 in gold color it s a smartphone with 5Megapixel camera";
+		String text = "ireland";
 		DictionaryCreator dict = new DictionaryCreator();
 		Dictionary dictionary = new Dictionary();
 		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements);
@@ -51,9 +52,7 @@ public class TestDictionaryApproach {
 			tokenizedInput.put(i, grams);
 		}
 		
-		InputPreprocessor processInput = new InputPreprocessor();
 		DocPreprocessor processdoc = new DocPreprocessor();
-		HashMap<String, ArrayList<String>> taggedWords= new HashMap<String, ArrayList<String>>();
 		for(Map.Entry<String, Set<String>> dictEntry:dictionary.getDictionary().entrySet()){
 			for(final String value:dictEntry.getValue()){
 				

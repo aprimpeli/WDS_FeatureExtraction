@@ -274,7 +274,6 @@ public class SimilarityCalculator {
 		HashMap<String, Double> predictedAnswers = new HashMap<String,Double>();
 		
 		for (Map.Entry<String, List<String>> entry:vectorCatalogEntities.entrySet()){
-			System.out.println("catalog:"+entry.getKey());
 			double score =0.0;
 			if(model.getSimilarityType().equals("simple"))
 				score=simpleContainmentSimilarity(entry.getValue(), vectorpage);
@@ -337,10 +336,10 @@ public class SimilarityCalculator {
 			sim = new MongeElkan(StringMetrics.mongeElkan()) ;
 		
 		else if (editDistanceMeasure.equals("levenshtein"))
-			sim = new MongeElkan(StringMetricBuilder.with(new MongeElkan(new Levenshtein())).tokenize(Tokenizers.whitespace()).build());
+			sim = new MongeElkan(StringMetrics.levenshtein());
 		
 		else if (editDistanceMeasure.equals("jaroWrinkler"))
-			sim = new MongeElkan(StringMetricBuilder.with(new MongeElkan(new JaroWinkler())).tokenize(Tokenizers.whitespace()).build());
+			sim = new MongeElkan(StringMetrics.jaroWinkler());
 		else {
 			System.out.println("No defined edit measure for MongeElkan similarity");
 			return 0;
@@ -349,6 +348,30 @@ public class SimilarityCalculator {
 		return sim.compare(a,b);
 	}
 	
+	public static double getEditDistanceSimilarity(String a, String b, String editDistanceMeasure){
+		
+		if(editDistanceMeasure.equals("default")){
+			SmithWatermanGotoh sim = new SmithWatermanGotoh() ;
+			return sim.compare(a, b);
+
+		}				
+		else if (editDistanceMeasure.equals("levenshtein")){
+			Levenshtein sim = new Levenshtein();
+			return sim.compare(a, b);
+
+		}
+		
+		else if (editDistanceMeasure.equals("jaroWrinkler")){
+			JaroWinkler sim = new JaroWinkler();
+			return sim.compare(a, b);
+
+		}
+		else {
+			System.out.println("No defined edit measure for MongeElkan similarity");
+			return 0;
+		}
+		
+	}
 	
 	/**
 	 * @return

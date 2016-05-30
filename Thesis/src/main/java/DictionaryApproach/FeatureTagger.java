@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.PriorityQueue;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.json.JSONException;
 
 import BagOfWordsModel.DocPreprocessor;
@@ -78,50 +79,38 @@ public class FeatureTagger {
 						continue;
 					}
 					
-					HashMap<String, Double> initialCandidates = getTopCandidates(value, gramsOfValue+model.getWindowSize(), preprocessing, htmlPath, null, true, model);
 								
-					HashMap<String, Double> finalCandidates = new HashMap<String, Double>();
-			       //for the top candidates try to reduce the window size till you get the best scores meet the threshold
-					for (Entry<String, Double> candidate : initialCandidates.entrySet())
-			        {
-			        	String maxCandidate="";
-			        	double maxScore=0.0;
-			            for(int i=gramsOfValue+model.getWindowSize(); i>=1; i--){ //reduce window size
-			            	HashMap<String, Double> tempCandidates=getTopCandidates(value, i, preprocessing,  null, candidate.getKey(),  false, model);
-			            	for (Entry<String,Double> c:tempCandidates.entrySet()){
-			            		if (c.getValue()>maxScore) {
-			            			maxScore=c.getValue();
-			            			maxCandidate=c.getKey();
-			           		}
-			            		
-			            	}
-			            }
-			            if (maxScore>0.0) finalCandidates.put(maxCandidate,maxScore);
-		
-			        }	
-					if (finalCandidates.size()>0){
-						for(Map.Entry<String, Double> c: finalCandidates.entrySet()){
-							if(null == taggedWords.get(c.getKey())) taggedWords.put(c.getKey(), new ArrayList<String>());
-							taggedWords.get(c.getKey()).add(dictEntry.getKey());
-						}
-					}
-			
+			       					
+		        	String maxCandidate="";
+		        	double maxScore=0.0;
+		            for(int i=gramsOfValue+model.getWindowSize(); i>=1; i--){ //reduce window size
+		            	Entry<String, Double> tempCandidate=getTopCandidate(value, i, preprocessing,  htmlPath, null,  true, model);
+	            		if (tempCandidate.getValue()>maxScore) {
+	            			maxScore=tempCandidate.getValue();
+	            			maxCandidate=tempCandidate.getKey();
+	            		}
+		            				            	
+		            }
+		            if (maxScore<model.getFinalSimThreshold()) continue;
+					        	
+					// final candidate is only valid for another threshold
+					if(null == taggedWords.get(maxCandidate)) taggedWords.put(maxCandidate, new ArrayList<String>());
+					taggedWords.get(maxCandidate).add(dictEntry.getKey());
+							
 				}
 			}			
 		}
 		
-		System.out.println("Size of tagged words:"+taggedWords.size());
 		return taggedWords;
 	}
 	
 	
 	
-	public HashMap<String,Double> getTopCandidates(final String valueToCompare, int gramsToTokenize, PreprocessingConfiguration preprocessing,  String htmlPath, 
+	public Entry<String,Double> getTopCandidate(final String valueToCompare, int gramsToTokenize, PreprocessingConfiguration preprocessing,  String htmlPath, 
 			String text, boolean isHTML,DictionaryApproachModel model) throws IOException{
 		
 		DocPreprocessor process = new DocPreprocessor();
 		List<String> gramsOfCorpus = new ArrayList<String>();
-		HashMap<String,Double> topCandidates = new HashMap<String,Double>();
 		
 		if(isHTML) gramsOfCorpus=tokenizedInput.get(gramsToTokenize); //precalculated tokenization no need to compute it every time for the main input
 		else gramsOfCorpus = process.textProcessing(htmlPath, text, gramsToTokenize, isHTML, preprocessing, model.getLabelledPath());
@@ -129,14 +118,21 @@ public class FeatureTagger {
 		Set<String> uniqueGrams = new HashSet<String>(gramsOfCorpus);
     	
     	List<String> gramsOfValue = process.textProcessing(null, valueToCompare, 1, false, preprocessing, model.getLabelledPath());
+    	String maxCandidate="";
+    	double maxScore=0.0;
     	for(final String unique:uniqueGrams){
-    		//TODO: structure fltering methods
     		if (unique.length()<model.getPruneLength()) continue;
+    		
     		List<String> gramsOfUnique = process.textProcessing(null, unique, 1, false, preprocessing, model.getLabelledPath());
-			double score = SimilarityCalculator.getMongeElkanSimilarity(gramsOfUnique, gramsOfValue, model.getEditDistanceType());
-			if(score>model.getSimThreshold()) topCandidates.put(unique, score);
+			double score = SimilarityCalculator.getEditDistanceSimilarity(StringUtils.join(gramsOfUnique,""), StringUtils.join(gramsOfValue,""), model.getEditDistanceType());
+			//double score = SimilarityCalculator.getMongeElkanSimilarity(gramsOfUnique,gramsOfValue,model.getEditDistanceType());
+
+			if (score>maxScore) {
+    			maxScore=score;
+    			maxCandidate=unique;
+			}
     	}
-    	return topCandidates;
+    	return new java.util.AbstractMap.SimpleEntry<String,Double>(maxCandidate,maxScore);
 	}
 	public void printTagged(HashMap<String,ArrayList<String> >dictionary){
 		for(Map.Entry<String, ArrayList<String>> entry:dictionary.entrySet()){

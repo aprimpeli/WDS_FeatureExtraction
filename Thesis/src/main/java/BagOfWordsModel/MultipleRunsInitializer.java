@@ -26,17 +26,17 @@ public class MultipleRunsInitializer {
 	//FILEPATHS
 	static String modelType="BagOfWordsModel";
 	static String productCategory="headphone"; //tv, phone, headphone
-	static String catalog="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\ProductCatalog\\HeadphoneCatalog.json";
-	static String htmlFolder="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\HTML_Pages\\heaphones";
-	static String labelled="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\CorrectedLabelledEntities\\HeadphonesLabelledEntitiesProcessed.txt";
-	static String allExperimentsResultPath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\ExperimentsResults\\full_results\\TablesandListsContent\\test_headphones.csv";
+	static String catalog="C:\\Users\\Johannes\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\ProductCatalog\\HeadphoneCatalog.json";
+	static String htmlFolder="C:\\Users\\Johannes\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\HTML_Pages\\headphones";
+	static String labelled="C:\\Users\\Johannes\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\CorrectedLabelledEntities\\HeadphonesLabelledEntitiesProcessed.txt";
+	static String allExperimentsResultPath="C:\\Users\\Johannes\\Google Drive\\Master_Thesis\\3.MatchingModels\\ExperimentsResults\\BagOfWordsModel\\allHTMLContent\\headphones_bruteforce.csv";
 	static String logFile="resources\\log\\logEvaluationItems";
-	static String mode="wrapper"; // define the mode (wrapper/normal). In the wrapper mode only the 4 plds for which a wrapper exists are considered (ebay, tesco, alibaba, overstock)
+	static String mode="normal"; // define the mode (wrapper/normal). In the wrapper mode only the 4 plds for which a wrapper exists are considered (ebay, tesco, alibaba, overstock)
 	//PREPROCESSING
 	static boolean stemming=true;
 	static boolean stopWordRemoval=true;
 	static boolean lowerCase=true;
-	static String htmlParsingElements="html_tables_lists"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
+	static String htmlParsingElements="all_html"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
 
 	//String evaluation type definition
 	static String evaluationType="optimizingF1"; //average, median, optimizingF1
@@ -73,7 +73,6 @@ public class MultipleRunsInitializer {
 			List<EvaluationItem> ItemstoBeEvaluated = new ArrayList<EvaluationItem>();
 			
 			for (int i = 0; i < listOfHTML.length; i++) {
-				System.out.println(listOfHTML[i].getPath());
 				//if you are in wrapper mode do not consider all pages but only the ones that could be potentially parsed by the implemented wrappers
 				String pld = HTMLPages.getPLDFromHTMLPath(labelled, listOfHTML[i].getPath());
 		    	if(mode.equals("wrapper") && !(pld.contains("ebay")||pld.contains("tesco")||pld.contains("alibaba")||pld.contains("overstock")) ) continue;

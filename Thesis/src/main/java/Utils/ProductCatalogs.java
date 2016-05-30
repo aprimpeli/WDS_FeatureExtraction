@@ -26,7 +26,6 @@ public class ProductCatalogs {
 			PreprocessingConfiguration preprocess = new PreprocessingConfiguration(false, true, true,"");
 			HashMap<String, List<String>> tokens = test.getCatalogTokens("tv", filepath, 1, preprocess);
 			for (Map.Entry<String,List<String> > entry: tokens.entrySet()){
-				System.out.println(entry.getKey());
 				process.printList(entry.getValue());
 			}
 		}

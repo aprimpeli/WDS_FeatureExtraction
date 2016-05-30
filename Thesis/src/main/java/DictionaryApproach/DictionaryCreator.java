@@ -77,7 +77,7 @@ public class DictionaryCreator {
 						Set<String> newValues = new HashSet<String>();
 						for(String v:uniqueValues){
 							String processedValue = process.textProcessing(null, v, false, preprocessing, labelledPath);
-							if(unimportantValues.equals(processedValue)) continue;
+							if(unimportantValues.contains(processedValue)) continue;
 							newValues.add(processedValue);
 						}
 						dictionary.get(property).addAll(newValues);
@@ -85,7 +85,7 @@ public class DictionaryCreator {
 					}
 					else {
 						String processedValue = process.textProcessing(null, value, false, preprocessing, labelledPath);
-						if(unimportantValues.equals(processedValue)) continue;
+						if(unimportantValues.contains(processedValue)) continue;
 						dictionary.get(property).add(processedValue);
 						featureValues.get(property).add(processedValue);
 											
@@ -116,7 +116,7 @@ public class DictionaryCreator {
 		
 		ArrayList<String> unimportant = new ArrayList<String>();
 		for(Map.Entry<String,Double> term:weightsOfTerms.entrySet()){
-			if(term.getValue()<idfThreshold) unimportant.add(term.getKey());
+			if(term.getValue()>idfThreshold) unimportant.add(term.getKey());
 		}
 		return unimportant;
 	}

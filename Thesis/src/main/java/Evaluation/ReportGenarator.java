@@ -74,7 +74,7 @@ public class ReportGenarator {
 				if(!model.getSimType().equals("exact")) {
 					lineToAppend+=";"+model.getPruneLength();
 					lineToAppend+=";"+model.getEditDistanceType();
-					lineToAppend+=";"+model.getSimThreshold();
+					lineToAppend+=";"+model.getFinalSimThreshold();
 					lineToAppend+=";"+model.getWindowSize();
 				}
 				else {

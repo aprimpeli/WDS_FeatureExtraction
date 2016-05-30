@@ -22,7 +22,6 @@ public class HTMLPages {
 			File folderHTML = new File(model.getHtmlFolder());
 		    File[] listOfHTML = folderHTML.listFiles();
 			DocPreprocessor processText = new DocPreprocessor();
-
 		    for (int i = 0; i < listOfHTML.length; i++) {		  
 		    	String pld= getPLDFromHTMLPath(model.getLabelled(), listOfHTML[i].getPath());
 		    	if(mode.equals("wrapper") && !(pld.contains("ebay")|| pld.contains("overstock")||pld.contains("alibaba")||pld.contains("tesco"))) continue;

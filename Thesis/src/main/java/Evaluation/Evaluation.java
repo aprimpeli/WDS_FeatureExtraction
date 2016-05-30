@@ -25,7 +25,8 @@ public class Evaluation {
 		
 		for(double a=0; a<=1; a=a+0.001){
 			currentResults= new ResultItem();
-			double threshold = defineThresholdWitha(allLinks,a);
+			//double threshold = defineThresholdWitha(allLinks,a);
+			double threshold=a;
 			if(Double.isNaN(threshold)) {
 				System.out.println("The threshold could not be defined. The program will unsuccessfully exit.");
 				System.exit(0);
@@ -35,6 +36,7 @@ public class Evaluation {
 			for(EvaluationItem item:allLinks){
 				calculateResults(threshold, item.getPredictedAnswers(), item.getRightAnswers(), item.getProductCategory());
 			}
+			//System.out.println("THRESHOLD:"+threshold+" F1:"+currentResults.getF1());
 			if (currentResults.getF1()>bestResult.getF1()){
 				bestResult=currentResults;
 			}

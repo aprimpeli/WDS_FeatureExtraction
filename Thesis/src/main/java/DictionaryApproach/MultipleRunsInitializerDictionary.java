@@ -26,13 +26,13 @@ import Evaluation.ResultItem;
 public class MultipleRunsInitializerDictionary {
 
 	//FILEPATHS
-	static String mainPath="C:\\Users\\Johannes\\Documents\\UserAnna";
+	static String mainPath="C:\\Users\\Johannes\\Google Drive\\Master_Thesis\\";
 	static String modelType="DictionaryApproach";
-	static String productCategory="headphone"; //tv, phone, headphone
-	static String catalog=mainPath+"\\LabelledDataProfiling\\ProductCatalog\\HeadphoneCatalog.json";
-	static String htmlFolder=mainPath+"\\LabelledDataProfiling\\HTML_Pages\\headphones";
-	static String labelled=mainPath+"\\LabelledDataProfiling\\CorrectedLabelledEntities\\HeadphonesLabelledEntitiesProcessed.txt";
-	static String allExperimentsResultPath=mainPath+"\\headphones.csv";
+	static String productCategory="tv"; //tv, phone, headphone
+	static String catalog=mainPath+"2.ProfilingOfData\\LabelledDataProfiling\\ProductCatalog\\TvCatalog.json";
+	static String htmlFolder=mainPath+"2.ProfilingOfData\\LabelledDataProfiling\\HTML_Pages\\tvs";
+	static String labelled=mainPath+"2.ProfilingOfData\\LabelledDataProfiling\\CorrectedLabelledEntities\\TvsLabelledEntitiesProcessed.txt";
+	static String allExperimentsResultPath=mainPath+"3.MatchingModels\\ExperimentsResults\\DictionaryApproach\\TablesandListsContent\\tvs_bruteforce.csv"; //allHTMLContent,MarkedUpContent,TablesandListsContent
 	static String logFile="resources\\log\\logEvaluationItemsDictionary";
 	static String mode="normal"; // define the mode (wrapper/normal). In the wrapper mode only the 4 plds for which a wrapper exists are considered (ebay, tesco, alibaba, overstock)
 	
@@ -40,21 +40,36 @@ public class MultipleRunsInitializerDictionary {
 	static boolean stemming=false;
 	static boolean stopWordRemoval=false;
 	static boolean lowerCase=true;
-	static String htmlParsingElements="all_html"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
-	static double idfThresholdForcatalog=0.5;
-	static boolean idfFiltering =true;
+	static String htmlParsingElements="html_tables_lists"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
+	static double idfThresholdForcatalog=0.8;
+	static boolean idfFiltering =false;
 	
 	//String evaluation type definition
 	static String evaluationType="optimizingF1"; //average, median, optimizingF1
 
 	HashMap<String, HashMap<Integer, List<String>>> tokenizedInput;
 	HashMap<String, ArrayList<String>> rightAnswersIndex;
+	Dictionary dictionary;
 
 	public static void main (String args[]) throws Exception{
+		
 		MultipleRunsInitializerDictionary run =new MultipleRunsInitializerDictionary();
 		System.out.println("Get Right Answers");
 		run.getRightAnswers();
+		System.out.println("Tokenize Input");
+		run.initializeTokenizer();
+		//create the dictionary
+		System.out.println("Create Dictionary");
+		run.getDictionary();
+
 		run.runMultipleInitializer();
+	}
+	
+	private void getDictionary() throws JSONException, IOException{
+		dictionary = new Dictionary();
+		DictionaryCreator creator= new DictionaryCreator();
+		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements);
+		dictionary=creator.createDictionary(catalog, productCategory,preprocessing, labelled, idfThresholdForcatalog, idfFiltering);
 	}
 	
 	private void getRightAnswers() throws JSONException, IOException {
@@ -73,16 +88,15 @@ public class MultipleRunsInitializerDictionary {
 		
 	}
 
-	private void initializeTokenizer(String htmlName) throws IOException {
+	private void initializeTokenizer() throws IOException {
 		File folderHTML = new File(htmlFolder);
 		File[] listOfHTML = folderHTML.listFiles();
 		tokenizedInput= new HashMap<String, HashMap<Integer, List<String>>>();
 		for (int i = 0; i < listOfHTML.length; i++) {
-			while (!listOfHTML[i].getName().equals(htmlName)) continue;
 			PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements);
 			HashMap<Integer,List<String>> pagetokenizedInput= new HashMap<Integer,List<String>>();
 			DocPreprocessor process= new DocPreprocessor();
-			for (int j=1; j<=10; j++){
+			for (int j=1; j<=5; j++){
 				List<String> grams = process.textProcessing(listOfHTML[i].getPath(), null, j, true, preprocessing,labelled);
 				pagetokenizedInput.put(j, grams);
 			}
@@ -95,17 +109,13 @@ public class MultipleRunsInitializerDictionary {
 		LinkedHashMap<DictionaryApproachModel, ResultItem> allResults = new LinkedHashMap<DictionaryApproachModel,ResultItem>();
 		Queue<DictionaryApproachModel> allmodels = defineExperiments();
 		
-		//create the dictionary
-		Dictionary dictionary = new Dictionary();
-		DictionaryCreator creator= new DictionaryCreator();
-		System.out.println("Get Dictionary");
-
-		dictionary=creator.createDictionary(catalog, productCategory,preprocessing, labelled, idfThresholdForcatalog, idfFiltering);
+		
 
 		System.out.println("Start Running the Models");
-
+		int modelProgress =1;
 		for(DictionaryApproachModel modelConfig:allmodels){
-
+			System.out.println("Model "+modelProgress+" out of"+allmodels.size() );
+			modelProgress++;
 			//creator.printDictionary(dictionary.getDictionary());
 			
 			System.out.println("---START---");
@@ -120,10 +130,8 @@ public class MultipleRunsInitializerDictionary {
 			
 			for (int i = 0; i < listOfHTML.length; i++) {
 				
-				if(null==tokenizedInput.get(listOfHTML[i].getName())) {
-					tokenizedInput=new HashMap<String, HashMap<Integer, List<String>>>();
-					initializeTokenizer(listOfHTML[i].getName());
-				}
+				double progress=(((double)(i+1)/(double)listOfHTML.length))*100;
+				if((int)progress % 10==0) System.out.println("Current Progress:"+(int)progress+"%");
 				//if you are in wrapper mode do not consider all pages but only the ones that could be potentially parsed by the implemented wrappers
 				String pld = HTMLPages.getPLDFromHTMLPath(labelled, listOfHTML[i].getPath());
 		    	if(mode.equals("wrapper") && !(pld.contains("ebay")||pld.contains("tesco")||pld.contains("alibaba")||pld.contains("overstock")) ) continue;
@@ -135,7 +143,7 @@ public class MultipleRunsInitializerDictionary {
 				FeatureTagger tag = new FeatureTagger(tokenizedInput.get(listOfHTML[i].getName()));
 				
 				HashMap<String, ArrayList<String>> tagged = tag.setFeatureTagging(listOfHTML[i].getPath(), dictionary.getDictionary(),preprocessing, modelConfig);
-				tag.printTagged(tagged);
+				//tag.printTagged(tagged);
 				HashMap<String, ArrayList<String>> reversed = tag.reverseTaggedWords(tagged);
 				if (reversed.size()==0) {
 					System.out.println("No tagging could be done for the page:"+listOfHTML[i].getPath());
@@ -198,20 +206,17 @@ public class MultipleRunsInitializerDictionary {
 	private static Queue<DictionaryApproachModel> defineExperiments() {
 		Queue<DictionaryApproachModel> models = new LinkedList<DictionaryApproachModel>();
 		
-//		public DictionaryApproachModel(String simType, int windowSize,
-//				String labelledPath, double simThreshold, String editDistanceType,
-//				int pruneLength)
 		
 		models.add(new DictionaryApproachModel("exact", 0,labelled,  0, null, 0));
-		models.add(new DictionaryApproachModel("non-exact", 2,labelled,  0.8, "default", 3));
-		models.add(new DictionaryApproachModel("non-exact", 3,labelled,  0.8, "default", 3));
-		models.add(new DictionaryApproachModel("non-exact", 2,labelled,  0.9, "default", 3));
-		models.add(new DictionaryApproachModel("non-exact", 3,labelled,  0.9, "jaroWrinkler", 3));
-		models.add(new DictionaryApproachModel("non-exact", 3,labelled,  0.8, "jaroWrinkler", 3));
-		models.add(new DictionaryApproachModel("non-exact", 3,labelled,  0.8, "jaroWrinkler", 4));
-		models.add(new DictionaryApproachModel("non-exact", 3,labelled,  0.9, "levenshtein", 3));
-		models.add(new DictionaryApproachModel("non-exact", 2,labelled,  0.8, "levenshtein", 3));
-		models.add(new DictionaryApproachModel("non-exact", 3,labelled,  0.8, "levenshtein", 4));
+//		models.add(new DictionaryApproachModel("non-exact", 2,labelled,  0.8, "default", 3));
+//		models.add(new DictionaryApproachModel("non-exact", 3,labelled,  0.8, "default", 3));
+//		models.add(new DictionaryApproachModel("non-exact", 2,labelled,  0.8, "default", 3));
+//		models.add(new DictionaryApproachModel("non-exact", 3,labelled,  0.7, "jaroWrinkler", 3));
+//		models.add(new DictionaryApproachModel("non-exact", 3,labelled,  0.8, "jaroWrinkler", 3));
+//		models.add(new DictionaryApproachModel("non-exact", 3,labelled,  0.7, "jaroWrinkler", 4));
+//		models.add(new DictionaryApproachModel("non-exact", 3,labelled,  0.7, "levenshtein", 3));
+//		models.add(new DictionaryApproachModel("non-exact", 2,labelled,  0.6, "levenshtein", 3));
+//		models.add(new DictionaryApproachModel("non-exact", 2,labelled,  0.85, "levenshtein", 4));
 
 		return models;
 	}
