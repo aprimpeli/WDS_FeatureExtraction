@@ -25,22 +25,26 @@ import Evaluation.ResultItem;
 
 public class MultipleRunsInitializerDictionary {
 
-	//FILEPATHS
-	static String mainPath="C:\\Users\\Johannes\\Google Drive\\Master_Thesis\\";
-	static String modelType="DictionaryApproach";
+	//configure
 	static String productCategory="tv"; //tv, phone, headphone
-	static String catalog=mainPath+"2.ProfilingOfData\\LabelledDataProfiling\\ProductCatalog\\TvCatalog.json";
-	static String htmlFolder=mainPath+"2.ProfilingOfData\\LabelledDataProfiling\\HTML_Pages\\tvs";
-	static String labelled=mainPath+"2.ProfilingOfData\\LabelledDataProfiling\\CorrectedLabelledEntities\\TvsLabelledEntitiesProcessed.txt";
-	static String allExperimentsResultPath=mainPath+"3.MatchingModels\\ExperimentsResults\\DictionaryApproach\\TablesandListsContent\\tvs_bruteforce.csv"; //allHTMLContent,MarkedUpContent,TablesandListsContent
-	static String logFile="resources\\log\\logEvaluationItemsDictionary";
-	static String mode="normal"; // define the mode (wrapper/normal). In the wrapper mode only the 4 plds for which a wrapper exists are considered (ebay, tesco, alibaba, overstock)
+	static String mode="wrapper"; // define the mode (wrapper/normal). In the wrapper mode only the 4 plds for which a wrapper exists are considered (ebay, tesco, alibaba, overstock)
+	static String dataPath="C:/Users/Johannes/Google Drive/Master_Thesis/2.ProfilingOfData/LabelledDataProfiling/";
+	static String experimentsPath="C:/Users/Johannes/Google Drive/Master_Thesis/3.MatchingModels/ExperimentsResults/Dictionary/"+mode+"/"+productCategory+"/";
+	
+	//FILEPATHS
+	static String mainPath="C:/Users/Johannes/Google Drive/Master_Thesis/";
+	static String modelType="DictionaryApproach";
+	static String catalog=dataPath+"ProductCatalog/"+productCategory+"Catalog.json";
+	static String htmlFolder=dataPath+"HTML_Pages/"+productCategory+"s_test";
+	static String labelled=dataPath+"/CorrectedLabelledEntities/UnifiedGoldStandard/"+productCategory+"s.txt";
+	static String currentExperimentPath; //allHTMLContent,MarkedUpContent,TablesandListsContent
+	static String logFile="resources/log/logEvaluationItemsDictionary";
 	
 	//PREPROCESSING
 	static boolean stemming=false;
 	static boolean stopWordRemoval=false;
 	static boolean lowerCase=true;
-	static String htmlParsingElements="html_tables_lists"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
+	static String htmlParsingElements="html_tables_lists_wrapper;all_html"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
 	static double idfThresholdForcatalog=0.8;
 	static boolean idfFiltering =false;
 	
@@ -52,17 +56,34 @@ public class MultipleRunsInitializerDictionary {
 	Dictionary dictionary;
 
 	public static void main (String args[]) throws Exception{
+		if(args.length == 5){
+			productCategory=args[0];
+			mode=args[1];
+			dataPath=args[2];
+			experimentsPath=args[3];
+			htmlParsingElements=args[4];
+			catalog=dataPath+"/ProductCatalog/"+productCategory+"Catalog.json";
+			htmlFolder=dataPath+"/HTML_Pages/"+productCategory+"s";
+			labelled=dataPath+"/CorrectedLabelledEntities/UnifiedGoldStandard/"+productCategory+"s.txt";
+		}
+		String[] allHtmlParsingElements=htmlParsingElements.split(";");
 		
-		MultipleRunsInitializerDictionary run =new MultipleRunsInitializerDictionary();
-		System.out.println("Get Right Answers");
-		run.getRightAnswers();
-		System.out.println("Tokenize Input");
-		run.initializeTokenizer();
-		//create the dictionary
-		System.out.println("Create Dictionary");
-		run.getDictionary();
-
-		run.runMultipleInitializer();
+		for (int i=0; i<allHtmlParsingElements.length;i++){
+		
+			MultipleRunsInitializerDictionary run =new MultipleRunsInitializerDictionary();
+			htmlParsingElements=allHtmlParsingElements[i];
+			currentExperimentPath=experimentsPath+allHtmlParsingElements[i]+".csv";
+			
+			System.out.println("Get Right Answers");
+			run.getRightAnswers();
+			System.out.println("Tokenize Input");
+			run.initializeTokenizer();
+			//create the dictionary
+			System.out.println("Create Dictionary");
+			run.getDictionary();
+			
+			run.runMultipleInitializer();
+		}
 	}
 	
 	private void getDictionary() throws JSONException, IOException{
@@ -93,7 +114,11 @@ public class MultipleRunsInitializerDictionary {
 		File[] listOfHTML = folderHTML.listFiles();
 		tokenizedInput= new HashMap<String, HashMap<Integer, List<String>>>();
 		for (int i = 0; i < listOfHTML.length; i++) {
-			PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements);
+			//if you are in wrapper mode do not consider all pages but only the ones that could be potentially parsed by the implemented wrappers
+			String pld = HTMLPages.getPLDFromHTMLPath(labelled, listOfHTML[i].getPath());
+	    	if(mode.equals("wrapper") && !(pld.contains("ebay")||pld.contains("tesco")||pld.contains("alibaba")||pld.contains("overstock")) ) continue;
+			
+	    	PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements);
 			HashMap<Integer,List<String>> pagetokenizedInput= new HashMap<Integer,List<String>>();
 			DocPreprocessor process= new DocPreprocessor();
 			for (int j=1; j<=5; j++){
@@ -129,7 +154,6 @@ public class MultipleRunsInitializerDictionary {
 			List<EvaluationItem> ItemstoBeEvaluated = new ArrayList<EvaluationItem>();
 			
 			for (int i = 0; i < listOfHTML.length; i++) {
-				
 				double progress=(((double)(i+1)/(double)listOfHTML.length))*100;
 				if((int)progress % 10==0) System.out.println("Current Progress:"+(int)progress+"%");
 				//if you are in wrapper mode do not consider all pages but only the ones that could be potentially parsed by the implemented wrappers
@@ -182,7 +206,7 @@ public class MultipleRunsInitializerDictionary {
 			allResults.put(modelConfig, results);
 		}
 		ReportGenarator report = new ReportGenarator();
-		report.generateReportDictionaryApproach(allResults, allExperimentsResultPath);
+		report.generateReportDictionaryApproach(allResults, currentExperimentPath);
 		
 	}
 	
@@ -208,15 +232,14 @@ public class MultipleRunsInitializerDictionary {
 		
 		
 		models.add(new DictionaryApproachModel("exact", 0,labelled,  0, null, 0));
-//		models.add(new DictionaryApproachModel("non-exact", 2,labelled,  0.8, "default", 3));
-//		models.add(new DictionaryApproachModel("non-exact", 3,labelled,  0.8, "default", 3));
-//		models.add(new DictionaryApproachModel("non-exact", 2,labelled,  0.8, "default", 3));
-//		models.add(new DictionaryApproachModel("non-exact", 3,labelled,  0.7, "jaroWrinkler", 3));
-//		models.add(new DictionaryApproachModel("non-exact", 3,labelled,  0.8, "jaroWrinkler", 3));
-//		models.add(new DictionaryApproachModel("non-exact", 3,labelled,  0.7, "jaroWrinkler", 4));
-//		models.add(new DictionaryApproachModel("non-exact", 3,labelled,  0.7, "levenshtein", 3));
-//		models.add(new DictionaryApproachModel("non-exact", 2,labelled,  0.6, "levenshtein", 3));
-//		models.add(new DictionaryApproachModel("non-exact", 2,labelled,  0.85, "levenshtein", 4));
+		models.add(new DictionaryApproachModel("non-exact", 2,labelled,  0.8, "default", 3));
+		models.add(new DictionaryApproachModel("non-exact", 3,labelled,  0.8, "default", 3));
+     	models.add(new DictionaryApproachModel("non-exact", 3,labelled,  0.7, "jaroWrinkler", 3));
+		models.add(new DictionaryApproachModel("non-exact", 3,labelled,  0.8, "jaroWrinkler", 3));
+		models.add(new DictionaryApproachModel("non-exact", 3,labelled,  0.7, "jaroWrinkler", 4));
+		models.add(new DictionaryApproachModel("non-exact", 3,labelled,  0.7, "levenshtein", 3));
+		models.add(new DictionaryApproachModel("non-exact", 2,labelled,  0.6, "levenshtein", 3));
+		models.add(new DictionaryApproachModel("non-exact", 2,labelled,  0.85, "levenshtein", 4));
 
 		return models;
 	}

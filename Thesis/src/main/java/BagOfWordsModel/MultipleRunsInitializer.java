@@ -23,25 +23,46 @@ import Utils.ProductCatalogs;
 
 public class MultipleRunsInitializer {
 
-	//FILEPATHS
+	//configure
+	static String productCategory="tv"; //tv, phone, headphone
+	static String mode="wrapper"; // define the mode (wrapper/normal). In the wrapper mode only the 4 plds for which a wrapper exists are considered (ebay, tesco, alibaba, overstock)
+	static String dataPath="C:/Users/Johannes/Google Drive/Master_Thesis/2.ProfilingOfData/LabelledDataProfiling/";
+	static String experimentsPath="C:/Users/Johannes/Google Drive/Master_Thesis/3.MatchingModels/ExperimentsResults/BagOfWordsModel/"+mode+"/"+productCategory+"/";
+	
+	//do not configure but keep the same file structure
 	static String modelType="BagOfWordsModel";
-	static String productCategory="headphone"; //tv, phone, headphone
-	static String catalog="C:\\Users\\Johannes\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\ProductCatalog\\HeadphoneCatalog.json";
-	static String htmlFolder="C:\\Users\\Johannes\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\HTML_Pages\\headphones";
-	static String labelled="C:\\Users\\Johannes\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\CorrectedLabelledEntities\\HeadphonesLabelledEntitiesProcessed.txt";
-	static String allExperimentsResultPath="C:\\Users\\Johannes\\Google Drive\\Master_Thesis\\3.MatchingModels\\ExperimentsResults\\BagOfWordsModel\\allHTMLContent\\headphones_bruteforce.csv";
-	static String logFile="resources\\log\\logEvaluationItems";
-	static String mode="normal"; // define the mode (wrapper/normal). In the wrapper mode only the 4 plds for which a wrapper exists are considered (ebay, tesco, alibaba, overstock)
+	static String catalog=dataPath+"ProductCatalog/"+productCategory+"Catalog.json";
+	static String htmlFolder=dataPath+"HTML_Pages/"+productCategory+"s";
+	static String labelled=dataPath+"/CorrectedLabelledEntities/UnifiedGoldStandard/"+productCategory+"s.txt";
+	static String currentExperimentPath; //allHTMLContent,MarkedUpContent,TablesandListsContent
+	static String logFile="resources/log/logEvaluationItems";
 	//PREPROCESSING
 	static boolean stemming=true;
 	static boolean stopWordRemoval=true;
 	static boolean lowerCase=true;
-	static String htmlParsingElements="all_html"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
+	static String htmlParsingElements="marked_up_data"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
 
 	//String evaluation type definition
 	static String evaluationType="optimizingF1"; //average, median, optimizingF1
 	public static void main (String args[]) throws Exception{
-		runMultipleInitializer();		
+		if(args.length == 5){
+			productCategory=args[0];
+			mode=args[1];
+			dataPath=args[2];
+			experimentsPath=args[3];
+			htmlParsingElements=args[4];
+			catalog=dataPath+"/ProductCatalog/"+productCategory+"Catalog.json";
+			htmlFolder=dataPath+"/HTML_Pages/"+productCategory+"s";
+			labelled=dataPath+"/CorrectedLabelledEntities/UnifiedGoldStandard/"+productCategory+"s.txt";
+		}
+		String[] allHtmlParsingElements=htmlParsingElements.split(";");
+		
+		for (int i=0; i<allHtmlParsingElements.length;i++){
+			htmlParsingElements=allHtmlParsingElements[i];
+			currentExperimentPath=experimentsPath+allHtmlParsingElements[i]+".csv";
+			runMultipleInitializer();
+		}
+				
 	}
 	private static void runMultipleInitializer() throws JSONException, IOException{
 		LinkedHashMap<ModelConfiguration, ResultItem> allResults = new LinkedHashMap<ModelConfiguration,ResultItem>();
@@ -87,6 +108,7 @@ public class MultipleRunsInitializer {
 		    	predictedAnswersForPage = calculate.getPredictedAnswers(tokensOfAllHTML.get(listOfHTML[i].getName()));
 		    	
 		    	EvaluationItem toBeEvaluated= new EvaluationItem();
+		    	toBeEvaluated.setPath(listOfHTML[i].getName());
 		    	toBeEvaluated.setPredictedAnswers(predictedAnswersForPage);
 		    	toBeEvaluated.setRightAnswers(rightAnswers);
 		    	toBeEvaluated.setProductCategory(modelConfig.getProductCategory());
@@ -122,14 +144,14 @@ public class MultipleRunsInitializer {
 			allResults.put(modelConfig, results);
 		}
 		ReportGenarator report = new ReportGenarator();
-		report.generateReport(allResults, allExperimentsResultPath);
+		report.generateReport(allResults, currentExperimentPath);
 	}
 
 
 	private static void writeLog(BufferedWriter logger,
 			List<EvaluationItem> itemstoBeEvaluated) throws IOException {
 		for(EvaluationItem ev:itemstoBeEvaluated){
-			logger.append("NEW ITEM");
+			logger.append(ev.getPath());
 			logger.newLine();
 			for (String answer:ev.getRightAnswers()){
 				logger.append("Right Answer:"+answer);

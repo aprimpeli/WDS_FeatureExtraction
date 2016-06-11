@@ -197,6 +197,8 @@ public class SimilarityCalculator {
 		
 		double score = 0.0;
 		if (commonWords.size()>0){
+			
+			
 			if(model.getTypeOfWeighting().equals("simple")){
 				catalogWeights=weights.getSimpleWeighting(catalogVector);
 				pageWeights=weights.getSimpleWeighting(pageVector);
@@ -270,7 +272,6 @@ public class SimilarityCalculator {
 	
 	public HashMap<String, Double> getPredictedAnswers(List<String> vectorpage) throws IOException{
 				
-	
 		HashMap<String, Double> predictedAnswers = new HashMap<String,Double>();
 		
 		for (Map.Entry<String, List<String>> entry:vectorCatalogEntities.entrySet()){
@@ -299,7 +300,7 @@ public class SimilarityCalculator {
 		//String htmlfrag[] = htmlPage.split("\\\\");
 		//String htmlName = htmlfrag[htmlfrag.length-1];
 		
-		//System.out.println("The page "+htmlName+" fitted with score "+maxScore+" to the product name "+matchedProduct);
+		//System.out.println("The page "+htmlPage+" fitted with score "+score+" to the product name "+matchedProduct);
 		return predictedAnswers;
 	}
 	

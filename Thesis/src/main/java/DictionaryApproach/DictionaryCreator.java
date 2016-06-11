@@ -54,7 +54,10 @@ public class DictionaryCreator {
 		
 		//TODO idf to ignore some of the values of the dictionary
 		ArrayList<String> unimportantValues = new ArrayList<String>();
+		
+
 		if(idfFiltering) unimportantValues = getIDFsForCatalogValues(pathToCatalog, productCategory,  preprocessing, idfWeightThreshold);
+		System.out.println("Unimportant values:"+unimportantValues);
 		
 		for(int i = 0 ; i < catalogEntities.length() ; i++){
 			ProductEntity product = new ProductEntity();

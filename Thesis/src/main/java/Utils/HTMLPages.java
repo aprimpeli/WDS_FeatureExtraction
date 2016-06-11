@@ -42,7 +42,12 @@ public class HTMLPages {
 
 	public static String getPLDFromHTMLPath(String labelledEntitiesPath,String htmlName) throws JSONException, IOException{
 		
-		String concatName = htmlName.substring(htmlName.lastIndexOf("\\")+1);
+		String concatName;
+		if(htmlName.contains("\\"))
+			 concatName = htmlName.substring(htmlName.lastIndexOf("\\")+1);
+		else
+			 concatName = htmlName.substring(htmlName.lastIndexOf("/")+1);
+
 		String nodeID=concatName.replace(".html", "");
 
 		JSONArray labelled = new JSONArray(DocPreprocessor.fileToText(labelledEntitiesPath));

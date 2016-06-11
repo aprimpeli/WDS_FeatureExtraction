@@ -17,7 +17,16 @@ public class LabelledFileExtractions {
 		
 
 		NodeFromLabelled node= new NodeFromLabelled();
-		String htmlfrag[] = htmlPath.split("\\\\");
+		String splitChar;
+		if(htmlPath.contains("\\")){
+			splitChar= "\\\\";
+		}
+		else{
+			splitChar= "/";
+
+		}
+		String htmlfrag[]= htmlPath.split(splitChar);
+
 		String htmlName = htmlfrag[htmlfrag.length-1];
 		String nodeID=htmlName.replace(".html", "");
 		String title="";

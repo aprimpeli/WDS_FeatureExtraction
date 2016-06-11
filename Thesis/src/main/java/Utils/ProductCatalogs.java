@@ -72,12 +72,13 @@ public class ProductCatalogs {
 			filename="resources/Properties/headphone.txt";
 		}
 		else if (productCategory.equals("tv"))		{
-			filename="resources//Properties//tv.txt";
+			filename="resources/Properties/tv.txt";
 		}			
 		else {
 			System.out.println("Cannot retrieve properties for "+productCategory+". The catalogs stored can handle the following product categories: phones, headphone and tv ");			
 			System.exit(0);
 		}
+
 		 try
 		 {
 			 FileInputStream in = new FileInputStream(filename);
@@ -89,12 +90,14 @@ public class ProductCatalogs {
 				  properties.add(strLine);
 			  }
 			  br.close();
+
 			  return properties;
 		 }
 		 catch(Exception e){
 			 System.out.println(e);
 			 return null;
 		 }
+
 	}
 	
 	public static String getHeadItem(String productCategory){
