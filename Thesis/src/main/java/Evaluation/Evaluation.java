@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import Utils.ErrorAnalysisLog;
+
 public class Evaluation {
 	ResultItem currentResults;
 	BufferedWriter logEvaluation;
@@ -19,6 +21,7 @@ public class Evaluation {
 		logEvaluation.append(simType);
 		logEvaluation.newLine();
 	}
+	
 	
 	public ResultItem getResultsOptimizingF1(List<EvaluationItem>  allLinks ) throws IOException{
 		ResultItem bestResult= new ResultItem();
@@ -34,7 +37,7 @@ public class Evaluation {
 			currentResults.setA(a);
 			currentResults.setThreshold(threshold);
 			for(EvaluationItem item:allLinks){
-				calculateResults(threshold, item.getPredictedAnswers(), item.getRightAnswers(), item.getProductCategory());
+				calculateResults(threshold, item);
 			}
 			//System.out.println("THRESHOLD:"+threshold+" F1:"+currentResults.getF1());
 			if (currentResults.getF1()>bestResult.getF1()){
@@ -84,7 +87,7 @@ public class Evaluation {
  		double threshold=defineThresholdasMedian(allLinks);
  		currentResults.setThreshold(threshold);
  		for(EvaluationItem item:allLinks){			
- 			calculateResults(threshold, item.getPredictedAnswers(), item.getRightAnswers(), item.getProductCategory());
+ 			calculateResults(threshold, item);
  		}	
 		return currentResults;
 	}
@@ -95,7 +98,7 @@ public class Evaluation {
  		currentResults.setThreshold(threshold);
 
  		for(EvaluationItem item:allLinks){			
- 			calculateResults(threshold, item.getPredictedAnswers(), item.getRightAnswers(), item.getProductCategory());
+ 			calculateResults(threshold, item);
  		}	
 		return currentResults;
 	}
@@ -139,54 +142,25 @@ public class Evaluation {
 		return mean;
 	}
 	
-	private void calculateResults(double threshold,HashMap<String, Double> predicted, ArrayList<String> rightAnswers, String productCategory ) throws IOException{
+	private void calculateResults(double threshold,EvaluationItem item) throws IOException{
 		
 		ArrayList<String> positives = new ArrayList<String>();
 		ArrayList<String> negatives = new ArrayList<String>();
 		
-		for(Map.Entry<String, Double> entry:predicted.entrySet()){
+		for(Map.Entry<String, Double> entry:item.getPredictedAnswers().entrySet()){
 			if(entry.getValue()>threshold) positives.add(entry.getKey());
 			else negatives.add(entry.getKey());
 		}
 
-
-		//implementation considering that only one answer is correct
-//		boolean answerInTruePositives= false;
-//				
-//		for (Map.Entry<String,Double> p: positives.entrySet()){
-//			
-//			//logEvaluation.append("Predicted:"+p.getKey().toLowerCase()+";Right:"+arrayList.toLowerCase());
-//			logEvaluation.newLine();
-//			//System.out.println("Predicted:"+p.getKey()+";Right:"+answer.toLowerCase());
-//			if (p.getKey().toLowerCase().equals(rightsAnswer.toLowerCase())){
-//				answerInTruePositives=true;
-//				break;
-//			}
-//			
-//		}
-//		if (answerInTruePositives) {
-//			currentResults.setTruePositives(currentResults.getTruePositives()+1);
-//			currentResults.setFalsePositives(currentResults.getFalsePositives()+positives.size()-1);
-//			currentResults.setTrueNegatives(currentResults.getTrueNegatives()+negatives.size());
-//			currentResults.setFalseNegatives(currentResults.getFalseNegatives()+0);
-//			
-//		}
-//		else {
-//			currentResults.setTruePositives(currentResults.getTruePositives()+0);
-//			currentResults.setFalsePositives(currentResults.getFalsePositives()+positives.size());
-//			currentResults.setTrueNegatives(currentResults.getTrueNegatives()+negatives.size()-1);
-//			currentResults.setFalseNegatives(currentResults.getFalseNegatives()+1);
-//		}
-		
-		
+	
 		List<String> truePositives = new ArrayList<String>(positives);
-		truePositives.retainAll(rightAnswers);
+		truePositives.retainAll(item.getRightAnswers());
 		List<String> falsePositives = new ArrayList<String> (positives);
-		falsePositives.removeAll(rightAnswers);
+		falsePositives.removeAll(item.getRightAnswers());
 		List<String> trueNegatives = new ArrayList<String>(negatives);
-		trueNegatives.removeAll(rightAnswers);
+		trueNegatives.removeAll(item.getRightAnswers());
 		List<String> falseNegatives = new ArrayList<String>(negatives);
-		falseNegatives.retainAll(rightAnswers);
+		falseNegatives.retainAll(item.getRightAnswers());
 		
 		
 		currentResults.setTruePositives(currentResults.getTruePositives()+truePositives.size());
@@ -194,5 +168,13 @@ public class Evaluation {
 		currentResults.setTrueNegatives(currentResults.getTrueNegatives()+trueNegatives.size());
 		currentResults.setFalseNegatives(currentResults.getFalseNegatives()+falseNegatives.size());
 		
+		if (null==currentResults.getFalsePositivesValues()) currentResults.setFalsePositivesValues(new ArrayList<String>());
+		if (null==currentResults.getFalseNegativesValues()) currentResults.setFalseNegativesValues(new ArrayList<String>());
+
+		if (falsePositives.size()!=0)
+			currentResults.getFalsePositivesValues().add(item.getPath()+"-"+item.getRightAnswers().toString()+";"+falsePositives.toString());
+		if (falseNegatives.size()!=0)
+			currentResults.getFalseNegativesValues().add(item.getPath()+"-"+item.getRightAnswers().toString()+";"+falseNegatives.toString());
+				
 	}
 }

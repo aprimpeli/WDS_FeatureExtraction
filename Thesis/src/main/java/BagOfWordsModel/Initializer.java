@@ -62,7 +62,7 @@ public class Initializer {
 		
 		HashMap<String,List<String>> tokensOfAllHTML = HTMLPages.getHTMLToken(modelConfig, preprocessing,mode);
 		HashMap<String,List<String>> tokensOfAllCatalogEntities = ProductCatalogs.getCatalogTokens(modelConfig.getProductCategory(), modelConfig.getCatalog(), modelConfig.getGrams(), preprocessing);
-		SimilarityCalculator calculate = new SimilarityCalculator(modelConfig,preprocessing, tokensOfAllHTML, tokensOfAllCatalogEntities);
+		SimilarityCalculator calculate = new SimilarityCalculator(modelConfig,preprocessing, tokensOfAllHTML, tokensOfAllCatalogEntities,null);
 		File folderHTML = new File(modelConfig.getHtmlFolder());
 		File[] listOfHTML = folderHTML.listFiles();
 		
@@ -79,7 +79,7 @@ public class Initializer {
 			//System.out.println(listOfHTML[i].getName());
 
 	    	//get all the matches with the equivalent scores
-	    	predictedAnswersForPage = calculate.getPredictedAnswers(tokensOfAllHTML.get(listOfHTML[i].getName()));
+	    	predictedAnswersForPage = calculate.getPredictedAnswers(tokensOfAllHTML.get(listOfHTML[i].getName()),listOfHTML[i].getName());
 	    	EvaluationItem toBeEvaluated= new EvaluationItem();
 	    	toBeEvaluated.setPredictedAnswers(predictedAnswersForPage);
 	    	toBeEvaluated.setRightAnswers(rightAnswer);

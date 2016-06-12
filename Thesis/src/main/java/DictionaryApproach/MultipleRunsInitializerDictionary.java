@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 
 import org.json.JSONException;
 
+import Utils.ErrorAnalysisLog;
 import Utils.HTMLPages;
 import BagOfWordsModel.DocPreprocessor;
 import BagOfWordsModel.PreprocessingConfiguration;
@@ -54,6 +55,7 @@ public class MultipleRunsInitializerDictionary {
 	HashMap<String, HashMap<Integer, List<String>>> tokenizedInput;
 	HashMap<String, ArrayList<String>> rightAnswersIndex;
 	Dictionary dictionary;
+	final static ErrorAnalysisLog error_logger=new ErrorAnalysisLog();
 
 	public static void main (String args[]) throws Exception{
 		if(args.length == 5){

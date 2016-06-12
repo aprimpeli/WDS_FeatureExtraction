@@ -108,10 +108,10 @@ public class SimilarityComputationTest {
 		
 		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase,htmlParsingElements);
 
-		SimilarityCalculator calculate = new SimilarityCalculator(modelConfig, preprocessing, queryCorpus, docCorpus );
+		SimilarityCalculator calculate = new SimilarityCalculator(modelConfig, preprocessing, queryCorpus, docCorpus , null);
 
 		for(Map.Entry<String,List<String>> query: queryCorpus.entrySet()){
-			calculate.getPredictedAnswers(query.getValue());
+			calculate.getPredictedAnswers(query.getValue(),null);
 		}
 	}
 

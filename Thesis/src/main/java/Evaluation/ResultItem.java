@@ -1,11 +1,49 @@
 package Evaluation;
 
+import java.util.ArrayList;
+
 public class ResultItem {
 
 	private int truePositives;
 	private int trueNegatives;
 	private int falsePositives;
 	private int falseNegatives;
+	private ArrayList<String> truePositivesValues;
+	public ArrayList<String> getTruePositivesValues() {
+		return truePositivesValues;
+	}
+
+	public void setTruePositivesValues(ArrayList<String> truePositivesValues) {
+		this.truePositivesValues = truePositivesValues;
+	}
+
+	public ArrayList<String> getTrueNegativesValues() {
+		return trueNegativesValues;
+	}
+
+	public void setTrueNegativesValues(ArrayList<String> trueNegativesValues) {
+		this.trueNegativesValues = trueNegativesValues;
+	}
+
+	public ArrayList<String> getFalsePositivesValues() {
+		return falsePositivesValues;
+	}
+
+	public void setFalsePositivesValues(ArrayList<String> falsePositivesValues) {
+		this.falsePositivesValues = falsePositivesValues;
+	}
+
+	public ArrayList<String> getFalseNegativesValues() {
+		return falseNegativesValues;
+	}
+
+	public void setFalseNegativesValues(ArrayList<String> falseNegativesValues) {
+		this.falseNegativesValues = falseNegativesValues;
+	}
+
+	private  ArrayList<String> trueNegativesValues;
+	private  ArrayList<String> falsePositivesValues;
+	private  ArrayList<String> falseNegativesValues;	
 	private double threshold;
 	private double a;
 	private double avgCommonGrams;

@@ -1,5 +1,6 @@
 package BagOfWordsModel;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -175,6 +176,11 @@ public class DocPreprocessor {
 	 * Gets the path of a file and transforms it to a string variableS
 	 */
 	public static String fileToText (String filepath) throws IOException{
+		File f = new File(filepath);
+		if (!f.exists()) {
+		    System.out.println("The file could not be found: "+filepath);
+		    System.exit(0);
+		}
 		byte[] encoded = Files.readAllBytes(Paths.get(filepath));
 		  return new String(encoded, StandardCharsets.UTF_8);	
 	}

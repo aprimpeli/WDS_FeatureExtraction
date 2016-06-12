@@ -22,6 +22,9 @@ import org.simmetrics.metrics.SmithWatermanGotoh;
 import org.simmetrics.metrics.StringMetrics;
 import org.simmetrics.simplifiers.Soundex;
 import org.simmetrics.tokenizers.Tokenizers;
+
+import Utils.ErrorAnalysisLog;
+
 import org.simmetrics.*;
 
 
@@ -33,11 +36,12 @@ public class SimilarityCalculator {
 	List<List<String>> CatalogEntitiesAsList;
 	List<List<String>> PagesAsList;
 	int totalCommonElements;
+	static String logLine;
+	ErrorAnalysisLog logger;
+	String pageName;
+	String productName;
 	
-	public SimilarityCalculator(){}
-	
-	
-	public SimilarityCalculator(ModelConfiguration modelConfig, PreprocessingConfiguration preprocessing, HashMap<String,List<String>> pagesTokens,HashMap<String,List<String>> catalogTokens ) {
+	public SimilarityCalculator(ModelConfiguration modelConfig, PreprocessingConfiguration preprocessing, HashMap<String,List<String>> pagesTokens,HashMap<String,List<String>> catalogTokens,ErrorAnalysisLog logger ) {
 		SimilarityCalculator.model = modelConfig;
 		SimilarityCalculator.preprocessing=preprocessing;				
 		SimilarityCalculator.vectorCatalogEntities = catalogTokens;
@@ -55,7 +59,8 @@ public class SimilarityCalculator {
 			modelConfig.setIdfWeightsCatalog(weights.getIDFWeighting(CatalogEntitiesAsList));
 			modelConfig.setIdfWeightsPages(weights.getIDFWeighting(PagesAsList));
 		}
-		
+		this.logger=logger;
+		logger.setCommonWords(new HashMap<String, String>());
 //		//precalculation of words frequencies
 //		if(modelConfig.getSimilarityType().equals("simple with frequency threshold")){
 //			modelConfig.setVectorCatalogFrequencies(weights.getFrequencyOfWords(wordsOfVector));
@@ -68,6 +73,9 @@ public class SimilarityCalculator {
 		SimilarityCalculator.model=modelConfig;
 	}
 
+	public SimilarityCalculator() {
+		// TODO Auto-generated constructor stub
+	}
 	/**
 	 * @param catalogVector
 	 * @param pageVector
@@ -101,6 +109,8 @@ public class SimilarityCalculator {
 		if(minsize==0) return 0; //TODO
 		score = ((double) commonElements.size()) / ((double) minsize);
 		totalCommonElements+=commonElements.size();
+		
+		logger.getCommonWords().put(this.pageName+";"+this.productName,commonElements.toString());
 		return score;
 	}
 	
@@ -139,6 +149,7 @@ public class SimilarityCalculator {
 		Set<String> catalogVectorSet = new HashSet<String>(catalogVector);
 		Set<String> pageVectorSet = new HashSet<String>(pageVector);
 		int commonGrams=0;
+		ArrayList<String> common = new ArrayList<String>();
 		
 		for(String gram:pageVectorSet){
 			ArrayList<String> tokensOfPageGram = new ArrayList<String>();
@@ -164,6 +175,7 @@ public class SimilarityCalculator {
 					commonElements.retainAll(tokensOfCatalogGram);
 				}
 				if (commonElements.size()==tokensOfPageGram.size()) {
+					common.add(gram);
 					commonGrams++;
 					foundCommon=true;
 					break;
@@ -173,6 +185,7 @@ public class SimilarityCalculator {
 		int unionSize = catalogVectorSet.size()+pageVectorSet.size() - commonGrams;
 		double score=((double)commonGrams/(double) unionSize);
 		totalCommonElements+=commonGrams;
+		logger.getCommonWords().put(this.pageName+";"+this.productName,common.toString());
 		return score;
 	}
 	
@@ -215,7 +228,7 @@ public class SimilarityCalculator {
 			score = getCosineSimilarityScore(catalogWeights, pageWeights, commonWords);
 			totalCommonElements+=commonWords.size();
 		}
-		 
+		logger.getCommonWords().put(this.pageName+";"+this.productName,commonWords.toString());
 		return score;
 	}
 	
@@ -270,11 +283,16 @@ public class SimilarityCalculator {
 		return rightAnswers;
 	}
 	
-	public HashMap<String, Double> getPredictedAnswers(List<String> vectorpage) throws IOException{
+	public HashMap<String, Double> getPredictedAnswers(List<String> vectorpage, String pageName) throws IOException{
 				
+		
 		HashMap<String, Double> predictedAnswers = new HashMap<String,Double>();
 		
 		for (Map.Entry<String, List<String>> entry:vectorCatalogEntities.entrySet()){
+			
+			this.pageName=pageName;
+			this.productName=entry.getKey();
+			
 			double score =0.0;
 			if(model.getSimilarityType().equals("simple"))
 				score=simpleContainmentSimilarity(entry.getValue(), vectorpage);
@@ -293,7 +311,7 @@ public class SimilarityCalculator {
 				System.exit(0);
 			}
 			predictedAnswers.put(entry.getKey().toLowerCase(), score);
-			
+
 		}
 		
 		
@@ -301,6 +319,7 @@ public class SimilarityCalculator {
 		//String htmlName = htmlfrag[htmlfrag.length-1];
 		
 		//System.out.println("The page "+htmlPage+" fitted with score "+score+" to the product name "+matchedProduct);
+		
 		return predictedAnswers;
 	}
 	
