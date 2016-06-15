@@ -26,24 +26,24 @@ public class MultipleRunsInitializer {
 
 	//configure
 	static String productCategory="phone"; //tv, phone, headphone
-	static String mode="wrapper"; // define the mode (wrapper/normal). In the wrapper mode only the 4 plds for which a wrapper exists are considered (ebay, tesco, alibaba, overstock)
+	static String mode="normal"; // define the mode (wrapper/normal). In the wrapper mode only the 4 plds for which a wrapper exists are considered (ebay, tesco, alibaba, overstock)
 	static String dataPath="C:/Users/Johannes/Google Drive/Master_Thesis/2.ProfilingOfData/LabelledDataProfiling/";
 	//static String experimentsPath="C:/Users/Johannes/Google Drive/Master_Thesis/3.MatchingModels/ExperimentsResults/BagOfWordsModel/"+mode+"/"+productCategory+"/";
 	static String experimentsPath="C:/Users/Johannes/Google Drive/Master_Thesis/3.MatchingModels/ExperimentsResults/";
-	static String errorLogFile="resources/logPhonesTest.csv";
+	static String errorLogFile="resources/errorAnalysis/headphone_cosine_1gram.csv";
 	
 	//do not configure but keep the same file structure
 	static String modelType="BagOfWordsModel";
 	static String catalog=dataPath+"ProductCatalog/"+productCategory+"Catalog.json";
-	static String htmlFolder=dataPath+"HTML_Pages/"+productCategory+"s_test";
+	static String htmlFolder=dataPath+"HTML_Pages/"+productCategory+"s";
 	static String labelled=dataPath+"/CorrectedLabelledEntities/UnifiedGoldStandard/"+productCategory+"s.txt";
 	static String currentExperimentPath; //allHTMLContent,MarkedUpContent,TablesandListsContent
-	static String logFile="resources/log/logEvaluationItems";
+	static String logFile="resources/log/scores_headphone_cosine_1gram";
 	//PREPROCESSING
 	static boolean stemming=true;
 	static boolean stopWordRemoval=true;
 	static boolean lowerCase=true;
-	static String htmlParsingElements="all_html"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
+	static String htmlParsingElements="all_html;html_tables_lists;marked_up_data"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
 
 	//String evaluation type definition
 	static String evaluationType="optimizingF1"; //average, median, optimizingF1
@@ -52,16 +52,16 @@ public class MultipleRunsInitializer {
 
 
 	public static void main (String args[]) throws Exception{
-//		if(args.length == 5){
-//			productCategory=args[0];
-//			mode=args[1];
-//			dataPath=args[2];
-//			experimentsPath=args[3];
-//			htmlParsingElements=args[4];
-//			catalog=dataPath+"/ProductCatalog/"+productCategory+"Catalog.json";
-//			htmlFolder=dataPath+"/HTML_Pages/"+productCategory+"s";
-//			labelled=dataPath+"/CorrectedLabelledEntities/UnifiedGoldStandard/"+productCategory+"s.txt";
-//		}
+		if(args.length == 5){
+			productCategory=args[0];
+			mode=args[1];
+			dataPath=args[2];
+			experimentsPath=args[3];
+			htmlParsingElements=args[4];
+			catalog=dataPath+"/ProductCatalog/"+productCategory+"Catalog.json";
+			htmlFolder=dataPath+"/HTML_Pages/"+productCategory+"s";
+			labelled=dataPath+"/CorrectedLabelledEntities/UnifiedGoldStandard/"+productCategory+"s.txt";
+		}
 		String[] allHtmlParsingElements=htmlParsingElements.split(";");
 		
 		for (int i=0; i<allHtmlParsingElements.length;i++){
@@ -103,13 +103,14 @@ public class MultipleRunsInitializer {
 			
 			ResultItem results= new ResultItem();
 			List<EvaluationItem> ItemstoBeEvaluated = new ArrayList<EvaluationItem>();
-						
+				
 			for (int i = 0; i < listOfHTML.length; i++) {
+				//if(!listOfHTML[i].getName().contains("node1be6f6fecd7637694711d6a7352d4535")) continue;
 				//if you are in wrapper mode do not consider all pages but only the ones that could be potentially parsed by the implemented wrappers
 				String pld = HTMLPages.getPLDFromHTMLPath(labelled, listOfHTML[i].getPath());
 		    	if(mode.equals("wrapper") && !(pld.contains("ebay")||pld.contains("tesco")||pld.contains("alibaba")||pld.contains("overstock")) ) continue;
-						    	
-				HashMap<String, Double> predictedAnswersForPage = new HashMap<String,Double>();
+
+		    	HashMap<String, Double> predictedAnswersForPage = new HashMap<String,Double>();
 		    	ArrayList<String> rightAnswers= calculate.getRightAnswer(modelConfig.getLabelled(), listOfHTML[i].getName());
 		    	if (rightAnswers.size()==0) {
 		    		System.out.println("no answer defined:"+listOfHTML[i]);
@@ -190,9 +191,9 @@ public class MultipleRunsInitializer {
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "simple", "n/a", 3,0,  0,  false, 0));
-//		models.add(new ModelConfiguration
-//				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "simple", "n/a", 2,0,  0,  true, 0.9));
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
+				 "simple", "n/a", 2,0,  0,  true, 0.9));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "simple", "n/a", 2,0,  0,  true, 0.95));
@@ -208,18 +209,18 @@ public class MultipleRunsInitializer {
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "simple with frequency threshold", "n/a", 2,0.04, 0, false, 0));
-//		models.add(new ModelConfiguration
-//				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "jaccard", "n/a", 2,0,  0,  false, 0));
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
+				 "jaccard", "n/a", 2,0,  0,  false, 0));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "jaccard", "n/a", 3,0,  0,  false, 0));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "jaccard", "n/a", 4,0,  0,  false, 0));
-//		models.add(new ModelConfiguration
-//				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "cosine", "simple", 1,0,  0,  false, 0));
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
+				 "cosine", "simple", 1,0,  0,  false, 0));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "cosine", "simple", 2,0,  0,  false, 0));
@@ -229,9 +230,9 @@ public class MultipleRunsInitializer {
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "cosine", "simple", 2,0,  0,  true, 0.6));
-		models.add(new ModelConfiguration
-				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-				 "cosine", "tfidf", 1,0,  0,  false, 0));
+//		models.add(new ModelConfiguration
+//				(modelType,productCategory, catalog,htmlFolder,  labelled,  
+//				 "cosine", "tfidf", 1,0,  0,  false, 0));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "cosine", "tfidf", 2,0,  0,  false, 0));
@@ -244,8 +245,8 @@ public class MultipleRunsInitializer {
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "cosine", "tfidf", 2,0,  0,  true, 0.8));
-		
-		
+//		
+//		
 
 		return models;
 	}

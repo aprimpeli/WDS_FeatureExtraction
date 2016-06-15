@@ -3,6 +3,59 @@ package BagOfWordsModel;
 import java.util.HashMap;
 
 public class ModelConfiguration {
+	
+	public ModelConfiguration(String simType, int windowSize,
+			String labelledPath,  double finalSimThreshold, boolean isLevenshtein,
+			int pruneLength, String similarityType, String typeOfWeighting, int grams, String htmlFolder, 
+			String productCategory, String catalog) {
+		super();
+		this.dictsimType = simType;
+		this.windowSize = windowSize;
+		this.labelled = labelledPath;
+		this.onTopLevenshtein = isLevenshtein;
+		this.pruneLength = pruneLength;
+		this.levenshteinThreshold=finalSimThreshold;
+		this.similarityType=similarityType;
+		this.typeOfWeighting=typeOfWeighting;
+		this.grams=grams;
+		this.htmlFolder=htmlFolder;
+		this.productCategory=productCategory;
+		this.catalog=catalog;
+	}
+	
+	private String dictsimType;
+	public String getDictsimType() {
+		return dictsimType;
+	}
+
+	public void setDictsimType(String dictsimType) {
+		this.dictsimType = dictsimType;
+	}
+
+	public int getWindowSize() {
+		return windowSize;
+	}
+
+	public void setWindowSize(int windowSize) {
+		this.windowSize = windowSize;
+	}
+
+	
+
+	
+
+	public int getPruneLength() {
+		return pruneLength;
+	}
+
+	public void setPruneLength(int pruneLength) {
+		this.pruneLength = pruneLength;
+	}
+
+	
+
+	private int windowSize;
+	private int pruneLength;
 
 	private String modelType;
 	public String getModelType() {
@@ -69,13 +122,15 @@ public class ModelConfiguration {
 		this.onTopLevenshtein = onTopLevenshtein;
 		this.levenshteinThreshold = levenshteinThreshold;
 	}
+	public ModelConfiguration() {
+		// TODO Auto-generated constructor stub
+	}
+
 	//
 	private boolean onTopLevenshtein;
 	private double levenshteinThreshold;
 	
-	public ModelConfiguration(){
-		
-	}
+	
 	
 	public String getLabelled() {
 		return labelled;

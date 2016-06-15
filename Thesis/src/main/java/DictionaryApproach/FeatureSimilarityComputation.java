@@ -3,10 +3,13 @@ package DictionaryApproach;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import BagOfWordsModel.DocPreprocessor;
 import BagOfWordsModel.ModelConfiguration;
+import BagOfWordsModel.PreprocessingConfiguration;
 import BagOfWordsModel.SimilarityCalculator;
 
 public class FeatureSimilarityComputation {
@@ -17,15 +20,12 @@ public class FeatureSimilarityComputation {
 	}
 	
 	public HashMap<String,Double> getPredictedAnswersinDictionaryApproach
-	(HashMap<String,ArrayList<String>> featureValuesOfPage, Dictionary dictionary, DictionaryApproachModel model, String htmlPath) throws IOException{
+	(HashMap<String,ArrayList<String>> featureValuesOfPage, Dictionary dictionary, ModelConfiguration model, String htmlPath, SimilarityCalculator calculate) throws IOException{
 		
 		HashMap<String, Double> predictedAnswers = new HashMap<String, Double>();
-		ModelConfiguration exactSimModelconfig = new ModelConfiguration();
-		exactSimModelconfig.setOnTopLevenshtein(false);
-		SimilarityCalculator calculateExact = new SimilarityCalculator(exactSimModelconfig);
-		SimilarityCalculator calculateNonExact = new SimilarityCalculator();
 		
 		for (ProductEntity product:dictionary.getProductEntities()){
+			System.out.println("Compared with:"+product.getName());
 			double score=0.0;
 			if(featureValuesOfPage.size()==0) predictedAnswers.put(product.getName().toLowerCase(), 0.0);
 			
@@ -34,22 +34,32 @@ public class FeatureSimilarityComputation {
 					List<String> valuesOfPage = featureValue.getValue();
 					List<String> valuesOfcatalog= product.getFeatureValues().get(featureValue.getKey());
 					double currentScore=0.0;
-					if(model.getSimType().equals("exact")){
-						
-						currentScore=calculateExact.simpleContainmentSimilarity(valuesOfcatalog, valuesOfPage);				
-					}
+					DocPreprocessor tokenize = new DocPreprocessor();
+					List<String> tokenizedValuesOfPage = new ArrayList<String>();
+					List<String> tokenizedValuesOfCatalog= new ArrayList<String>();
+					for (String s:valuesOfPage) tokenizedValuesOfPage.addAll(Arrays.asList(s.split(" ")));
+					for (String s:valuesOfcatalog) tokenizedValuesOfCatalog.addAll(Arrays.asList(s.split(" ")));
+					//System.out.println("Page:"+tokenizedValuesOfPage.toString());
+					//System.out.println("Tokenized Catalog:"+tokenizedValuesOfCatalog.toString());
+					if(model.getSimilarityType().equals("cosine"))
+						currentScore=calculate.cosineSimilarity(tokenizedValuesOfCatalog, tokenizedValuesOfPage);
+					else if(model.getSimilarityType().equals("simple"))							
+						currentScore=calculate.simpleContainmentSimilarity(tokenizedValuesOfCatalog, tokenizedValuesOfPage);	
 					else {
-						
-						currentScore=calculateNonExact.getMongeElkanSimilarity(valuesOfcatalog, valuesOfPage, model.getEditDistanceType());
-					}				
+						System.out.println("Not defined similarity type:"+model.getSimilarityType());
+						System.exit(0);
+					}
+				
+					//currentScore=calculateNonExact.getMongeElkanSimilarity(valuesOfcatalog, valuesOfPage, model.getEditDistanceType());
+					System.out.println(featureValue.getKey()+"--"+currentScore);				
 									
 					if(!Double.isNaN(currentScore))	score+=currentScore;
 					else {
 						System.out.println("Score between "+product.getName()+" and "+htmlPath+ " could not be defined");
 					}
-
+					//System.out.println("Feature:"+featureValue.getKey()+"--"+currentScore);
 				}
-				predictedAnswers.put(product.getName().toLowerCase(), score/(double)featureValuesOfPage.size());
+				predictedAnswers.put(product.getName().toLowerCase(), score/(double)product.getFeatureValues().size());
 			}
 			
 		}

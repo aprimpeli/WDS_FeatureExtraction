@@ -49,13 +49,17 @@ public class ProductCatalogs {
 		JSONArray array = catalog.getJSONArray(headItem);
 		for(int i = 0 ; i < array.length() ; i++){
 			ArrayList<String> entityValues = new ArrayList<String>();
+			ArrayList<String> preprocessedValue = new ArrayList<String>();
 			for (String property: properties){
+				
 				String value= array.getJSONObject(i).getString(property);
 				if (value.equals("")) continue;
+				preprocessedValue.add(value);
 				List<String> tokenizedValue = processText.textProcessing(null, value, grams, false, preprocessing,null);
 				entityValues.addAll(tokenizedValue);
 
 			}
+			//System.out.println(array.getJSONObject(i).getString("Product Name")+"---"+entityValues.toString());
 			catalogProducts.put(array.getJSONObject(i).getString("Product Name"), entityValues);
 		}
 		

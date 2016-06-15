@@ -33,6 +33,7 @@ public class PreprocessingConfiguration {
 		this.htmlParsingType=htmlParsingElements;
 	}
 
+	
 	public String getHtmlParsingType() {
 		return htmlParsingType;
 	}

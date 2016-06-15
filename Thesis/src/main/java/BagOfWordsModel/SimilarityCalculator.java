@@ -190,12 +190,13 @@ public class SimilarityCalculator {
 	}
 	
 	public double cosineSimilarity(List<String> catalogVector, List<String> pageVector){
+		
 		Weightening weights = new Weightening();
 		HashMap<String,Double> catalogWeights = new HashMap<String,Double>();
 		HashMap<String,Double> pageWeights = new HashMap<String,Double>();
 		
 		Set<String> commonWords = new HashSet<String>();
-		if(SimilarityCalculator.model.isOnTopLevenshtein()){
+		if( SimilarityCalculator.model.isOnTopLevenshtein()){
 			for(String gram1:catalogVector){
 				for(String gram2:pageVector)
 					if(commonWithLevenshteinSimilarity(gram1, gram2, model.getLevenshteinThreshold()))
@@ -236,8 +237,9 @@ public class SimilarityCalculator {
 		
 		double [] vectorA= new double[commonWords.size()];
 		double [] vectorB= new double[commonWords.size()];
-		vectorA= fromMapToMatrix(vector1,commonWords );
+		vectorA= fromMapToMatrix(vector1,commonWords );		
 		vectorB = fromMapToMatrix(vector2, commonWords);
+		
 
 		double dotProduct = 0.0;
 	    double normA = 0.0;
@@ -246,7 +248,10 @@ public class SimilarityCalculator {
 	    for(Map.Entry<String, Double> v1:vector1.entrySet()) normA+=Math.pow(v1.getValue(), 2);
 	    for(Map.Entry<String, Double> v2:vector2.entrySet()) normB+=Math.pow(v2.getValue(), 2);
 
-	    if(normA==0 || normB==0) return 0; //TODO
+	    if(normA==0 || normB==0) {
+	    	System.out.println("Normalization factor for Cosine equals 0. Please check.");
+	    	return 0; //TODO
+	    }
 	    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 	}
 	
@@ -368,28 +373,10 @@ public class SimilarityCalculator {
 		return sim.compare(a,b);
 	}
 	
-	public static double getEditDistanceSimilarity(String a, String b, String editDistanceMeasure){
+	public static double getEditDistanceSimilarity(String a, String b){
 		
-		if(editDistanceMeasure.equals("default")){
-			SmithWatermanGotoh sim = new SmithWatermanGotoh() ;
-			return sim.compare(a, b);
-
-		}				
-		else if (editDistanceMeasure.equals("levenshtein")){
-			Levenshtein sim = new Levenshtein();
-			return sim.compare(a, b);
-
-		}
-		
-		else if (editDistanceMeasure.equals("jaroWrinkler")){
-			JaroWinkler sim = new JaroWinkler();
-			return sim.compare(a, b);
-
-		}
-		else {
-			System.out.println("No defined edit measure for MongeElkan similarity");
-			return 0;
-		}
+		Levenshtein sim = new Levenshtein();
+		return sim.compare(a, b);
 		
 	}
 	

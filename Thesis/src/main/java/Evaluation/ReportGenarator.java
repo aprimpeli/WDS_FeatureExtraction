@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import BagOfWordsModel.ModelConfiguration;
-import DictionaryApproach.DictionaryApproachModel;
 
 public class ReportGenarator {
 
@@ -56,7 +55,7 @@ public class ReportGenarator {
 		}
 	}
 
-	public void generateReportDictionaryApproach(HashMap<DictionaryApproachModel, ResultItem> results, String filePath){
+	public void generateReportDictionaryApproach(HashMap<ModelConfiguration, ResultItem> results, String filePath){
 		
 		try {
 
@@ -66,15 +65,14 @@ public class ReportGenarator {
 			BufferedWriter bw = new BufferedWriter(fw);
 			bw.append("Similarity Method;Size of words prune threshold;Edit Distance Measure;Similarity Threshold;Window Size;Precision;Recall;F1;Step a;Threshold");
 			bw.newLine();
-			for(Map.Entry<DictionaryApproachModel,ResultItem> result:results.entrySet()){
+			for(Map.Entry<ModelConfiguration,ResultItem> result:results.entrySet()){
 				String lineToAppend="";
-				DictionaryApproachModel model= result.getKey();
+				ModelConfiguration model= result.getKey();
 				ResultItem evaluation=result.getValue();
-				lineToAppend = model.getSimType();
-				if(!model.getSimType().equals("exact")) {
+				lineToAppend = model.getDictsimType();
+				if(!model.getDictsimType().equals("exact")) {
 					lineToAppend+=";"+model.getPruneLength();
-					lineToAppend+=";"+model.getEditDistanceType();
-					lineToAppend+=";"+model.getFinalSimThreshold();
+					lineToAppend+=";"+model.getLevenshteinThreshold();
 					lineToAppend+=";"+model.getWindowSize();
 				}
 				else {

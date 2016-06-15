@@ -58,14 +58,14 @@ public class ErrorAnalysisLog {
 		}
 		logger.append("THRESHOLD:"+results.getThreshold());
 		logger.newLine();
-		logger.append("FALSE NEGATIVES");
+		logger.append("FALSE NEGATIVES"+results.getFalseNegatives());
 		logger.newLine();
 		for (String fn:results.getFalseNegativesValues()){
 			if (fn.equals("") || fn.equals(null)) continue;
 			logger.append(fn);
 			logger.newLine();
 		}
-		logger.append("FALSE POSITIVES");
+		logger.append("FALSE POSITIVES"+results.getFalsePositives());
 		logger.newLine();
 		for (String fp:results.getFalsePositivesValues()){
 			logger.append(fp);

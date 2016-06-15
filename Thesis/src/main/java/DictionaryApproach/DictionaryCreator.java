@@ -64,8 +64,7 @@ public class DictionaryCreator {
 			product.setName(catalogEntities.getJSONObject(i).getString("Product Name"));
 			HashMap<String, ArrayList<String>> featureValues = new HashMap<String, ArrayList<String>>();
 			for (String property: properties){
-				//ignore the description property
-				if (property.equals("description")) continue;
+				
 				featureValues.put(property, new ArrayList<String>());
 				
 				String value= catalogEntities.getJSONObject(i).getString(property);

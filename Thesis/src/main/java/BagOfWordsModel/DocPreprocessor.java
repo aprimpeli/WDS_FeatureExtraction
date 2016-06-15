@@ -108,7 +108,8 @@ public class DocPreprocessor {
 			}
 		}
 		result.close();
-//		System.out.println("Size of stemmed words:"+stemmedWords.size());
+		
+
 		return processedWords;
     }
 	

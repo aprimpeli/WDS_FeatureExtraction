@@ -20,6 +20,7 @@ public class HTMLPages {
 		  try{
 			HashMap<String,List<String>> tokensOfPages = new HashMap<String,List<String>>();
 			File folderHTML = new File(model.getHtmlFolder());
+			System.out.println("HTML Pages located in:"+model.getHtmlFolder());
 		    File[] listOfHTML = folderHTML.listFiles();
 			DocPreprocessor processText = new DocPreprocessor();
 		    for (int i = 0; i < listOfHTML.length; i++) {		  
@@ -30,6 +31,7 @@ public class HTMLPages {
 					System.out.println("The page "+listOfHTML[i].getName()+" had no content");
 					continue;
 				}
+				//System.out.println(listOfHTML[i].getName()+"--"+tokenizedValue.toString());
 				tokensOfPages.put(listOfHTML[i].getName(), tokenizedValue);
 		    }
 			return tokensOfPages;      

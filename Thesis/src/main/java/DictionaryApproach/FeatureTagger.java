@@ -2,19 +2,18 @@ package DictionaryApproach;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.PriorityQueue;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONException;
 
 import BagOfWordsModel.DocPreprocessor;
+import BagOfWordsModel.ModelConfiguration;
 import BagOfWordsModel.PreprocessingConfiguration;
 import BagOfWordsModel.SimilarityCalculator;
 
@@ -50,22 +49,21 @@ public class FeatureTagger {
 	 * @throws IOException 
 	 * 
 	 */
-	public HashMap<String, ArrayList<String>> setFeatureTagging(String htmlPath, HashMap<String,Set<String>> dictionary,  PreprocessingConfiguration preprocessing, DictionaryApproachModel model) throws IOException{
+	public HashMap<String, ArrayList<String>> setFeatureTagging(String htmlPath, HashMap<String,Set<String>> dictionary,  PreprocessingConfiguration preprocessing, ModelConfiguration model) throws IOException{
 		
 		InputPreprocessor processInput = new InputPreprocessor();
 		DocPreprocessor processdoc = new DocPreprocessor();
 		HashMap<String, ArrayList<String>> taggedWords= new HashMap<String, ArrayList<String>>();
-		if (model.getSimType().equals("exact")){
-			String htmlInput = processInput.textProcessing(htmlPath, null, true, preprocessing, model.getLabelledPath());
+		if (model.getDictsimType().equals("exact")){
+			String htmlInput = processInput.textProcessing(htmlPath, null, true, preprocessing, model.getLabelled());
 			for(Map.Entry<String, Set<String>> dictEntry:dictionary.entrySet()){
 				for(final String value:dictEntry.getValue()){
-
-						//if the input contains this as a token - not inside a word example: clear and cleared
-						if(htmlInput.contains(" "+value+" ")) {
-							if(null == taggedWords.get(value)) taggedWords.put(value, new ArrayList<String>());
-							taggedWords.get(value).add(dictEntry.getKey());
-						}
+					//if the input contains this as a token - not inside a word example: clear and cleared
+					if(htmlInput.contains(" "+value+" ")) {
+						if(null == taggedWords.get(value)) taggedWords.put(value, new ArrayList<String>());
+						taggedWords.get(value).add(dictEntry.getKey());														
 					}
+				}
 			}
 		}
 		else{
@@ -91,7 +89,7 @@ public class FeatureTagger {
 	            		}
 		            				            	
 		            }
-		            if (maxScore<model.getFinalSimThreshold()) continue;
+		            if (maxScore<model.getLevenshteinThreshold()) continue;
 					        	
 					// final candidate is only valid for another threshold
 					if(null == taggedWords.get(maxCandidate)) taggedWords.put(maxCandidate, new ArrayList<String>());
@@ -107,25 +105,24 @@ public class FeatureTagger {
 	
 	
 	public Entry<String,Double> getTopCandidate(final String valueToCompare, int gramsToTokenize, PreprocessingConfiguration preprocessing,  String htmlPath, 
-			String text, boolean isHTML,DictionaryApproachModel model) throws IOException{
+			String text, boolean isHTML,ModelConfiguration model) throws IOException{
 		
 		DocPreprocessor process = new DocPreprocessor();
 		List<String> gramsOfCorpus = new ArrayList<String>();
 		
 		if(isHTML) gramsOfCorpus=tokenizedInput.get(gramsToTokenize); //precalculated tokenization no need to compute it every time for the main input
-		else gramsOfCorpus = process.textProcessing(htmlPath, text, gramsToTokenize, isHTML, preprocessing, model.getLabelledPath());
+		else gramsOfCorpus = process.textProcessing(htmlPath, text, gramsToTokenize, isHTML, preprocessing, model.getLabelled());
     	
 		Set<String> uniqueGrams = new HashSet<String>(gramsOfCorpus);
     	
-    	List<String> gramsOfValue = process.textProcessing(null, valueToCompare, 1, false, preprocessing, model.getLabelledPath());
+    	List<String> gramsOfValue = process.textProcessing(null, valueToCompare, 1, false, preprocessing, model.getLabelled());
     	String maxCandidate="";
     	double maxScore=0.0;
     	for(final String unique:uniqueGrams){
     		if (unique.length()<model.getPruneLength()) continue;
     		
-    		List<String> gramsOfUnique = process.textProcessing(null, unique, 1, false, preprocessing, model.getLabelledPath());
-			double score = SimilarityCalculator.getEditDistanceSimilarity(StringUtils.join(gramsOfUnique,""), StringUtils.join(gramsOfValue,""), model.getEditDistanceType());
-			//double score = SimilarityCalculator.getMongeElkanSimilarity(gramsOfUnique,gramsOfValue,model.getEditDistanceType());
+    		List<String> gramsOfUnique = process.textProcessing(null, unique, 1, false, preprocessing, model.getLabelled());
+			double score = SimilarityCalculator.getEditDistanceSimilarity(StringUtils.join(gramsOfUnique,""), StringUtils.join(gramsOfValue,""));
 
 			if (score>maxScore) {
     			maxScore=score;
@@ -161,35 +158,6 @@ public class FeatureTagger {
 		return taggedWords;
 	}
 
-	private static <K, V extends Comparable<? super V>> List<Map.Entry<K, V>> findGreatest(Map<K, V> map, int n)
-	{
-	    Comparator<? super Entry<K, V>> comparator = 
-	        new Comparator<Entry<K, V>>()
-	    {
-	        public int compare(Entry<K, V> e0, Entry<K, V> e1)
-	        {
-	            V v0 = e0.getValue();
-	            V v1 = e1.getValue();
-	            return v0.compareTo(v1);
-	        }
-	    };
-	    PriorityQueue<Entry<K, V>> highest = 
-	        new PriorityQueue<Entry<K,V>>(n, comparator);
-	    for (Entry<K, V> entry : map.entrySet())
-	    {
-	        highest.offer(entry);
-	        while (highest.size() > n)
-	        {
-	            highest.poll();
-	        }
-	    }
 	
-	    List<Entry<K, V>> result = new ArrayList<Map.Entry<K,V>>();
-	    while (highest.size() > 0)
-	    {
-	        result.add(highest.poll());
-	    }
-	    return result;
-	}
 
 }

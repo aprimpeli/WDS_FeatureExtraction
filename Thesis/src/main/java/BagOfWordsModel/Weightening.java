@@ -42,9 +42,14 @@ public class Weightening {
 		
 		HashMap<String, Double> tfidfWeights = new HashMap<String,Double>();
 		HashMap<String, Integer> frequencyOfWords = getFrequencyOfWords(wordsOfVector);
-		for(Map.Entry<String,Integer> gramFrequency: frequencyOfWords.entrySet()){						
-			double tfidf = (double) gramFrequency.getValue() * IDFWeights.get(gramFrequency.getKey());
+		double tfidf=0;
+		for(Map.Entry<String,Integer> gramFrequency: frequencyOfWords.entrySet()){	
+			if(null==IDFWeights.get(gramFrequency.getKey())){
+				System.out.println("The idf weight for:"+gramFrequency.getKey()+"could not be retrieved. If you are in inexact matching this is ok.");
+			}
+			else  tfidf = (double) gramFrequency.getValue() * IDFWeights.get(gramFrequency.getKey());
 			tfidfWeights.put(gramFrequency.getKey(), tfidf);
+			//System.out.println(gramFrequency.getKey()+"--tf:"+gramFrequency.getValue()+"--idf:"+IDFWeights.get(gramFrequency.getKey())+"--tfidf:"+tfidf);
 		}
 		return tfidfWeights;
 	}
