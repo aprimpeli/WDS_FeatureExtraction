@@ -1,6 +1,7 @@
 package Evaluation;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class ResultItem {
 
@@ -9,6 +10,38 @@ public class ResultItem {
 	private int falsePositives;
 	private int falseNegatives;
 	private ArrayList<String> truePositivesValues;
+	private HashMap<String, Integer> truePositivesCounts;
+	
+	public HashMap<String, Integer> getUniqueCounts(ArrayList<String> list){
+		HashMap<String, Integer> map = new HashMap<String,Integer>();
+		for(String l:list){
+			String s=l.split(";")[1];
+			Integer counter=map.get(s);
+			if(null==counter) counter=0;
+			map.put(s, ++counter);
+		}
+		return map;
+	}
+	
+	public HashMap<String, Integer> getTruePositivesCounts() {		
+		return getUniqueCounts(this.truePositivesValues);
+	}
+	
+	public HashMap<String, Integer> getTrueNegativesCounts() {
+		
+		return getUniqueCounts(this.trueNegativesValues);
+	}
+
+	public HashMap<String, Integer> getFalsePositivesCounts() {
+		return getUniqueCounts(this.falsePositivesValues);
+	}
+
+
+	public HashMap<String, Integer> getFalseNegativesCounts() {
+		return getUniqueCounts(this.falseNegativesValues);
+	}
+
+	
 	public ArrayList<String> getTruePositivesValues() {
 		return truePositivesValues;
 	}
@@ -116,4 +149,8 @@ public class ResultItem {
 	public void setAvgCommonGrams(double avgCommonGrams) {
 		this.avgCommonGrams = avgCommonGrams;
 	}
+
+
+
+	
 }

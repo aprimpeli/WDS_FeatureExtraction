@@ -52,6 +52,7 @@ public class HTMLPages {
 
 		String nodeID=concatName.replace(".html", "");
 
+		
 		JSONArray labelled = new JSONArray(DocPreprocessor.fileToText(labelledEntitiesPath));
 		String url = "";
 		for(int i = 0 ; i < labelled.length() ; i++){
@@ -62,7 +63,6 @@ public class HTMLPages {
 				break;
 			}
 		}
-		
 		return url.split("\\.")[1].split("/")[0];
 	}
 	

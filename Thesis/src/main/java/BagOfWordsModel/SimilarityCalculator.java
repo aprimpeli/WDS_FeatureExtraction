@@ -280,7 +280,7 @@ public class SimilarityCalculator {
 			if(entity.getString("id_self").equals(nodeID)){
 				rightAnswer = entity.getString("normalized_product_name");
 				String [] answers = rightAnswer.split(";");
-				for(int j=0;j<answers.length;j++) rightAnswers.add(answers[j]);
+				for(int j=0;j<answers.length;j++) rightAnswers.add(answers[j].toLowerCase());
 				break;
 			}
 		}

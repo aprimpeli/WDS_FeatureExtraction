@@ -15,6 +15,8 @@ import org.json.JSONObject;
 
 import BagOfWordsModel.DocPreprocessor;
 import BagOfWordsModel.PreprocessingConfiguration;
+import DictionaryApproach.Dictionary;
+import DictionaryApproach.ProductEntity;
 
 public class ProductCatalogs {
 	
@@ -120,5 +122,23 @@ public class ProductCatalogs {
 			return null;
 		}
 	}
+
+	
+	public static HashMap<String, List<String>> getCatalogTokensDictionaryApproach(
+			Dictionary dictionary) {
+		
+		HashMap<String,List<String>> catalogTokens = new HashMap<String,List<String>>();
+		List<ProductEntity> products = dictionary.getProductEntities();
+		for (ProductEntity product:products){
+			catalogTokens.put(product.getName(), new ArrayList<String>());
+			for (Map.Entry<String,ArrayList<String>> values:product.getFeatureValues().entrySet())
+				catalogTokens.get(product.getName()).addAll(values.getValue());
+		}
+		return catalogTokens;
+	}
+
+	
+		
+		
 }
 

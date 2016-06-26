@@ -27,8 +27,7 @@ public class Weightening {
 			for(String gram:vector)
 				uniqueGrams.add(gram);
 		}
-		for (String uniqueGram:uniqueGrams){
-			
+		for (String uniqueGram:uniqueGrams){			
 			int appearanceOfTokeninCorpus=0;
 			for(List<String> vector: vectorsOfCorpus)
 				if(vector.contains(uniqueGram)) appearanceOfTokeninCorpus++;

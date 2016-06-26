@@ -151,7 +151,6 @@ public class Evaluation {
 			if(entry.getValue()>threshold) positives.add(entry.getKey());
 			else negatives.add(entry.getKey());
 		}
-
 	
 		List<String> truePositives = new ArrayList<String>(positives);
 		truePositives.retainAll(item.getRightAnswers());
@@ -170,11 +169,17 @@ public class Evaluation {
 		
 		if (null==currentResults.getFalsePositivesValues()) currentResults.setFalsePositivesValues(new ArrayList<String>());
 		if (null==currentResults.getFalseNegativesValues()) currentResults.setFalseNegativesValues(new ArrayList<String>());
+		if (null==currentResults.getTruePositivesValues()) currentResults.setTruePositivesValues(new ArrayList<String>());
+		if (null==currentResults.getTrueNegativesValues()) currentResults.setTrueNegativesValues(new ArrayList<String>());
 
 		if (falsePositives.size()!=0)
 			currentResults.getFalsePositivesValues().add(item.getPath()+"-"+item.getRightAnswers().toString()+";"+falsePositives.toString());
 		if (falseNegatives.size()!=0)
 			currentResults.getFalseNegativesValues().add(item.getPath()+"-"+item.getRightAnswers().toString()+";"+falseNegatives.toString());
-				
+		if(truePositives.size()!=0)		
+			currentResults.getTruePositivesValues().add(item.getPath()+"-"+item.getRightAnswers().toString()+";"+truePositives.toString());
+		if(trueNegatives.size()!=0)		
+			currentResults.getTrueNegativesValues().add(item.getPath()+"-"+item.getRightAnswers().toString()+";"+trueNegatives.toString());
+
 	}
 }

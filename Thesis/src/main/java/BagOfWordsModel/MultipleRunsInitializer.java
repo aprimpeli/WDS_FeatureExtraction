@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
 
@@ -30,20 +31,20 @@ public class MultipleRunsInitializer {
 	static String dataPath="C:/Users/Johannes/Google Drive/Master_Thesis/2.ProfilingOfData/LabelledDataProfiling/";
 	//static String experimentsPath="C:/Users/Johannes/Google Drive/Master_Thesis/3.MatchingModels/ExperimentsResults/BagOfWordsModel/"+mode+"/"+productCategory+"/";
 	static String experimentsPath="C:/Users/Johannes/Google Drive/Master_Thesis/3.MatchingModels/ExperimentsResults/";
-	static String errorLogFile="resources/errorAnalysis/headphone_cosine_1gram.csv";
+	static String errorLogFile="resources/errorAnalysis/tv_cosine_1gram.csv";
 	
 	//do not configure but keep the same file structure
 	static String modelType="BagOfWordsModel";
 	static String catalog=dataPath+"ProductCatalog/"+productCategory+"Catalog.json";
-	static String htmlFolder=dataPath+"HTML_Pages/"+productCategory+"s";
-	static String labelled=dataPath+"/CorrectedLabelledEntities/UnifiedGoldStandard/"+productCategory+"s.txt";
+	static String htmlFolder=dataPath+"HTML_Pages/Unified_extra/"+productCategory+"s";
+	static String labelled=dataPath+"/CorrectedLabelledEntities/UnifiedGoldStandard_extra/"+productCategory+"s.txt";
 	static String currentExperimentPath; //allHTMLContent,MarkedUpContent,TablesandListsContent
 	static String logFile="resources/log/scores_headphone_cosine_1gram";
 	//PREPROCESSING
 	static boolean stemming=true;
 	static boolean stopWordRemoval=true;
 	static boolean lowerCase=true;
-	static String htmlParsingElements="all_html;html_tables_lists;marked_up_data"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
+	static String htmlParsingElements="marked_up_data"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
 
 	//String evaluation type definition
 	static String evaluationType="optimizingF1"; //average, median, optimizingF1
@@ -59,14 +60,14 @@ public class MultipleRunsInitializer {
 			experimentsPath=args[3];
 			htmlParsingElements=args[4];
 			catalog=dataPath+"/ProductCatalog/"+productCategory+"Catalog.json";
-			htmlFolder=dataPath+"/HTML_Pages/"+productCategory+"s";
-			labelled=dataPath+"/CorrectedLabelledEntities/UnifiedGoldStandard/"+productCategory+"s.txt";
+			htmlFolder=dataPath+"/HTML_Pages/Unified_extra/"+productCategory+"s";
+			labelled=dataPath+"/CorrectedLabelledEntities/UnifiedGoldStandard_extra/"+productCategory+"s.txt";
 		}
 		String[] allHtmlParsingElements=htmlParsingElements.split(";");
 		
 		for (int i=0; i<allHtmlParsingElements.length;i++){
-			
 			htmlParsingElements=allHtmlParsingElements[i];
+
 			currentExperimentPath=experimentsPath+allHtmlParsingElements[i]+"test.csv";
 			runMultipleInitializer();
 		}
@@ -151,6 +152,11 @@ public class MultipleRunsInitializer {
 		    System.out.println("Recall: "+results.getRecall());
 		    System.out.println("F1: "+results.getF1());
 		    System.out.println("Average Common Grams: "+results.getAvgCommonGrams());
+		    for(Map.Entry<String, Integer> m:results.getFalsePositivesCounts().entrySet())
+		    	System.out.println(m.getKey()+"--"+m.getValue());
+		    System.out.println("True positives:"+results.getTruePositivesValues());
+		    System.out.println("False Negatives:"+results.getFalseNegativesValues());
+
 			System.out.println("---END---");
 			
 			allResults.put(modelConfig, results);
@@ -191,9 +197,9 @@ public class MultipleRunsInitializer {
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "simple", "n/a", 3,0,  0,  false, 0));
-		models.add(new ModelConfiguration
-				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-				 "simple", "n/a", 2,0,  0,  true, 0.9));
+//		models.add(new ModelConfiguration
+//				(modelType,productCategory, catalog,htmlFolder,  labelled,  
+//				 "simple", "n/a", 2,0,  0,  true, 0.9));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "simple", "n/a", 2,0,  0,  true, 0.95));
@@ -209,18 +215,18 @@ public class MultipleRunsInitializer {
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "simple with frequency threshold", "n/a", 2,0.04, 0, false, 0));
-		models.add(new ModelConfiguration
-				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-				 "jaccard", "n/a", 2,0,  0,  false, 0));
+//		models.add(new ModelConfiguration
+//				(modelType,productCategory, catalog,htmlFolder,  labelled,  
+//				 "jaccard", "n/a", 2,0,  0,  false, 0));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "jaccard", "n/a", 3,0,  0,  false, 0));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "jaccard", "n/a", 4,0,  0,  false, 0));
-		models.add(new ModelConfiguration
-				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-				 "cosine", "simple", 1,0,  0,  false, 0));
+//		models.add(new ModelConfiguration
+//				(modelType,productCategory, catalog,htmlFolder,  labelled,  
+//				 "cosine", "simple", 1,0,  0,  false, 0));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "cosine", "simple", 2,0,  0,  false, 0));
@@ -236,17 +242,17 @@ public class MultipleRunsInitializer {
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "cosine", "tfidf", 2,0,  0,  false, 0));
-//		models.add(new ModelConfiguration
-//				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "cosine", "tfidf", 3,0,  0,  false, 0));
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
+				 "cosine", "tfidf", 3,0,  0,  false, 0));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "cosine", "tfidf", 2,0,  0,  true, 0.6));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "cosine", "tfidf", 2,0,  0,  true, 0.8));
-//		
-//		
+		
+		
 
 		return models;
 	}

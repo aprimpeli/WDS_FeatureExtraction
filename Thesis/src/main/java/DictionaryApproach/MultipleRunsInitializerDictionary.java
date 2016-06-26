@@ -32,7 +32,7 @@ public class MultipleRunsInitializerDictionary {
 
 	//configure
 	static String similarityComputation="bow";
-	static String productCategory="headphone"; //tv, phone, headphone
+	static String productCategory="tv"; //tv, phone, headphone
 	static String mode="wrapper"; // define the mode (wrapper/normal). In the wrapper mode only the 4 plds for which a wrapper exists are considered (ebay, tesco, alibaba, overstock)
 	static String dataPath="C:/Users/Johannes/Google Drive/Master_Thesis/2.ProfilingOfData/LabelledDataProfiling/";
 	//static String experimentsPath="C:/Users/Johannes/Google Drive/Master_Thesis/3.MatchingModels/ExperimentsResults/Dictionary/"+mode+"/"+productCategory+"/";
@@ -42,7 +42,7 @@ public class MultipleRunsInitializerDictionary {
 	static String mainPath="C:/Users/Johannes/Google Drive/Master_Thesis/";
 	static String modelType="DictionaryApproach";
 	static String catalog=dataPath+"ProductCatalog/"+productCategory+"Catalog.json";
-	static String htmlFolder=dataPath+"HTML_Pages/"+productCategory+"s";
+	static String htmlFolder=dataPath+"HTML_Pages/"+productCategory+"s_positive";
 	static String labelled=dataPath+"/CorrectedLabelledEntities/UnifiedGoldStandard/"+productCategory+"s.txt";
 	static String currentExperimentPath; //allHTMLContent,MarkedUpContent,TablesandListsContent
 	static String logFile="resources/log/logEvaluationItemsDictionary";
@@ -51,7 +51,7 @@ public class MultipleRunsInitializerDictionary {
 	static boolean stemming=true;
 	static boolean stopWordRemoval=true;
 	static boolean lowerCase=true;
-	static String htmlParsingElements="marked_up_data"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
+	static String htmlParsingElements="all_html;marked_up_data;html_tables_lists"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
 	static double idfThresholdForcatalog=0.8;
 	static boolean idfFiltering =false;
 	
@@ -105,15 +105,26 @@ public class MultipleRunsInitializerDictionary {
 		File folderHTML = new File(htmlFolder);
 		File[] listOfHTML = folderHTML.listFiles();
 		HashMap<String,List<String>> tokensOfAllHTML=new HashMap<String,List<String>>();
+		
 		for (int i = 0; i < listOfHTML.length; i++) {
+			List<String> allTaggedTokens= new ArrayList<String>();
+
+			String pld = HTMLPages.getPLDFromHTMLPath(labelled, listOfHTML[i].getPath());
+	    	if(mode.equals("wrapper") && !(pld.contains("ebay")||pld.contains("tesco")||pld.contains("alibaba")||pld.contains("overstock")) ) continue;
 			//do the tagging step
 			FeatureTagger tag = new FeatureTagger(tokenizedInput.get(listOfHTML[i].getName()));			
 			HashMap<String, ArrayList<String>> tagged = tag.setFeatureTagging(listOfHTML[i].getPath(),dictionary.getDictionary(),preprocessing, modelConfig);
 			HashMap<String, ArrayList<String>> reversed = tag.reverseTaggedWords(tagged);
+			for(Map.Entry<String, ArrayList<String>> r: reversed.entrySet())
+				allTaggedTokens.addAll(r.getValue());
+			
 			if (reversed.size()==0) {
 				System.out.println("No tagging could be done for the page:"+listOfHTML[i].getPath());
 			}
-			tokensOfAllHTML.put(listOfHTML[i].getName(), getTokenizedTaggedWords(reversed));
+			//in order to get the idf  based on tokenized words - but if we do the tagging based on groups of tokens we should not make it like this
+			//tokensOfAllHTML.put(listOfHTML[i].getName(), getTokenizedTaggedWords(reversed));
+			tokensOfAllHTML.put(listOfHTML[i].getName(), allTaggedTokens);
+
 		}
 		return tokensOfAllHTML;
 	}
@@ -179,7 +190,7 @@ public class MultipleRunsInitializerDictionary {
 			List<EvaluationItem> ItemstoBeEvaluated = new ArrayList<EvaluationItem>();
 						
 			HashMap<String, List<String>> tokensOfAllHTML = getFeatureTagging(modelConfig);
-			HashMap<String,List<String>> tokensOfAllCatalogEntities = ProductCatalogs.getCatalogTokens(modelConfig.getProductCategory(), modelConfig.getCatalog(), modelConfig.getGrams(), preprocessing);
+			HashMap<String,List<String>> tokensOfAllCatalogEntities = ProductCatalogs.getCatalogTokensDictionaryApproach(dictionary);
 			SimilarityCalculator calculate = new SimilarityCalculator(modelConfig,preprocessing, tokensOfAllHTML, tokensOfAllCatalogEntities,error_logger);
 
 			
