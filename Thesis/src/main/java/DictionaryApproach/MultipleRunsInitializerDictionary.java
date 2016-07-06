@@ -32,8 +32,8 @@ public class MultipleRunsInitializerDictionary {
 
 	//configure
 	static String similarityComputation="bow";
-	static String productCategory="tv"; //tv, phone, headphone
-	static String mode="wrapper"; // define the mode (wrapper/normal). In the wrapper mode only the 4 plds for which a wrapper exists are considered (ebay, tesco, alibaba, overstock)
+	static String productCategory="phone"; //tv, phone, headphone
+	static String mode="normal"; // define the mode (wrapper/normal). In the wrapper mode only the 4 plds for which a wrapper exists are considered (ebay, tesco, alibaba, overstock)
 	static String dataPath="C:/Users/Johannes/Google Drive/Master_Thesis/2.ProfilingOfData/LabelledDataProfiling/";
 	//static String experimentsPath="C:/Users/Johannes/Google Drive/Master_Thesis/3.MatchingModels/ExperimentsResults/Dictionary/"+mode+"/"+productCategory+"/";
 	static String experimentsPath="C:/Users/Johannes/Google Drive/Master_Thesis/3.MatchingModels/ExperimentsResults/test";
@@ -42,16 +42,17 @@ public class MultipleRunsInitializerDictionary {
 	static String mainPath="C:/Users/Johannes/Google Drive/Master_Thesis/";
 	static String modelType="DictionaryApproach";
 	static String catalog=dataPath+"ProductCatalog/"+productCategory+"Catalog.json";
-	static String htmlFolder=dataPath+"HTML_Pages/"+productCategory+"s_positive";
-	static String labelled=dataPath+"/CorrectedLabelledEntities/UnifiedGoldStandard/"+productCategory+"s.txt";
+	static String htmlFolder=dataPath+"HTML_Pages/Unified_extra/"+productCategory+"s_test";
+	static String labelled=dataPath+"/CorrectedLabelledEntities/UnifiedGoldStandard_extra/"+productCategory+"s.txt";
 	static String currentExperimentPath; //allHTMLContent,MarkedUpContent,TablesandListsContent
 	static String logFile="resources/log/logEvaluationItemsDictionary";
-	
+	static String errorLogFile="resources/errorAnalysis/dictionary_html_tables_lists_"+productCategory+"_error_analysis.csv";
+
 	//PREPROCESSING
 	static boolean stemming=true;
 	static boolean stopWordRemoval=true;
 	static boolean lowerCase=true;
-	static String htmlParsingElements="all_html;marked_up_data;html_tables_lists"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
+	static String htmlParsingElements="marked_up_data"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
 	static double idfThresholdForcatalog=0.8;
 	static boolean idfFiltering =false;
 	
@@ -72,8 +73,8 @@ public class MultipleRunsInitializerDictionary {
 			experimentsPath=args[3];
 			htmlParsingElements=args[4];
 			catalog=dataPath+"/ProductCatalog/"+productCategory+"Catalog.json";
-			htmlFolder=dataPath+"/HTML_Pages/"+productCategory+"s";
-			labelled=dataPath+"/CorrectedLabelledEntities/UnifiedGoldStandard/"+productCategory+"s.txt";
+			htmlFolder=dataPath+"/HTML_Pages/Unified_extra/"+productCategory+"s";
+			labelled=dataPath+"/CorrectedLabelledEntities/UnifiedGoldStandard_extra/"+productCategory+"s.txt";
 		}
 		String[] allHtmlParsingElements=htmlParsingElements.split(";");
 		
@@ -106,17 +107,30 @@ public class MultipleRunsInitializerDictionary {
 		File[] listOfHTML = folderHTML.listFiles();
 		HashMap<String,List<String>> tokensOfAllHTML=new HashMap<String,List<String>>();
 		
+		BufferedWriter logProcessing = new BufferedWriter(new FileWriter(new File("resources/HTMLPages_dictionary_errorAnalysis.csv")));
+		System.out.println("Begin Feature Tagging");
+		
 		for (int i = 0; i < listOfHTML.length; i++) {
 			List<String> allTaggedTokens= new ArrayList<String>();
 
-			String pld = HTMLPages.getPLDFromHTMLPath(labelled, listOfHTML[i].getPath());
-	    	if(mode.equals("wrapper") && !(pld.contains("ebay")||pld.contains("tesco")||pld.contains("alibaba")||pld.contains("overstock")) ) continue;
+	    	if(mode.equals("wrapper") ){
+				String pld = HTMLPages.getPLDFromHTMLPath(labelled, listOfHTML[i].getPath());
+				if (pld.contains("ebay")||pld.contains("tesco")||pld.contains("alibaba")||pld.contains("overstock")) continue;
+	    	}
 			//do the tagging step
-			FeatureTagger tag = new FeatureTagger(tokenizedInput.get(listOfHTML[i].getName()));			
-			HashMap<String, ArrayList<String>> tagged = tag.setFeatureTagging(listOfHTML[i].getPath(),dictionary.getDictionary(),preprocessing, modelConfig);
+			FeatureTagger tag = new FeatureTagger(tokenizedInput.get(listOfHTML[i].getName()));	
+			FeatureTaggerResult ftResult = tag.setFeatureTagging(listOfHTML[i].getPath(),dictionary.getDictionary(),preprocessing, modelConfig);
+			HashMap<String, ArrayList<String>> tagged = ftResult.getTaggedWords();
 			HashMap<String, ArrayList<String>> reversed = tag.reverseTaggedWords(tagged);
-			for(Map.Entry<String, ArrayList<String>> r: reversed.entrySet())
-				allTaggedTokens.addAll(r.getValue());
+			for(Map.Entry<String, ArrayList<String>> r: reversed.entrySet()){
+				for(String value:r.getValue()){
+					//add it as many times as it appeared in the corpus
+					for(int fr=0;fr<ftResult.getTaggedWordFrequency().get(value);fr++)
+						allTaggedTokens.add(value);
+				}
+				
+				
+			}
 			
 			if (reversed.size()==0) {
 				System.out.println("No tagging could be done for the page:"+listOfHTML[i].getPath());
@@ -125,7 +139,11 @@ public class MultipleRunsInitializerDictionary {
 			//tokensOfAllHTML.put(listOfHTML[i].getName(), getTokenizedTaggedWords(reversed));
 			tokensOfAllHTML.put(listOfHTML[i].getName(), allTaggedTokens);
 
+			logProcessing.append("Processed;"+listOfHTML[i].getName()+";"+allTaggedTokens);
+			logProcessing.newLine();
+			logProcessing.flush();
 		}
+		logProcessing.close();
 		return tokensOfAllHTML;
 	}
 	
@@ -217,6 +235,7 @@ public class MultipleRunsInitializerDictionary {
 
 				
 		    	EvaluationItem toBeEvaluated= new EvaluationItem();
+		    	toBeEvaluated.setPath(listOfHTML[i].getName());
 		    	toBeEvaluated.setPredictedAnswers(predictedAnswersForPage);
 		    	toBeEvaluated.setRightAnswers(rightAnswersIndex.get(listOfHTML[i].getName()));
 		    	toBeEvaluated.setProductCategory(productCategory);
@@ -243,8 +262,16 @@ public class MultipleRunsInitializerDictionary {
 		    System.out.println("F1: "+results.getF1());
 		    System.out.println("Threshold: "+results.getThreshold());
 			System.out.println("---END---");
+			System.out.println("False Negatives:"+results.getFalseNegatives());
+			System.out.println("False Positives:"+results.getFalsePositives());
+			System.out.println("True Positives:"+results.getTruePositives());
+
+			for (Map.Entry<String, Integer> fn:results.getFalseNegativesCounts().entrySet())
+				System.out.println(fn.getKey()+"--"+fn.getValue());
 			
 			allResults.put(modelConfig, results);
+			error_logger.printlogErrorAnalysis(errorLogFile, results);
+
 		}
 		ReportGenarator report = new ReportGenarator();
 		report.generateReportDictionaryApproach(allResults, currentExperimentPath);
@@ -282,7 +309,7 @@ public class MultipleRunsInitializerDictionary {
 		
 		//simType, windowsize, labelledpath, finalSimThreshold, editdistancetype, prunelength, similarityType, weighting, grams, html,category,catalog
 		models.add(new ModelConfiguration("exact", 0,labelled,  0, false, 0, "cosine", "tfidf", 1 , htmlFolder, productCategory, catalog));
-//		models.add(new ModelConfiguration("non-exact", 3,labelled,  0.7, true, 3,"cosine", "tfidf", 1 , htmlFolder, productCategory, catalog));
+		models.add(new ModelConfiguration("non-exact", 3,labelled,  0.7, true, 3,"cosine", "tfidf", 1 , htmlFolder, productCategory, catalog));
 //		models.add(new ModelConfiguration("non-exact", 2,labelled,  0.6, true, 3,"cosine", "tfidf", 1 , htmlFolder, productCategory, catalog));
 //		models.add(new ModelConfiguration("non-exact", 2,labelled,  0.85, true, 4,"cosine", "tfidf", 1 , htmlFolder, productCategory, catalog));
 

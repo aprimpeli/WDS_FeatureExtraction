@@ -96,6 +96,10 @@
     <artifactId>commons-codec</artifactId>
     <version>1.10</version>
 </dependency>
-    
+    <dependency>
+    <groupId>info.debatty</groupId>
+    <artifactId>java-string-similarity</artifactId>
+    <version>RELEASE</version>
+</dependency>
   </dependencies>
 </project>

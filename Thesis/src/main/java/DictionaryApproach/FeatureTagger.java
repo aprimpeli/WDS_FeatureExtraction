@@ -49,19 +49,28 @@ public class FeatureTagger {
 	 * @throws IOException 
 	 * 
 	 */
-	public HashMap<String, ArrayList<String>> setFeatureTagging(String htmlPath, HashMap<String,Set<String>> dictionary,  PreprocessingConfiguration preprocessing, ModelConfiguration model) throws IOException{
+	public FeatureTaggerResult setFeatureTagging(String htmlPath, HashMap<String,Set<String>> dictionary,  PreprocessingConfiguration preprocessing, ModelConfiguration model) throws IOException{
+		
+		FeatureTaggerResult ftResult = new FeatureTaggerResult();
 		
 		InputPreprocessor processInput = new InputPreprocessor();
 		DocPreprocessor processdoc = new DocPreprocessor();
 		HashMap<String, ArrayList<String>> taggedWords= new HashMap<String, ArrayList<String>>();
+		HashMap<String, Integer> taggedWordsFrequency= new HashMap<String, Integer>();
+
 		if (model.getDictsimType().equals("exact")){
 			String htmlInput = processInput.textProcessing(htmlPath, null, true, preprocessing, model.getLabelled());
 			for(Map.Entry<String, Set<String>> dictEntry:dictionary.entrySet()){
 				for(final String value:dictEntry.getValue()){
 					//if the input contains this as a token - not inside a word example: clear and cleared
-					if(htmlInput.contains(" "+value+" ")) {
+					//if(htmlInput.contains(" "+value+" ")) {
+					int termFrequency= StringUtils.countMatches(htmlInput, " "+value+" ");
+					if(termFrequency>0){
 						if(null == taggedWords.get(value)) taggedWords.put(value, new ArrayList<String>());
-						taggedWords.get(value).add(dictEntry.getKey());														
+						taggedWords.get(value).add(dictEntry.getKey());		
+						
+						if(null == taggedWordsFrequency.get(value)) taggedWordsFrequency.put(value, termFrequency);
+
 					}
 				}
 			}
@@ -76,9 +85,7 @@ public class FeatureTagger {
 		//				System.out.println("Property:"+dictEntry.getKey());
 						continue;
 					}
-					
-								
-			       					
+																       					
 		        	String maxCandidate="";
 		        	double maxScore=0.0;
 		            for(int i=gramsOfValue+model.getWindowSize(); i>=1; i--){ //reduce window size
@@ -91,15 +98,20 @@ public class FeatureTagger {
 		            }
 		            if (maxScore<model.getLevenshteinThreshold()) continue;
 					        	
-					// final candidate is only valid for another threshold
-					if(null == taggedWords.get(maxCandidate)) taggedWords.put(maxCandidate, new ArrayList<String>());
+					if(null == taggedWords.get(maxCandidate)) {
+						taggedWords.put(maxCandidate, new ArrayList<String>());
+					}
 					taggedWords.get(maxCandidate).add(dictEntry.getKey());
-							
+					
+					String htmlInput = processInput.textProcessing(htmlPath, null, true, preprocessing, model.getLabelled());
+					if(null == taggedWordsFrequency.get(maxCandidate)) taggedWordsFrequency.put(maxCandidate, StringUtils.countMatches(htmlInput, " "+maxCandidate+" "));
+					
 				}
 			}			
 		}
-		
-		return taggedWords;
+		ftResult.setTaggedWords(taggedWords);
+		ftResult.setTaggedWordFrequency(taggedWordsFrequency);
+		return ftResult;
 	}
 	
 	

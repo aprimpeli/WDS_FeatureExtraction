@@ -1,7 +1,10 @@
 package Utils;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -19,6 +22,17 @@ import DictionaryApproach.Dictionary;
 import DictionaryApproach.ProductEntity;
 
 public class ProductCatalogs {
+
+	static BufferedWriter logProcessing;
+	
+	
+	static {
+	    try{
+			logProcessing = new BufferedWriter(new FileWriter(new File("resources/CatalogWords_errorAnalysis.csv")));
+	    } catch (IOException e){
+	        e.printStackTrace();
+	    }
+	}
 	
 	public static void main (String args[]){
 		try{
@@ -61,6 +75,12 @@ public class ProductCatalogs {
 				entityValues.addAll(tokenizedValue);
 
 			}
+			logProcessing.append("Preprocessed;"+array.getJSONObject(i).getString("Product Name")+";"+preprocessedValue.toString());
+			logProcessing.newLine();
+			logProcessing.append("Processed;"+array.getJSONObject(i).getString("Product Name")+";"+entityValues.toString());
+			logProcessing.newLine();
+			logProcessing.flush();
+
 			//System.out.println(array.getJSONObject(i).getString("Product Name")+"---"+entityValues.toString());
 			catalogProducts.put(array.getJSONObject(i).getString("Product Name"), entityValues);
 		}
@@ -125,7 +145,7 @@ public class ProductCatalogs {
 
 	
 	public static HashMap<String, List<String>> getCatalogTokensDictionaryApproach(
-			Dictionary dictionary) {
+			Dictionary dictionary) throws IOException {
 		
 		HashMap<String,List<String>> catalogTokens = new HashMap<String,List<String>>();
 		List<ProductEntity> products = dictionary.getProductEntities();
@@ -133,7 +153,13 @@ public class ProductCatalogs {
 			catalogTokens.put(product.getName(), new ArrayList<String>());
 			for (Map.Entry<String,ArrayList<String>> values:product.getFeatureValues().entrySet())
 				catalogTokens.get(product.getName()).addAll(values.getValue());
+			
+
+			logProcessing.append("Processed;"+product.getName()+";"+catalogTokens.get(product.getName()).toString());
+			logProcessing.newLine();
+			logProcessing.flush();
 		}
+		
 		return catalogTokens;
 	}
 

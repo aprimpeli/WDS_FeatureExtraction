@@ -1,9 +1,12 @@
 package BagOfWordsModel;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class ModelConfiguration {
 	
+	//in case of non exact matching we need to define the found to be matching words in order to get the similarity scores
+	private HashMap<String,ArrayList<String>> nonExactMatchingWords;
 	public ModelConfiguration(String simType, int windowSize,
 			String labelledPath,  double finalSimThreshold, boolean isLevenshtein,
 			int pruneLength, String similarityType, String typeOfWeighting, int grams, String htmlFolder, 
@@ -216,5 +219,13 @@ public class ModelConfiguration {
 
 	public void setIdfWeightsPages(HashMap<String,Double> idfWeightsPages) {
 		this.idfWeightsPages = idfWeightsPages;
+	}
+
+	public HashMap<String,ArrayList<String>> getNonExactMatchingWords() {
+		return nonExactMatchingWords;
+	}
+
+	public void setNonExactMatchingWords(HashMap<String,ArrayList<String>> nonExactMatchingWords) {
+		this.nonExactMatchingWords = nonExactMatchingWords;
 	}
 }

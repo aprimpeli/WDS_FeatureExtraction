@@ -39,6 +39,8 @@ public class Evaluation {
 			for(EvaluationItem item:allLinks){
 				calculateResults(threshold, item);
 			}
+			logEvaluation.append(a+";"+currentResults.getF1());
+			logEvaluation.newLine();
 			//System.out.println("THRESHOLD:"+threshold+" F1:"+currentResults.getF1());
 			if (currentResults.getF1()>bestResult.getF1()){
 				bestResult=currentResults;
@@ -50,6 +52,8 @@ public class Evaluation {
 				}
 			}
 		}
+		logEvaluation.flush();
+		logEvaluation.close();
 		return bestResult;
 	}
 

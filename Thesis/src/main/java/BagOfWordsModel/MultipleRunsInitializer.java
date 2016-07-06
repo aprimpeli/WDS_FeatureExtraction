@@ -26,25 +26,27 @@ import Utils.ProductCatalogs;
 public class MultipleRunsInitializer {
 
 	//configure
-	static String productCategory="phone"; //tv, phone, headphone
+	static String productCategory="tv"; //tv, phone, headphone
 	static String mode="normal"; // define the mode (wrapper/normal). In the wrapper mode only the 4 plds for which a wrapper exists are considered (ebay, tesco, alibaba, overstock)
 	static String dataPath="C:/Users/Johannes/Google Drive/Master_Thesis/2.ProfilingOfData/LabelledDataProfiling/";
 	//static String experimentsPath="C:/Users/Johannes/Google Drive/Master_Thesis/3.MatchingModels/ExperimentsResults/BagOfWordsModel/"+mode+"/"+productCategory+"/";
 	static String experimentsPath="C:/Users/Johannes/Google Drive/Master_Thesis/3.MatchingModels/ExperimentsResults/";
-	static String errorLogFile="resources/errorAnalysis/tv_cosine_1gram.csv";
 	
 	//do not configure but keep the same file structure
 	static String modelType="BagOfWordsModel";
 	static String catalog=dataPath+"ProductCatalog/"+productCategory+"Catalog.json";
 	static String htmlFolder=dataPath+"HTML_Pages/Unified_extra/"+productCategory+"s";
 	static String labelled=dataPath+"/CorrectedLabelledEntities/UnifiedGoldStandard_extra/"+productCategory+"s.txt";
+	//static String labelled="C:\\Users\\Johannes\\Google Drive\\Master_Thesis\\4.ErrorAnalysis\\RapidMiner\\data\\sampleHEADPHONELabelled.json";
 	static String currentExperimentPath; //allHTMLContent,MarkedUpContent,TablesandListsContent
-	static String logFile="resources/log/scores_headphone_cosine_1gram";
+	static String logFile="resources/log/error_analysis_scores_"+productCategory+"_";
 	//PREPROCESSING
 	static boolean stemming=true;
 	static boolean stopWordRemoval=true;
 	static boolean lowerCase=true;
 	static String htmlParsingElements="marked_up_data"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
+
+	static String errorLogFile="resources/errorAnalysis/"+productCategory+"_"+htmlParsingElements+"_error_analysis.csv";
 
 	//String evaluation type definition
 	static String evaluationType="optimizingF1"; //average, median, optimizingF1
@@ -108,8 +110,11 @@ public class MultipleRunsInitializer {
 			for (int i = 0; i < listOfHTML.length; i++) {
 				//if(!listOfHTML[i].getName().contains("node1be6f6fecd7637694711d6a7352d4535")) continue;
 				//if you are in wrapper mode do not consider all pages but only the ones that could be potentially parsed by the implemented wrappers
-				String pld = HTMLPages.getPLDFromHTMLPath(labelled, listOfHTML[i].getPath());
-		    	if(mode.equals("wrapper") && !(pld.contains("ebay")||pld.contains("tesco")||pld.contains("alibaba")||pld.contains("overstock")) ) continue;
+				if(mode.equals("wrapper")){
+					String pld = HTMLPages.getPLDFromHTMLPath(labelled, listOfHTML[i].getPath());
+			    	if(!(pld.contains("ebay")||pld.contains("tesco")||pld.contains("alibaba")||pld.contains("overstock")) ) continue;
+				}
+				
 
 		    	HashMap<String, Double> predictedAnswersForPage = new HashMap<String,Double>();
 		    	ArrayList<String> rightAnswers= calculate.getRightAnswer(modelConfig.getLabelled(), listOfHTML[i].getName());
@@ -152,12 +157,15 @@ public class MultipleRunsInitializer {
 		    System.out.println("Recall: "+results.getRecall());
 		    System.out.println("F1: "+results.getF1());
 		    System.out.println("Average Common Grams: "+results.getAvgCommonGrams());
-		    for(Map.Entry<String, Integer> m:results.getFalsePositivesCounts().entrySet())
-		    	System.out.println(m.getKey()+"--"+m.getValue());
-		    System.out.println("True positives:"+results.getTruePositivesValues());
-		    System.out.println("False Negatives:"+results.getFalseNegativesValues());
-
 			System.out.println("---END---");
+			System.out.println("False Negatives:"+results.getFalseNegatives());
+			System.out.println("False Positives:"+results.getFalsePositives());
+			System.out.println("True Positives:"+results.getTruePositives());
+			System.out.println("True Positives:"+results.getTruePositivesValues());
+			
+//			for (Map.Entry<String, Integer> fn:results.getFalseNegativesCounts().entrySet())
+//				System.out.println(fn.getKey()+"--"+fn.getValue());
+				
 			
 			allResults.put(modelConfig, results);
 			error_logger.printlogErrorAnalysis(errorLogFile, results);
@@ -188,9 +196,9 @@ public class MultipleRunsInitializer {
 	private static Queue<ModelConfiguration> defineExperiments() {
 		Queue<ModelConfiguration> models = new LinkedList<ModelConfiguration>();
 		
-//		models.add(new ModelConfiguration
-//				(modelType,productCategory, catalog,htmlFolder,  labelled, 
-//				 "simple", "n/a", 1,0,  0,  false, 0));
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled, 
+				 "simple", "n/a", 1,0,  0,  false, 0));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled, 
 //				 "simple", "n/a", 2,0,  0,  false, 0));
@@ -236,22 +244,22 @@ public class MultipleRunsInitializer {
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "cosine", "simple", 2,0,  0,  true, 0.6));
-//		models.add(new ModelConfiguration
-//				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "cosine", "tfidf", 1,0,  0,  false, 0));
+		models.add(new ModelConfiguration
+				(modelType,productCategory, catalog,htmlFolder,  labelled,  
+				 "cosine", "tfidf", 1,0,  0,  false, 0));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "cosine", "tfidf", 2,0,  0,  false, 0));
-		models.add(new ModelConfiguration
-				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-				 "cosine", "tfidf", 3,0,  0,  false, 0));
+//		models.add(new ModelConfiguration
+//				(modelType,productCategory, catalog,htmlFolder,  labelled,  
+//				 "cosine", "tfidf", 3,0,  0,  false, 0));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "cosine", "tfidf", 2,0,  0,  true, 0.6));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "cosine", "tfidf", 2,0,  0,  true, 0.8));
-		
+////		
 		
 
 		return models;

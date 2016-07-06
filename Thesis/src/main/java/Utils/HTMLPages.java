@@ -1,6 +1,8 @@
 package Utils;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +18,16 @@ import BagOfWordsModel.PreprocessingConfiguration;
 
 public class HTMLPages {
 
+	static BufferedWriter logProcessing;
+	
+	static {
+	    try{
+			logProcessing = new BufferedWriter(new FileWriter(new File("resources/HTMLWords_errorAnalysis.csv")));
+	    } catch (IOException e){
+	        e.printStackTrace();
+	    }
+	}
+	
 	public static HashMap<String, List<String>> getHTMLToken(ModelConfiguration model, PreprocessingConfiguration preprocessing, String mode){
 		  try{
 			HashMap<String,List<String>> tokensOfPages = new HashMap<String,List<String>>();
@@ -27,6 +39,14 @@ public class HTMLPages {
 		    	String pld= getPLDFromHTMLPath(model.getLabelled(), listOfHTML[i].getPath());
 		    	if(mode.equals("wrapper") && !(pld.contains("ebay")|| pld.contains("overstock")||pld.contains("alibaba")||pld.contains("tesco"))) continue;
 				List<String> tokenizedValue = processText.textProcessing(listOfHTML[i].getPath(), null, model.getGrams(), true, preprocessing,model.getLabelled());
+				
+				logProcessing.append("Before Processing;"+listOfHTML[i].getName()+";"+processText.getText(true, null, listOfHTML[i].getPath(), preprocessing, model.getLabelled()));
+				logProcessing.newLine();
+				logProcessing.append("AFTER Processing;"+listOfHTML[i].getName()+";"+tokenizedValue);
+				logProcessing.newLine();
+				logProcessing.flush();
+
+				
 				if (null==tokenizedValue) {
 					System.out.println("The page "+listOfHTML[i].getName()+" had no content");
 					continue;
@@ -62,6 +82,9 @@ public class HTMLPages {
 				//String domain = de.wbsg.loddesc.util.DomainUtils.getDomain(url);
 				break;
 			}
+		}
+		if(url==""){
+			System.out.println("Url could not be retrieved");
 		}
 		return url.split("\\.")[1].split("/")[0];
 	}

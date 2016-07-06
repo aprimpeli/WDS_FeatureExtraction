@@ -1,7 +1,11 @@
 package BagOfWordsModel;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,20 +16,12 @@ import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.simmetrics.StringMetric;
-import org.simmetrics.builders.StringMetricBuilder;
-import org.simmetrics.builders.StringMetricBuilder.CollectionMetricInitialSimplifierStep;
-import org.simmetrics.metrics.JaroWinkler;
 import org.simmetrics.metrics.Levenshtein;
 import org.simmetrics.metrics.MongeElkan;
-import org.simmetrics.metrics.SmithWatermanGotoh;
 import org.simmetrics.metrics.StringMetrics;
-import org.simmetrics.simplifiers.Soundex;
-import org.simmetrics.tokenizers.Tokenizers;
 
 import Utils.ErrorAnalysisLog;
 
-import org.simmetrics.*;
 
 
 public class SimilarityCalculator { 
@@ -40,8 +36,9 @@ public class SimilarityCalculator {
 	ErrorAnalysisLog logger;
 	String pageName;
 	String productName;
+	BufferedWriter cosineWeights;
 	
-	public SimilarityCalculator(ModelConfiguration modelConfig, PreprocessingConfiguration preprocessing, HashMap<String,List<String>> pagesTokens,HashMap<String,List<String>> catalogTokens,ErrorAnalysisLog logger ) {
+	public SimilarityCalculator(ModelConfiguration modelConfig, PreprocessingConfiguration preprocessing, HashMap<String,List<String>> pagesTokens,HashMap<String,List<String>> catalogTokens,ErrorAnalysisLog logger ) throws IOException {
 		SimilarityCalculator.model = modelConfig;
 		SimilarityCalculator.preprocessing=preprocessing;				
 		SimilarityCalculator.vectorCatalogEntities = catalogTokens;
@@ -61,6 +58,7 @@ public class SimilarityCalculator {
 		}
 		this.logger=logger;
 		logger.setCommonWords(new HashMap<String, String>());
+		this.cosineWeights = new BufferedWriter( new FileWriter(new File("resources/errorAnalysis/cosineWeights.txt")));
 //		//precalculation of words frequencies
 //		if(modelConfig.getSimilarityType().equals("simple with frequency threshold")){
 //			modelConfig.setVectorCatalogFrequencies(weights.getFrequencyOfWords(wordsOfVector));
@@ -91,12 +89,12 @@ public class SimilarityCalculator {
 		double score = 0;
 		Set<String> commonElements = new HashSet<String>();
 		if(SimilarityCalculator.model.isOnTopLevenshtein()){
-			for(String gram1:catalogVectorSet){
-				for(String gram2:pageVectorSet){
-					if(commonWithLevenshteinSimilarity(gram1, gram2, model.getLevenshteinThreshold()))
-						commonElements.add(gram1);
-				}
-			}			
+			
+			for(String gram1:pageVectorSet){
+				if(null!=bestMatchWithLevenshteinSimilarity(gram1,new ArrayList<String>(catalogVectorSet) , model.getLevenshteinThreshold()))
+					commonElements.add(gram1);
+			}
+						
 		}
 		else{
 			commonElements = new HashSet<String>(pageVectorSet);
@@ -164,11 +162,11 @@ public class SimilarityCalculator {
 				
 				ArrayList<String> commonElements = new ArrayList<String>();
 				if(SimilarityCalculator.model.isOnTopLevenshtein()){
-					for(String gram1:tokensOfCatalogGram){
-						for(String gram2:tokensOfPageGram)
-							if(commonWithLevenshteinSimilarity(gram1, gram2, model.getLevenshteinThreshold()))
+						for(String gram1:tokensOfPageGram){
+							if(null!=bestMatchWithLevenshteinSimilarity(gram1, tokensOfCatalogGram, model.getLevenshteinThreshold()))
 								commonElements.add(gram1);
-					}
+						}
+					
 				} 
 				else {
 					commonElements = new ArrayList<String>(tokensOfPageGram);
@@ -189,28 +187,42 @@ public class SimilarityCalculator {
 		return score;
 	}
 	
-	public double cosineSimilarity(List<String> catalogVector, List<String> pageVector){
+	public double cosineSimilarity(List<String> catalogVector, List<String> pageVector) throws IOException{
 		
 		Weightening weights = new Weightening();
 		HashMap<String,Double> catalogWeights = new HashMap<String,Double>();
 		HashMap<String,Double> pageWeights = new HashMap<String,Double>();
 		
-		Set<String> commonWords = new HashSet<String>();
+		ArrayList<String> commonWordsPageSide = new ArrayList<String>();
+		ArrayList<String> commonWordsCatalogSide = new ArrayList<String>();
+
 		if( SimilarityCalculator.model.isOnTopLevenshtein()){
-			for(String gram1:catalogVector){
-				for(String gram2:pageVector)
-					if(commonWithLevenshteinSimilarity(gram1, gram2, model.getLevenshteinThreshold()))
-						commonWords.add(gram1);
-			}
+			
+			Set<String> pageVectorSet = new HashSet<String>(pageVector);
+			Set<String> catalogVectorSet = new HashSet<String>(catalogVector);
+
+				for(String gram1:pageVectorSet){
+					String bestMatch=bestMatchWithLevenshteinSimilarity(gram1, new ArrayList<String>(catalogVectorSet), model.getLevenshteinThreshold());
+					
+					if(null!=bestMatch){
+						commonWordsPageSide.add(gram1);
+						commonWordsCatalogSide.add(bestMatch);
+					}
+							
+				}
+			
+			
 		}
 		else{
-			commonWords = new HashSet<String>(catalogVector);
-			commonWords.retainAll(pageVector);
+			commonWordsPageSide = new ArrayList<String>(new HashSet<String> (catalogVector));
+			commonWordsPageSide.retainAll(new HashSet<String> (pageVector));
+			commonWordsPageSide=new ArrayList<String>(new HashSet<String> (commonWordsPageSide));
+			commonWordsCatalogSide=commonWordsPageSide;
 		}
 		
 		
 		double score = 0.0;
-		if (commonWords.size()>0){
+		if (commonWordsPageSide.size()>0){
 			
 			
 			if(model.getTypeOfWeighting().equals("simple")){
@@ -226,25 +238,51 @@ public class SimilarityCalculator {
 				System.out.println("Type of weighting:"+model.getTypeOfWeighting()+" cannot be calculated. Available options: simple or tfidf. The program will end.");
 				System.exit(0);
 			}
-			score = getCosineSimilarityScore(catalogWeights, pageWeights, commonWords);
-			totalCommonElements+=commonWords.size();
+			
+			score = getCosineSimilarityScore(pageWeights, commonWordsPageSide,catalogWeights, commonWordsCatalogSide);
+			totalCommonElements+=commonWordsPageSide.size();
 		}
-		logger.getCommonWords().put(this.pageName+";"+this.productName,commonWords.toString());
+		logger.getCommonWords().put(this.pageName+";"+this.productName,commonWordsPageSide.toString());
 		return score;
 	}
 	
-	private double getCosineSimilarityScore(HashMap<String,Double> vector1, HashMap<String,Double> vector2, Set<String> commonWords){
+	private void logCosineWeights(HashMap<String, Double> catalogWeights,
+			HashMap<String, Double> pageWeights) throws IOException {
+		//log the cosine weights
+		cosineWeights.append("---Catalog Weights---");
+		cosineWeights.newLine();
+		for(Map.Entry<String,Double> wC:catalogWeights.entrySet()){
+			cosineWeights.append(wC.getKey()+";"+wC.getValue());
+			cosineWeights.newLine();
+		}
+		cosineWeights.append("---Page Weights---");
+		cosineWeights.newLine();
+		for(Map.Entry<String,Double> wP:pageWeights.entrySet()){
+			cosineWeights.append(wP.getKey()+";"+wP.getValue());
+			cosineWeights.newLine();
+		}
+		cosineWeights.flush();
+	}
+	private double getCosineSimilarityScore(HashMap<String,Double> vector1, ArrayList<String> commonWordsPageSide, HashMap<String,Double> vector2,  ArrayList<String> commonWordsCatalogSide) throws IOException{
 		
-		double [] vectorA= new double[commonWords.size()];
-		double [] vectorB= new double[commonWords.size()];
-		vectorA= fromMapToMatrix(vector1,commonWords );		
-		vectorB = fromMapToMatrix(vector2, commonWords);
+		double [] vectorPage = new double[commonWordsPageSide.size()];
+		double [] vectorCatalog= new double[commonWordsCatalogSide.size()];
+		vectorPage= fromMapToMatrix(vector1,commonWordsPageSide);		
+		vectorCatalog = fromMapToMatrix(vector2, commonWordsCatalogSide);
 		
+		//log
+		cosineWeights.append("---");
+		cosineWeights.newLine();
+		cosineWeights.append("Page:"+pageName+";"+Arrays.toString(vectorPage));
+		cosineWeights.newLine();
+		cosineWeights.append("Product from Catalog:"+productName+";"+Arrays.toString(vectorCatalog));
+		cosineWeights.newLine();
+		cosineWeights.flush();
 
 		double dotProduct = 0.0;
 	    double normA = 0.0;
 	    double normB = 0.0;
-	    for (int i = 0; i < vectorA.length; i++) dotProduct += vectorA[i] * vectorB[i];   
+	    for (int i = 0; i < vectorPage.length; i++) dotProduct += vectorPage[i] * vectorCatalog[i];   
 	    for(Map.Entry<String, Double> v1:vector1.entrySet()) normA+=Math.pow(v1.getValue(), 2);
 	    for(Map.Entry<String, Double> v2:vector2.entrySet()) normB+=Math.pow(v2.getValue(), 2);
 
@@ -252,10 +290,11 @@ public class SimilarityCalculator {
 	    	System.out.println("Normalization factor for Cosine equals 0. Please check.");
 	    	return 0; //TODO
 	    }
+	   
 	    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 	}
 	
-	private double[] fromMapToMatrix(HashMap<String,Double> map, Set<String> list){
+	private double[] fromMapToMatrix(HashMap<String,Double> map, ArrayList<String> list){
 		
 		double[] matrix = new double[list.size()];
 		int insertions=0;
@@ -264,6 +303,11 @@ public class SimilarityCalculator {
 				matrix[insertions]=map.get(word);
 				insertions++;
 			} 
+			else{
+				System.out.println("Cosine similarity could not be calculated. System will exit");
+				System.exit(0);
+			}
+				
 		}
 		return matrix;
 	}
@@ -328,17 +372,32 @@ public class SimilarityCalculator {
 		return predictedAnswers;
 	}
 	
-	public static boolean commonWithLevenshteinSimilarity(String a, String b, double threshold) {
+	public static String bestMatchWithLevenshteinSimilarity(String a, List<String> vectorb, double threshold) {
 		
-		int distance = org.apache.commons.lang.StringUtils.getLevenshteinDistance(a, b);
-        double similarity= 0;
-        if(a.length()>b.length())
-        	similarity=1.0-((double)distance/a.length());
-        else
-        	similarity=1.0-((double)distance/b.length());
-        
-        //System.out.println(a+"---"+b+":"+similarity);
-        return (similarity>=threshold);
+		String maxCandidate=null;
+		double maxSim=0;
+		
+		for (String b:vectorb){
+			int distance = org.apache.commons.lang.StringUtils.getLevenshteinDistance(a, b);
+	        double similarity= 0;
+	        if(a.length()>b.length())
+	        	similarity=1.0-((double)distance/a.length());
+	        else
+	        	similarity=1.0-((double)distance/b.length());
+	        
+	        if(similarity==1) {
+	        	maxCandidate=b;
+	        	break;
+	        }
+	        
+	        if(similarity<threshold) continue;
+	        if(similarity>maxSim){
+	        	maxSim=similarity;
+	        	maxCandidate=b;
+	        }
+		}
+		
+        return (maxCandidate);
     }
 
 
