@@ -1,0 +1,6 @@
+"byte"|"B","byte"
+"kilobyte"|"kilobyte","kb"|1000.0
+"megabyte"|"megabyte","mb"|1000000.0
+"gigabyte"|"gb","gigabyte"|1000000000
+"terabyte"|"terabyte","tb"|1000000000000
+"petabyte"|"pb","petabyte"|1000000000000000

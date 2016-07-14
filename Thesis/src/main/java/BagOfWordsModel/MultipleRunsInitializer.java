@@ -26,7 +26,7 @@ import Utils.ProductCatalogs;
 public class MultipleRunsInitializer {
 
 	//configure
-	static String productCategory="tv"; //tv, phone, headphone
+	static String productCategory="phone"; //tv, phone, headphone
 	static String mode="normal"; // define the mode (wrapper/normal). In the wrapper mode only the 4 plds for which a wrapper exists are considered (ebay, tesco, alibaba, overstock)
 	static String dataPath="C:/Users/Johannes/Google Drive/Master_Thesis/2.ProfilingOfData/LabelledDataProfiling/";
 	//static String experimentsPath="C:/Users/Johannes/Google Drive/Master_Thesis/3.MatchingModels/ExperimentsResults/BagOfWordsModel/"+mode+"/"+productCategory+"/";
@@ -44,7 +44,7 @@ public class MultipleRunsInitializer {
 	static boolean stemming=true;
 	static boolean stopWordRemoval=true;
 	static boolean lowerCase=true;
-	static String htmlParsingElements="marked_up_data"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
+	static String htmlParsingElements="all_html"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
 
 	static String errorLogFile="resources/errorAnalysis/"+productCategory+"_"+htmlParsingElements+"_error_analysis.csv";
 
@@ -195,10 +195,10 @@ public class MultipleRunsInitializer {
 	}
 	private static Queue<ModelConfiguration> defineExperiments() {
 		Queue<ModelConfiguration> models = new LinkedList<ModelConfiguration>();
-		
-		models.add(new ModelConfiguration
-				(modelType,productCategory, catalog,htmlFolder,  labelled, 
-				 "simple", "n/a", 1,0,  0,  false, 0));
+//		
+//		models.add(new ModelConfiguration
+//				(modelType,productCategory, catalog,htmlFolder,  labelled, 
+//				 "simple", "n/a", 1,0,  0,  false, 0));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled, 
 //				 "simple", "n/a", 2,0,  0,  false, 0));
@@ -259,8 +259,8 @@ public class MultipleRunsInitializer {
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
 //				 "cosine", "tfidf", 2,0,  0,  true, 0.8));
-////		
-		
+//		
+//		
 
 		return models;
 	}

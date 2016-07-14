@@ -1,0 +1,3 @@
+"megapixel"|"mp","megapixels","mpixel","mpixels"
+"mah"|"mah"
+"ohm"|"?","O","ohm","ohms"

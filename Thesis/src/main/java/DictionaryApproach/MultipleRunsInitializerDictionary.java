@@ -46,15 +46,16 @@ public class MultipleRunsInitializerDictionary {
 	static String labelled=dataPath+"/CorrectedLabelledEntities/UnifiedGoldStandard_extra/"+productCategory+"s.txt";
 	static String currentExperimentPath; //allHTMLContent,MarkedUpContent,TablesandListsContent
 	static String logFile="resources/log/logEvaluationItemsDictionary";
-	static String errorLogFile="resources/errorAnalysis/dictionary_html_tables_lists_"+productCategory+"_error_analysis.csv";
 
 	//PREPROCESSING
 	static boolean stemming=true;
 	static boolean stopWordRemoval=true;
 	static boolean lowerCase=true;
-	static String htmlParsingElements="marked_up_data"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
+	static String htmlParsingElements="all_html"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
 	static double idfThresholdForcatalog=0.8;
 	static boolean idfFiltering =false;
+	static String errorLogFile="resources/errorAnalysis/dictionary_"+htmlParsingElements+"_"+productCategory+"_error_analysis.csv";
+
 	
 	//String evaluation type definition
 	static String evaluationType="optimizingF1"; //average, median, optimizingF1
@@ -75,6 +76,7 @@ public class MultipleRunsInitializerDictionary {
 			catalog=dataPath+"/ProductCatalog/"+productCategory+"Catalog.json";
 			htmlFolder=dataPath+"/HTML_Pages/Unified_extra/"+productCategory+"s";
 			labelled=dataPath+"/CorrectedLabelledEntities/UnifiedGoldStandard_extra/"+productCategory+"s.txt";
+			errorLogFile="resources/errorAnalysis/dictionary_"+htmlParsingElements+"_"+productCategory+"_error_analysis.csv";
 		}
 		String[] allHtmlParsingElements=htmlParsingElements.split(";");
 		
@@ -107,7 +109,7 @@ public class MultipleRunsInitializerDictionary {
 		File[] listOfHTML = folderHTML.listFiles();
 		HashMap<String,List<String>> tokensOfAllHTML=new HashMap<String,List<String>>();
 		
-		BufferedWriter logProcessing = new BufferedWriter(new FileWriter(new File("resources/HTMLPages_dictionary_errorAnalysis.csv")));
+		BufferedWriter logProcessing = new BufferedWriter(new FileWriter(new File("resources/HTMLPages_dictionary_errorAnalysis_"+htmlParsingElements+".csv")));
 		System.out.println("Begin Feature Tagging");
 		
 		for (int i = 0; i < listOfHTML.length; i++) {
@@ -309,7 +311,7 @@ public class MultipleRunsInitializerDictionary {
 		
 		//simType, windowsize, labelledpath, finalSimThreshold, editdistancetype, prunelength, similarityType, weighting, grams, html,category,catalog
 		models.add(new ModelConfiguration("exact", 0,labelled,  0, false, 0, "cosine", "tfidf", 1 , htmlFolder, productCategory, catalog));
-		models.add(new ModelConfiguration("non-exact", 3,labelled,  0.7, true, 3,"cosine", "tfidf", 1 , htmlFolder, productCategory, catalog));
+//		models.add(new ModelConfiguration("non-exact", 3,labelled,  0.7, true, 3,"cosine", "tfidf", 1 , htmlFolder, productCategory, catalog));
 //		models.add(new ModelConfiguration("non-exact", 2,labelled,  0.6, true, 3,"cosine", "tfidf", 1 , htmlFolder, productCategory, catalog));
 //		models.add(new ModelConfiguration("non-exact", 2,labelled,  0.85, true, 4,"cosine", "tfidf", 1 , htmlFolder, productCategory, catalog));
 

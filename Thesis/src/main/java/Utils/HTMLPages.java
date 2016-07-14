@@ -21,8 +21,8 @@ public class HTMLPages {
 	static BufferedWriter logProcessing;
 	
 	static {
-	    try{
-			logProcessing = new BufferedWriter(new FileWriter(new File("resources/HTMLWords_errorAnalysis.csv")));
+	    try{	    	
+			logProcessing = new BufferedWriter(new FileWriter(new File("resources/errorAnalysis/HTMLWords_errorAnalysis"+Math.random()+".csv")));
 	    } catch (IOException e){
 	        e.printStackTrace();
 	    }
