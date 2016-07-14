@@ -26,6 +26,8 @@ public class Initializer {
 	static boolean stopWordRemoval=true;
 	static boolean lowerCase=true;
 	static String htmlParsingElements=""; //
+	static boolean numericalHandling=true;
+	static boolean tablesFiltering=true;
 	
 	//SIMILARITY CONFIGURATION
 	//cosine or simple(exact matching) or jaccard or simple with frequency threshold
@@ -51,7 +53,7 @@ public class Initializer {
 				 maxFreq,  minFreq,  onTopLevenshtein,
 				 levenshteinThreshold);
 		
-		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements);
+		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements,numericalHandling,tablesFiltering);
 		
 		System.out.println("---START---");
 		System.out.println("The bag of words model will be executed for the product category "+ productCategory);

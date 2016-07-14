@@ -18,9 +18,7 @@ import BagOfWordsModel.PreprocessingConfiguration;
 import BagOfWordsModel.SimilarityCalculator;
 import DictionaryApproach.Dictionary;
 import DictionaryApproach.DictionaryCreator;
-import DictionaryApproach.FeatureSimilarityComputation;
-import DictionaryApproach.FeatureTagger;
-import DictionaryApproach.InputPreprocessor;
+
 
 public class TestDictionaryApproach {
 	static String labelled="C:\\Users\\Johannes\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\LabelledDataProfiling\\CorrectedLabelledEntities\\PhonesLabelledEntitiesProcessed.txt";
@@ -30,6 +28,8 @@ public class TestDictionaryApproach {
 	static boolean stemming=false;
 	static boolean stopWordRemoval=false;
 	static boolean lowerCase=true;
+	static boolean numericalHandling=true;
+	static boolean tablesFiltering=true;
 	static String htmlParsingElements="html_tables"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
 	Map<Integer, List<String>> tokenizedInput;
 	
@@ -41,7 +41,7 @@ public class TestDictionaryApproach {
 		String text = "ireland";
 		DictionaryCreator dict = new DictionaryCreator();
 		Dictionary dictionary = new Dictionary();
-		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements);
+		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements,numericalHandling,tablesFiltering);
 
 		dictionary=dict.createDictionary(catalog, "phone",preprocessing, labelled, idfThresholdForcatalog,true);		
 		

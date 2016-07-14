@@ -1,23 +1,89 @@
 package Utils;
 
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Set;
+
+import org.json.JSONException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import Wrappers.AlibabaWrapper;
+import Wrappers.AliexpressWrapper;
+import Wrappers.BestbuyWrapper;
+import Wrappers.BjsWrapper;
+import Wrappers.ConnsWrapper;
+import Wrappers.DhgateWrapper;
+import Wrappers.EbayWrapper;
+import Wrappers.FlipKartWrapper;
+import Wrappers.MacmallWrapper;
+import Wrappers.MicroCenterWrapper;
+import Wrappers.NeweggWrapper;
+import Wrappers.OverstockWrapper;
+import Wrappers.SamsclubWrapper;
+import Wrappers.SearsoutletWrapper;
+import Wrappers.ShopWrapper;
+import Wrappers.SonyWrapper;
+import Wrappers.TargetWrapper;
+import Wrappers.TechspotWrapper;
+import Wrappers.TescoWrapper;
+import Wrappers.TomtopWrapper;
+import Wrappers.WalmartWrapper;
+
+import com.google.common.base.Optional;
+
 import BagOfWordsModel.DocPreprocessor;
 
 public class HTMLFragmentsExtractor {
 	String labelledEntitiesPath;
+	
 	public HTMLFragmentsExtractor(String labelPath){
 		labelledEntitiesPath=labelPath;
 	}
+	public HTMLFragmentsExtractor(){
+	}
 				
 	public static void main(String args[]) throws IOException{
-//		HTMLFragmentsExtractor extr= new HTMLFragmentsExtractor();
-//		System.out.println(extr.getTableWithWrapperText("C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\phones\\HTML\\iphone 4_2.html","ebay.com"));
+		HTMLFragmentsExtractor extr= new HTMLFragmentsExtractor();
+		
+		File folder = new File("C:/Users/Johannes/Google Drive/Master_Thesis/2.ProfilingOfData/LabelledDataProfiling/HTML_Pages/Unified_extra/"
+				+ "tvs");
+		File[] listOfFiles = folder.listFiles();
+
+	    for (int i = 0; i < listOfFiles.length; i++) {
+	    	System.out.println(listOfFiles[i].getName());
+	    	System.out.println(extr.getTablesListsContentFromWrappers(listOfFiles[i].getPath()));
+	    }
+		    
+		
 	}
 
 	public String getListText(String file) throws IOException {
@@ -45,6 +111,7 @@ public class HTMLFragmentsExtractor {
 		
 		for (Element table : doc.select("table")) {
 			//exclude nested elements
+			if(isNestedElement(table, false,true)) continue;
 			
 		    String table_text=Jsoup.parse(table.html()).text(); 
 
@@ -56,10 +123,10 @@ public class HTMLFragmentsExtractor {
 	}
 
 	public boolean isNestedElement(Element el, boolean isTable, boolean isList){
+				
 		if((isTable && el.children().select("table").size()>1) || (isList && el.children().select("table").size()>0)) return true;
 		if((isList && el.children().select("ul,ol,dl").size()>1) || (isTable && el.children().select("ul,ol,dl").size()>0)) return true;
-//		if((isTable && el.parents().select("table").size()>1) || (isList && el.parents().select("table").size()>0)) return true;
-//		if((isList && el.parents().select("ul,ol,dl").size()>1) || (isTable && el.parents().select("ul,ol,dl").size()>0)) return true;
+
 		return false;
 
 	}
@@ -156,5 +223,203 @@ public class HTMLFragmentsExtractor {
 			return null;
 			}
 		return allTablesContent.toString();
+	}
+
+	public String getTablesListsContentFromWrappers(String file) throws JSONException, IOException{
+		String pld= HTMLPages.getPLDFromHTMLPath(labelledEntitiesPath, file);
+		if(pld.contains("alibaba")){
+			AlibabaWrapper w= new AlibabaWrapper();
+			return w.getTableListsContentWithWrapperText(file);
+		}
+		else if(pld.contains("aliexpress")){
+			AliexpressWrapper w= new AliexpressWrapper();
+			return w.getTableListsContentWithWrapperText(file);
+		}
+		else if(pld.contains("bestbuy")){
+			BestbuyWrapper w= new BestbuyWrapper();
+			return w.getTableListsContentWithWrapperText(file);
+		}
+		else if(pld.contains("bjs")){
+			BjsWrapper w= new BjsWrapper();
+			return w.getTableListsContentWithWrapperText(file);
+		}
+		else if(pld.contains("conns")){
+			ConnsWrapper w= new ConnsWrapper();
+			return w.getTableListsContentWithWrapperText(file);
+		}
+		else if(pld.contains("dhgate")){
+			DhgateWrapper w= new DhgateWrapper();
+			return w.getTableListsContentWithWrapperText(file);
+		}
+		else if(pld.contains("ebay")){
+			EbayWrapper w= new EbayWrapper();
+			return w.getTableListsContentWithWrapperText(file);
+		}
+		else if(pld.contains("flipkart")){
+			FlipKartWrapper w= new FlipKartWrapper();
+			return w.getTableListsContentWithWrapperText(file);
+		}
+		else if(pld.contains("macmal")){
+			MacmallWrapper w= new MacmallWrapper();
+			return w.getTableListsContentWithWrapperText(file);
+		}
+		else if(pld.contains("microcenter")){
+			MicroCenterWrapper w= new MicroCenterWrapper();
+			return w.getTableListsContentWithWrapperText(file);
+		}
+		else if(pld.contains("newegg")){
+			NeweggWrapper w= new NeweggWrapper();
+			return w.getTableListsContentWithWrapperText(file);
+		}
+		else if(pld.contains("overstock")){
+			OverstockWrapper w= new OverstockWrapper();
+			return w.getTableListsContentWithWrapperText(file);
+		}
+		else if(pld.contains("samsclub")){
+			SamsclubWrapper w= new SamsclubWrapper();
+			return w.getTableListsContentWithWrapperText(file);
+		}
+		else if(pld.contains("searsoutlet")){
+			SearsoutletWrapper w= new SearsoutletWrapper();
+			return w.getTableListsContentWithWrapperText(file);
+		}
+		else if(pld.contains("shop")){
+			ShopWrapper w= new ShopWrapper();
+			return w.getTableListsContentWithWrapperText(file);
+		}
+		else if(pld.contains("sony")){
+			SonyWrapper w= new SonyWrapper();
+			return w.getTableListsContentWithWrapperText(file);
+		}
+		else if(pld.contains("target")){
+			TargetWrapper w= new TargetWrapper();
+			return w.getTableListsContentWithWrapperText(file);
+		}
+		else if(pld.contains("techspot")){
+			TechspotWrapper w= new TechspotWrapper();
+			return w.getTableListsContentWithWrapperText(file);
+		}
+		else if(pld.contains("tesco")){
+			TescoWrapper w= new TescoWrapper();
+			return w.getTableListsContentWithWrapperText(file);
+		}
+		else if(pld.contains("tomtop")){
+			TomtopWrapper w= new TomtopWrapper();
+			return w.getTableListsContentWithWrapperText(file);
+		}
+		else if(pld.contains("walmart")){
+			WalmartWrapper w= new WalmartWrapper();
+			return w.getTableListsContentWithWrapperText(file);
+		}
+		else {
+			System.out.println("PLD:"+pld+" is unknown.");
+			System.exit(0);
+			return null;
+		}
+	}
+	
+	public String getFilteredTableText(String filepath) throws IOException {
+		
+		String contentOfFile = DocPreprocessor.fileToText(filepath);
+		Document doc = Jsoup.parse(contentOfFile, "UTF-8");
+		StringBuilder allTablesContent= new StringBuilder();
+
+		//Petar's code
+		main_loop: for (Element table : doc.getElementsByTag("table")) {
+
+			// remove tables inside forms
+			for (Element p : table.parents()) {
+				if (p.tagName().equals("form")) {
+					continue main_loop;
+				}
+			}
+
+			// remove table with sub-tables
+			Elements subTables = table.getElementsByTag("table");
+			subTables.remove(table);
+			if (subTables.size() > 0) {
+				continue;
+			}
+			
+			// remove table with sub-lists
+			Elements subLists = table.select("ul,ol,dl");
+			subLists.remove(table);
+			if (subLists.size()>0) {
+				continue;
+			}
+
+			// remove table with option elements
+			if (table.select("option").size()>0) {
+				continue;
+			}
+					
+			//if survived all the above
+			String table_text=Jsoup.parse(table.html()).text(); 
+		    allTablesContent.append(table_text+" ");
+			
+		}
+		return allTablesContent.toString();
+	}
+
+	public String getFilteredListText(String filepath) throws IOException{
+		String contentOfFile = DocPreprocessor.fileToText(filepath);
+		Document doc = Jsoup.parse(contentOfFile, "UTF-8");
+		StringBuilder allListsContent= new StringBuilder();
+
+		//Petar's code
+		for (Element list : doc.getElementsByTag("ul")) {
+
+			// remove list inside forms
+			for (Element p : list.parents()) {
+				if (p.tagName().equals("form")) {
+					continue;
+				}
+			}
+
+			// remove list with sub-tables
+			Elements subTables = list.getElementsByTag("table");
+			subTables.remove(list);
+			if (subTables.size() > 0) {
+				continue;
+			}
+			
+			// remove list with sub-lists
+			Elements subLists = list.select("ul,ol,dl");
+			subLists.remove(list);
+			if (subLists.size()>0) {
+				continue;
+			}
+
+			// remove table with option elements
+			if (list.select("option").size()>0) {
+				continue;
+			}
+			
+//			// there should not be a big number of urls
+//			Elements links = list.select("a[href]");
+//			if(links.size()>=list.getElementsByTag("li").size()) {
+//				System.out.println(filepath);
+//				System.out.println("Links:"+links.size());
+//				System.out.println("Li:"+list.getElementsByTag("li").size());
+//				continue;
+//			}
+			
+			//if all li elements have an href child elements diregard
+			Elements liEl = list.getElementsByTag("li");
+			boolean allHref=true;
+			for(Element li:liEl){
+				if(li.select("a[href]").size()==0){
+					allHref=false;
+					break;
+				}
+			}
+			if(allHref) continue;
+			
+			//if survived all the above
+			String list_text=Jsoup.parse(list.html()).text(); 
+			allListsContent.append(list_text+" ");
+			
+		}
+		return allListsContent.toString();
 	}
 }

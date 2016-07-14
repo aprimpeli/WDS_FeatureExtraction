@@ -35,10 +35,13 @@ public class HTMLPages {
 			System.out.println("HTML Pages located in:"+model.getHtmlFolder());
 		    File[] listOfHTML = folderHTML.listFiles();
 			DocPreprocessor processText = new DocPreprocessor();
-		    for (int i = 0; i < listOfHTML.length; i++) {		  
-		    	String pld= getPLDFromHTMLPath(model.getLabelled(), listOfHTML[i].getPath());
-		    	if(mode.equals("wrapper") && !(pld.contains("ebay")|| pld.contains("overstock")||pld.contains("alibaba")||pld.contains("tesco"))) continue;
-				List<String> tokenizedValue = processText.textProcessing(listOfHTML[i].getPath(), null, model.getGrams(), true, preprocessing,model.getLabelled());
+		    for (int i = 0; i < listOfHTML.length; i++) {	
+		    	if(mode.equals("wrapper")){
+		    		String pld= getPLDFromHTMLPath(model.getLabelled(), listOfHTML[i].getPath());
+		    	 if(!(pld.contains("ebay")|| pld.contains("overstock")||pld.contains("alibaba")||pld.contains("tesco"))) continue;
+				
+		    	}
+		    	List<String> tokenizedValue = processText.textProcessing(listOfHTML[i].getPath(), null, model.getGrams(), true, preprocessing,model.getLabelled());
 				
 				logProcessing.append("Before Processing;"+listOfHTML[i].getName()+";"+processText.getText(true, null, listOfHTML[i].getPath(), preprocessing, model.getLabelled()));
 				logProcessing.newLine();

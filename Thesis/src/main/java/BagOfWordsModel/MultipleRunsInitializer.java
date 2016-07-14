@@ -41,10 +41,12 @@ public class MultipleRunsInitializer {
 	static String currentExperimentPath; //allHTMLContent,MarkedUpContent,TablesandListsContent
 	static String logFile="resources/log/error_analysis_scores_"+productCategory+"_";
 	//PREPROCESSING
+	static boolean numericalHandling=false;
+	static boolean tableslistsFiltering=false;
 	static boolean stemming=true;
 	static boolean stopWordRemoval=true;
 	static boolean lowerCase=true;
-	static String htmlParsingElements="all_html"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
+	static String htmlParsingElements="html_tables_lists"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
 
 	static String errorLogFile="resources/errorAnalysis/"+productCategory+"_"+htmlParsingElements+"_error_analysis.csv";
 
@@ -84,7 +86,7 @@ public class MultipleRunsInitializer {
 			
 		
 			
-			PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements);
+			PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements,numericalHandling,tableslistsFiltering);
 			
 			System.out.println("---START---");
 			System.out.println("The bag of words model will be executed for the product category "+ productCategory);

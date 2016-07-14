@@ -9,6 +9,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.lucene.analysis.LowerCaseFilter;
 import org.apache.lucene.analysis.PorterStemFilter;
@@ -23,6 +25,9 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.util.Version;
 import org.jsoup.Jsoup;
 
+import UnitConversion.ColumnTypeGuesser;
+import UnitConversion.SubUnit;
+import UnitConversion.ColumnTypeGuesser.ColumnDataType;
 import Utils.HTMLFragmentsExtractor;
 import Utils.LabelledFileExtractions;
 import Utils.NodeFromLabelled;
@@ -31,15 +36,24 @@ import Utils.NodeFromLabelled;
 
 
 public class DocPreprocessor {
+	
+	Pattern unitConversionPattern;
+	
+	public DocPreprocessor(){
+		unitConversionPattern= Pattern.compile("(?:\\.*+\\d)++ *+[^ \\d]++");
 
+	}
+	
 	public static void main (String [] args){
 		try{
-			String filepath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\tvs\\HTML\\43uf6400_1.html";
+			String filepath="C:/Users/Johannes/Google Drive/Master_Thesis/2.ProfilingOfData/LabelledDataProfiling/HTML_Pages/"
+				+ "Unified_extra/phones_test/node15e565d029457a98fee3de1ce7d5191c.html";
 			String labelledPath="";
 			DocPreprocessor process = new DocPreprocessor();
 			System.out.println("CASE 1");
-			PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(true, true, true, "marked_up_data");
-			process.printList(process.textProcessing(filepath, null ,1,true, preprocessing,labelledPath));
+			PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(true, true, true, "html_tables_lists",true,false);
+		
+			System.out.print(process.getText(true, null, filepath,  preprocessing,labelledPath));
 //			System.out.println("CASE 2");
 //			process.printList(process.textProcessing(filepath, "",true, false, true, true));
 //			System.out.println("CASE 3");
@@ -124,22 +138,42 @@ public class DocPreprocessor {
 				text= Jsoup.parse(text).text();
 			else if(preprocessing.getHtmlParsingType().equals("html_tables")){
 				HTMLFragmentsExtractor utils = new HTMLFragmentsExtractor(labelledpath);
-				text=utils.getTableText(filepath);
+				if(!preprocessing.isTablesFiltering()){
+					text=utils.getTableText(filepath);
+				}
+				else{
+					text=utils.getFilteredTableText(filepath);
+				}
 			}
 			else if(preprocessing.getHtmlParsingType().equals("html_lists")){
 				HTMLFragmentsExtractor utils = new HTMLFragmentsExtractor(labelledpath);
-				text=utils.getListText(filepath);
+				if(!preprocessing.isTablesFiltering()){
+					text=utils.getListText(filepath);
+				}
+				else{
+					text=utils.getFilteredListText(filepath);
+				}				
 			}
+			
 			else if(preprocessing.getHtmlParsingType().equals("html_tables_lists")){
 				HTMLFragmentsExtractor utils = new HTMLFragmentsExtractor(labelledpath);
 				StringBuilder allContent = new StringBuilder();
-				String listText=utils.getListText(filepath);
-				//System.out.println("LIST:"+listText);
-				String tableText=utils.getTableText(filepath);
-				//System.out.println("TABLE:"+tableText);
-				allContent.append(listText).append(tableText);
+				String tabletext="";
+				String listText="";
+
+				if(!preprocessing.isTablesFiltering()){
+					listText=utils.getListText(filepath);
+					tabletext=utils.getTableText(filepath);
+					allContent.append(listText).append(tabletext);
+
+				}
+				else{
+					String TablesListstext=utils.getTablesListsContentFromWrappers(filepath);
+					allContent.append(TablesListstext);
+
+				}
+				
 				text = allContent.toString();
-				//System.out.println("ALL:"+text);
 			}
 			else if(preprocessing.getHtmlParsingType().equals("html_tables_lists_wrapper")){
 				HTMLFragmentsExtractor utils = new HTMLFragmentsExtractor(labelledpath);
@@ -159,9 +193,53 @@ public class DocPreprocessor {
 				 text = allContent.toString();
 			}
 		}
-		return text;
+		if (preprocessing.isUnitConversion()) return handleNumericalValues(text,isHTML);
+		else return text;
 	}
 	
+	private String handleNumericalValues(String text,boolean isHTML) {
+		
+		text=text.toLowerCase().replaceAll("[()]","");
+		
+		Matcher extractedValues= unitConversionPattern.matcher(text);
+		List<String> valuesToBeReplaced = new ArrayList<String>();
+		List<String> newValues = new ArrayList<String>();
+		ColumnTypeGuesser g = new ColumnTypeGuesser();
+
+		while(extractedValues.find()){
+			String tobeConverted=extractedValues.group(0);
+			
+			//take out the 2g, 3g, 4g so that they are not mixed with weights
+			if (tobeConverted.replaceAll(" ", "").equals("2g") || tobeConverted.replaceAll(" ", "").equals("3g") 
+					|| tobeConverted.replaceAll(" ", "").equals("4g"))	continue;
+							       
+	        SubUnit subUnit = new SubUnit();
+	        
+	        if(!g.guessTypeForValue(tobeConverted, null, true, subUnit).equals(ColumnDataType.unit)) continue;
+	        	        
+	        String normalizedValue=subUnit.getNewValue();
+//	        int beginIndex= (extractedValues.start() >= 10) ? extractedValues.start()-10 : 0;
+//	        int endIndex=(extractedValues.end() +10 > text.length()-1) ?text.length()-1 : extractedValues.end() +10;
+	        valuesToBeReplaced.add(tobeConverted);
+	        
+	        newValues.add(normalizedValue+subUnit.getBaseUnit().getMainUnit().getName());
+//	        replacedText=replacedText.substring(0, extractedValues.start())+normalizedValue+subUnit.getBaseUnit().getMainUnit().getName()
+//	        		+text.substring(extractedValues.end(), text.length()-1);
+												
+			//System.out.println(tobeConverted+" replace with: "+ normalizedValue+subUnit.getBaseUnit().getMainUnit().getName());
+		}
+		
+		for (int i=0;i<valuesToBeReplaced.size();i++){
+			if(isHTML)
+				text = text.replace(" "+valuesToBeReplaced.get(i)+" "," "+newValues.get(i)+" ");
+			else 
+				text = text.replace(valuesToBeReplaced.get(i)," "+newValues.get(i)+" ");
+		}
+				
+		//System.out.println(text);
+		return text;
+		
+	}
 	public Reader StringToReaderConverter(String text){
 		
 		StringReader wordReader = new StringReader(text);

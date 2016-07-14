@@ -26,6 +26,8 @@ public class SimilarityComputationTest {
 		static boolean stemming=true;
 		static boolean stopWordRemoval=true;
 		static boolean lowerCase=true;
+		static boolean numericalHandling=true;
+		static boolean tablesFiltering=true;
 		static String htmlParsingElements="";
 		
 		//SIMILARITY CONFIGURATION
@@ -106,7 +108,7 @@ public class SimilarityComputationTest {
 				 maxFreq,  minFreq,  onTopLevenshtein,
 				 levenshteinThreshold);
 		
-		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase,htmlParsingElements);
+		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase,htmlParsingElements,numericalHandling,tablesFiltering);
 
 		SimilarityCalculator calculate = new SimilarityCalculator(modelConfig, preprocessing, queryCorpus, docCorpus , null);
 
@@ -121,7 +123,7 @@ public class SimilarityComputationTest {
 		String b="5megapixel";
 		
 		DocPreprocessor process = new DocPreprocessor();
-		PreprocessingConfiguration config = new PreprocessingConfiguration(false, false, true, "");
+		PreprocessingConfiguration config = new PreprocessingConfiguration(false, false, true, "",numericalHandling,tablesFiltering);
 		List<String> gramsa = process.textProcessing(null, a, 1, false, config, "");
 		List<String> gramsb = process.textProcessing(null, b, 1, false, config, "");
 

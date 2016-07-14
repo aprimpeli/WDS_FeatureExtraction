@@ -6,6 +6,9 @@ public class PreprocessingConfiguration {
 	private boolean stemming;
 	private boolean stopWordRemoval;
 	private boolean lowerCase;
+	private boolean unitConversion;
+	private boolean tablesListsFiltering;
+	
 	public boolean isStemming() {
 		return stemming;
 	}
@@ -25,12 +28,14 @@ public class PreprocessingConfiguration {
 		this.lowerCase = lowerCase;
 	}
 	public PreprocessingConfiguration(boolean stemming,
-			boolean stopWordRemoval, boolean lowerCase, String htmlParsingElements) {
+			boolean stopWordRemoval, boolean lowerCase, String htmlParsingElements, boolean unitConversion,boolean tablesFiltering) {
 		super();
 		this.stemming = stemming;
 		this.stopWordRemoval = stopWordRemoval;
 		this.lowerCase = lowerCase;
 		this.htmlParsingType=htmlParsingElements;
+		this.unitConversion=unitConversion;
+		this.tablesListsFiltering=tablesFiltering;
 	}
 
 	
@@ -39,6 +44,18 @@ public class PreprocessingConfiguration {
 	}
 	public void setHtmlParsingType(String htmlParsingType) {
 		this.htmlParsingType = htmlParsingType;
+	}
+	public boolean isUnitConversion() {
+		return unitConversion;
+	}
+	public void setUnitConversion(boolean unitConversion) {
+		this.unitConversion = unitConversion;
+	}
+	public boolean isTablesFiltering() {
+		return tablesListsFiltering;
+	}
+	public void setTablesFiltering(boolean tablesFiltering) {
+		this.tablesListsFiltering = tablesFiltering;
 	}
 	
 	

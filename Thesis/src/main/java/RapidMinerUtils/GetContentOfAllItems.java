@@ -17,6 +17,8 @@ public class GetContentOfAllItems {
 	static boolean stemming=true;
 	static boolean stopWordRemoval=true;
 	static boolean lowerCase=true;
+	static boolean numericalHandling=true;
+	static boolean tablesFiltering=true;
 		
 	static String htmlFolder="";
 	static String productCategory="";
@@ -25,7 +27,7 @@ public class GetContentOfAllItems {
 	
 	public static void main(String[] args) throws JSONException, IOException {
 		
-		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase,"");
+		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase,"",numericalHandling,tablesFiltering);
 		// TODO Auto-generated method stub
 		HashMap<String,List<String>> tokensOfAllHTML = HTMLPages.getHTMLToken(null,null,"");
 		HashMap<String,List<String>> tokensOfAllCatalogEntities = ProductCatalogs.getCatalogTokens(productCategory, productCatalog, grams, preprocessing);
