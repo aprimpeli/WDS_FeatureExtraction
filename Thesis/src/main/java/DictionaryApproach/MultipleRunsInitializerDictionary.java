@@ -319,8 +319,8 @@ public class MultipleRunsInitializerDictionary {
 		Queue<ModelConfiguration> models = new LinkedList<ModelConfiguration>();
 		
 		//simType, windowsize, labelledpath, finalSimThreshold, editdistancetype, prunelength, similarityType, weighting, grams, html,category,catalog
-		models.add(new ModelConfiguration("exact", 0,labelled,  0, false, 0, "cosine", "tfidf", 1 , htmlFolder, productCategory, catalog, optimalFeatureWeighting, weightsFile));
-//		models.add(new ModelConfiguration("non-exact", 3,labelled,  0.7, true, 3,"cosine", "tfidf", 1 , htmlFolder, productCategory, catalog, optimalFeatureWeighting, weightsFile));
+//		models.add(new ModelConfiguration("exact", 0,labelled,  0, false, 0, "cosine", "tfidf", 1 , htmlFolder, productCategory, catalog, optimalFeatureWeighting, weightsFile));
+		models.add(new ModelConfiguration("non-exact", 3,labelled,  0.7, true, 3,"cosine", "tfidf", 1 , htmlFolder, productCategory, catalog, optimalFeatureWeighting, weightsFile));
 //		models.add(new ModelConfiguration("non-exact", 2,labelled,  0.6, true, 3,"cosine", "tfidf", 1 , htmlFolder, productCategory, catalog, optimalFeatureWeighting, weightsFile));
 //		models.add(new ModelConfiguration("non-exact", 2,labelled,  0.85, true, 4,"cosine", "tfidf", 1 , htmlFolder, productCategory, catalog, optimalFeatureWeighting, weightsFile));
 

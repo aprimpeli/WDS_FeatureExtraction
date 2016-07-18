@@ -19,12 +19,14 @@ import BagOfWordsModel.SimilarityCalculator;
 
 public class FeatureTagger {
 	
-	HashMap<Integer, List<String>> tokenizedInput;
+	private HashMap<Integer, List<String>> tokenizedInput;
 	public FeatureTagger(HashMap<Integer, List<String>> tok) {
 			this.tokenizedInput=tok;
 	}
 	
-	
+	public HashMap<Integer, List<String>> getTokInput(){
+		return this.tokenizedInput;
+	}
 	
 	public static void main (String args[]) throws JSONException, IOException{
 		String catalog="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\2.ProfilingOfData\\"
