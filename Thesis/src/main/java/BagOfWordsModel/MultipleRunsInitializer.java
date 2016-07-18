@@ -35,19 +35,26 @@ public class MultipleRunsInitializer {
 	//do not configure but keep the same file structure
 	static String modelType="BagOfWordsModel";
 	static String catalog=dataPath+"ProductCatalog/"+productCategory+"Catalog.json";
-	static String htmlFolder=dataPath+"HTML_Pages/Unified_extra/"+productCategory+"s";
+	static String htmlFolder=dataPath+"HTML_Pages/Unified_extra/"+productCategory+"s_test";
 	static String labelled=dataPath+"/CorrectedLabelledEntities/UnifiedGoldStandard_extra/"+productCategory+"s.txt";
 	//static String labelled="C:\\Users\\Johannes\\Google Drive\\Master_Thesis\\4.ErrorAnalysis\\RapidMiner\\data\\sampleHEADPHONELabelled.json";
 	static String currentExperimentPath; //allHTMLContent,MarkedUpContent,TablesandListsContent
 	static String logFile="resources/log/error_analysis_scores_"+productCategory+"_";
 	//PREPROCESSING
+	//advance methods
 	static boolean numericalHandling=false;
 	static boolean tableslistsFiltering=false;
+	static boolean modelNameHandling=false;
+	//basic preprocessing methods
 	static boolean stemming=true;
 	static boolean stopWordRemoval=true;
 	static boolean lowerCase=true;
-	static String htmlParsingElements="html_tables_lists"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
+	static String htmlParsingElements="marked_up_data"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
 
+	//advanced matching methods
+	static boolean optimalFeatureWeighting=false;
+	static String weightsFile="C:\\Users\\Johannes\\Google Drive\\Master_Thesis\\6.AdditionalMethod\\LearnWeightsForMethods\\test\\learned_weights.csv";
+	
 	static String errorLogFile="resources/errorAnalysis/"+productCategory+"_"+htmlParsingElements+"_error_analysis.csv";
 
 	//String evaluation type definition
@@ -83,58 +90,76 @@ public class MultipleRunsInitializer {
 		
 
 		for(ModelConfiguration modelConfig:allmodels){
-			
-		
-			
-			PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements,numericalHandling,tableslistsFiltering);
-			
-			System.out.println("---START---");
-			System.out.println("The bag of words model will be executed for the product category "+ productCategory);
-			System.out.println("The chosen similarity method is "+modelConfig.getSimilarityType());
-			System.out.println("The similarity measure will include Levenshtein distance on top:"+modelConfig.isOnTopLevenshtein()+" with threshold:"+modelConfig.getLevenshteinThreshold());
-			System.out.println("The chosen type of weighting (not available for simple similarity method) is "+modelConfig.getTypeOfWeighting());
-			System.out.println("The bag of words model will be implemented on the basis of "+modelConfig.getGrams()+" grams");
-			
-			HashMap<String,List<String>> tokensOfAllHTML = HTMLPages.getHTMLToken(modelConfig, preprocessing, mode);
-			if(null==tokensOfAllHTML) {
-				System.out.println("Something went wrong. Check");
-				System.exit(0);
-			}
-
-			HashMap<String,List<String>> tokensOfAllCatalogEntities = ProductCatalogs.getCatalogTokens(modelConfig.getProductCategory(), modelConfig.getCatalog(), modelConfig.getGrams(), preprocessing);
-			SimilarityCalculator calculate = new SimilarityCalculator(modelConfig,preprocessing, tokensOfAllHTML, tokensOfAllCatalogEntities,error_logger);
-			File folderHTML = new File(modelConfig.getHtmlFolder());
-			File[] listOfHTML = folderHTML.listFiles();
-			
+					
 			ResultItem results= new ResultItem();
 			List<EvaluationItem> ItemstoBeEvaluated = new ArrayList<EvaluationItem>();
-				
-			for (int i = 0; i < listOfHTML.length; i++) {
-				//if(!listOfHTML[i].getName().contains("node1be6f6fecd7637694711d6a7352d4535")) continue;
-				//if you are in wrapper mode do not consider all pages but only the ones that could be potentially parsed by the implemented wrappers
-				if(mode.equals("wrapper")){
-					String pld = HTMLPages.getPLDFromHTMLPath(labelled, listOfHTML[i].getPath());
-			    	if(!(pld.contains("ebay")||pld.contains("tesco")||pld.contains("alibaba")||pld.contains("overstock")) ) continue;
+			
+			String categories[]= productCategory.split(";");
+			for(int cat=0;cat<categories.length;cat++){
+				if(categories.length>1){
+					productCategory=categories[cat];
+					catalog=dataPath+"/ProductCatalog/"+productCategory+"Catalog.json";
+					htmlFolder=dataPath+"/HTML_Pages/Unified_extra/"+productCategory+"s";
+					labelled=dataPath+"/CorrectedLabelledEntities/UnifiedGoldStandard_extra/"+productCategory+"s.txt";
+					modelConfig.setCatalog(catalog);
+					modelConfig.setHtmlFolder(htmlFolder);
+					modelConfig.setLabelled(labelled);
+					modelConfig.setProductCategory(productCategory);
 				}
+			
+				PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements,numericalHandling,tableslistsFiltering,modelNameHandling);
 				
+				System.out.println("---START---");
+				System.out.println("The bag of words model will be executed for the product category "+ productCategory);
+				System.out.println("The chosen similarity method is "+modelConfig.getSimilarityType());
+				System.out.println("The similarity measure will include Levenshtein distance on top:"+modelConfig.isOnTopLevenshtein()+" with threshold:"+modelConfig.getLevenshteinThreshold());
+				System.out.println("The chosen type of weighting (not available for simple similarity method) is "+modelConfig.getTypeOfWeighting());
+				System.out.println("The bag of words model will be implemented on the basis of "+modelConfig.getGrams()+" grams");
+				
+				ArrayList<String> productNames=new ArrayList<String>();
+				if(modelNameHandling) productNames=ProductCatalogs.getProductNamesFromcatalog(modelConfig.getProductCategory(), modelConfig.getCatalog(), preprocessing);
+				preprocessing.setProductNames(productNames);
+				
+				HashMap<String,List<String>> tokensOfAllHTML = HTMLPages.getHTMLToken(modelConfig, preprocessing, mode);
+				if(null==tokensOfAllHTML) {
+					System.out.println("Something went wrong. Check");
+					System.exit(0);
+				}
+			
+				HashMap<String,List<String>> tokensOfAllCatalogEntities = ProductCatalogs.getCatalogTokens(modelConfig.getProductCategory(), modelConfig.getCatalog(), modelConfig.getGrams(), preprocessing);
+				SimilarityCalculator calculate = new SimilarityCalculator(modelConfig,preprocessing, tokensOfAllHTML, tokensOfAllCatalogEntities,error_logger);
+				File folderHTML = new File(modelConfig.getHtmlFolder());
+				File[] listOfHTML = folderHTML.listFiles();
+				
+								
+				for (int i = 0; i < listOfHTML.length; i++) {
+					//if(!listOfHTML[i].getName().contains("node1be6f6fecd7637694711d6a7352d4535")) continue;
+					//if you are in wrapper mode do not consider all pages but only the ones that could be potentially parsed by the implemented wrappers
+					if(mode.equals("wrapper")){
+						String pld = HTMLPages.getPLDFromHTMLPath(labelled, listOfHTML[i].getPath());
+				    	if(!(pld.contains("ebay")||pld.contains("tesco")||pld.contains("alibaba")||pld.contains("overstock")) ) continue;
+					}
+					
 
-		    	HashMap<String, Double> predictedAnswersForPage = new HashMap<String,Double>();
-		    	ArrayList<String> rightAnswers= calculate.getRightAnswer(modelConfig.getLabelled(), listOfHTML[i].getName());
-		    	if (rightAnswers.size()==0) {
-		    		System.out.println("no answer defined:"+listOfHTML[i]);
-		    		continue;
-		    	}
-		    	//get all the matches with the equivalent scores
-		    	predictedAnswersForPage = calculate.getPredictedAnswers(tokensOfAllHTML.get(listOfHTML[i].getName()), listOfHTML[i].getName());
-		    	
-		    	EvaluationItem toBeEvaluated= new EvaluationItem();
-		    	toBeEvaluated.setPath(listOfHTML[i].getName());
-		    	toBeEvaluated.setPredictedAnswers(predictedAnswersForPage);
-		    	toBeEvaluated.setRightAnswers(rightAnswers);
-		    	toBeEvaluated.setProductCategory(modelConfig.getProductCategory());
-		    	ItemstoBeEvaluated.add(toBeEvaluated);
+			    	HashMap<String, Double> predictedAnswersForPage = new HashMap<String,Double>();
+			    	ArrayList<String> rightAnswers= calculate.getRightAnswer(modelConfig.getLabelled(), listOfHTML[i].getName());
+			    	if (rightAnswers.size()==0) {
+			    		System.out.println("no answer defined:"+listOfHTML[i]);
+			    		continue;
+			    	}
+			    	//get all the matches with the equivalent scores
+			    	predictedAnswersForPage = calculate.getPredictedAnswers(tokensOfAllHTML.get(listOfHTML[i].getName()), listOfHTML[i].getName());
+			    	
+			    	EvaluationItem toBeEvaluated= new EvaluationItem();
+			    	toBeEvaluated.setPath(listOfHTML[i].getName());
+			    	toBeEvaluated.setPredictedAnswers(predictedAnswersForPage);
+			    	toBeEvaluated.setRightAnswers(rightAnswers);
+			    	toBeEvaluated.setProductCategory(modelConfig.getProductCategory());
+			    	ItemstoBeEvaluated.add(toBeEvaluated);
 
-		    }
+			    }
+			}
+			
 			System.out.println("Items to be Evaluated:"+ItemstoBeEvaluated.size());
 			
 			//write some log to check the predictions
@@ -148,17 +173,12 @@ public class MultipleRunsInitializer {
 			else if (evaluationType.equals("median")) results= evaluate.getResultsWithMedianThreshold(ItemstoBeEvaluated); //*1.5
 			else if (evaluationType.equals("optimizingF1")) results=evaluate.getResultsOptimizingF1(ItemstoBeEvaluated);
 			else System.out.println("Wrong input for evaluation type. I can only handle average, median and optimizingF1");
-			
-			
-			//average common words
-			double avgCommonGrams=((double)calculate.totalCommonElements)/((double)htmlFolder.length()*(double)tokensOfAllCatalogEntities.size());
-			results.setAvgCommonGrams(avgCommonGrams);
+					
 			
 		    System.out.println("---RESULTS---");
 		    System.out.println("Precision: "+results.getPrecision());
 		    System.out.println("Recall: "+results.getRecall());
 		    System.out.println("F1: "+results.getF1());
-		    System.out.println("Average Common Grams: "+results.getAvgCommonGrams());
 			System.out.println("---END---");
 			System.out.println("False Negatives:"+results.getFalseNegatives());
 			System.out.println("False Positives:"+results.getFalsePositives());
@@ -200,67 +220,67 @@ public class MultipleRunsInitializer {
 //		
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled, 
-//				 "simple", "n/a", 1,0,  0,  false, 0));
+//				 "simple", "n/a", 1,0,  0,  false, 0, optimalFeatureWeighting, weightsFile));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled, 
-//				 "simple", "n/a", 2,0,  0,  false, 0));
+//				 "simple", "n/a", 2,0,  0,  false, 0, optimalFeatureWeighting, weightsFile));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "simple", "n/a", 3,0,  0,  false, 0));
+//				 "simple", "n/a", 3,0,  0,  false, 0, optimalFeatureWeighting, weightsFile));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "simple", "n/a", 2,0,  0,  true, 0.9));
+//				 "simple", "n/a", 2,0,  0,  true, 0.9, optimalFeatureWeighting, weightsFile));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "simple", "n/a", 2,0,  0,  true, 0.95));
+//				 "simple", "n/a", 2,0,  0,  true, 0.95, optimalFeatureWeighting, weightsFile));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "simple with frequency threshold", "n/a", 1,0.08, 0, false, 0));
+//				 "simple with frequency threshold", "n/a", 1,0.08, 0, false, 0, optimalFeatureWeighting, weightsFile));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "simple with frequency threshold", "n/a", 1,0.06, 0, false, 0));
+//				 "simple with frequency threshold", "n/a", 1,0.06, 0, false, 0, optimalFeatureWeighting, weightsFile));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "simple with frequency threshold", "n/a", 2,0.05,0,  false, 0));
+//				 "simple with frequency threshold", "n/a", 2,0.05,0,  false, 0, optimalFeatureWeighting, weightsFile));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "simple with frequency threshold", "n/a", 2,0.04, 0, false, 0));
+//				 "simple with frequency threshold", "n/a", 2,0.04, 0, false, 0, optimalFeatureWeighting, weightsFile));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "jaccard", "n/a", 2,0,  0,  false, 0));
+//				 "jaccard", "n/a", 2,0,  0,  false, 0, optimalFeatureWeighting, weightsFile));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "jaccard", "n/a", 3,0,  0,  false, 0));
+//				 "jaccard", "n/a", 3,0,  0,  false, 0, optimalFeatureWeighting, weightsFile));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "jaccard", "n/a", 4,0,  0,  false, 0));
+//				 "jaccard", "n/a", 4,0,  0,  false, 0, optimalFeatureWeighting, weightsFile));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "cosine", "simple", 1,0,  0,  false, 0));
+//				 "cosine", "simple", 1,0,  0,  false, 0, optimalFeatureWeighting, weightsFile));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "cosine", "simple", 2,0,  0,  false, 0));
+//				 "cosine", "simple", 2,0,  0,  false, 0, optimalFeatureWeighting, weightsFile));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "cosine", "simple", 3,0,  0,  false, 0));
+//				 "cosine", "simple", 3,0,  0,  false, 0, optimalFeatureWeighting, weightsFile));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "cosine", "simple", 2,0,  0,  true, 0.6));
+//				 "cosine", "simple", 2,0,  0,  true, 0.6, optimalFeatureWeighting, weightsFile));
 		models.add(new ModelConfiguration
 				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-				 "cosine", "tfidf", 1,0,  0,  false, 0));
+				 "cosine", "tfidf", 1,0,  0,  false, 0, optimalFeatureWeighting, weightsFile));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "cosine", "tfidf", 2,0,  0,  false, 0));
+//				 "cosine", "tfidf", 2,0,  0,  false, 0, optimalFeatureWeighting, weightsFile));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "cosine", "tfidf", 3,0,  0,  false, 0));
+//				 "cosine", "tfidf", 3,0,  0,  false, 0, optimalFeatureWeighting, weightsFile));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "cosine", "tfidf", 2,0,  0,  true, 0.6));
+//				 "cosine", "tfidf", 2,0,  0,  true, 0.6, optimalFeatureWeighting, weightsFile));
 //		models.add(new ModelConfiguration
 //				(modelType,productCategory, catalog,htmlFolder,  labelled,  
-//				 "cosine", "tfidf", 2,0,  0,  true, 0.8));
+//				 "cosine", "tfidf", 2,0,  0,  true, 0.8, optimalFeatureWeighting, weightsFile));
 //		
 //		
 

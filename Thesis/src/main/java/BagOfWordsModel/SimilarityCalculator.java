@@ -224,8 +224,13 @@ public class SimilarityCalculator {
 		double score = 0.0;
 		if (commonWordsPageSide.size()>0){
 			
-			
-			if(model.getTypeOfWeighting().equals("simple")){
+			if (model.isOptimalFeatureWeights()){
+				Weightening optimal = new Weightening( model.getFeatureWeightsFile());
+
+				catalogWeights = optimal.getOptimalWeighting(catalogVector);
+				pageWeights = optimal.getOptimalWeighting(pageVector);
+			}
+			else if(model.getTypeOfWeighting().equals("simple")){
 				catalogWeights=weights.getSimpleWeighting(catalogVector);
 				pageWeights=weights.getSimpleWeighting(pageVector);
 			}

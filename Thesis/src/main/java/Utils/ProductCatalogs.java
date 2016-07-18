@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,7 +40,7 @@ public class ProductCatalogs {
 			DocPreprocessor process = new DocPreprocessor();
 			ProductCatalogs test = new ProductCatalogs();
 			String filepath="C:\\Users\\Anna\\Google Drive\\Master_Thesis\\3.MatchingModels\\testInput\\catalog\\TVCatalog.json";
-			PreprocessingConfiguration preprocess = new PreprocessingConfiguration(false, true, true,"",true,true);
+			PreprocessingConfiguration preprocess = new PreprocessingConfiguration(false, true, true,"",true,true,true);
 			HashMap<String, List<String>> tokens = test.getCatalogTokens("tv", filepath, 1, preprocess);
 			for (Map.Entry<String,List<String> > entry: tokens.entrySet()){
 				process.printList(entry.getValue());
@@ -55,7 +56,6 @@ public class ProductCatalogs {
 		DocPreprocessor processText = new DocPreprocessor();
 		HashMap<String, List<String>> catalogProducts = new HashMap<String,List<String>>();
 		String headItem=getHeadItem(productCategory);
-		
 		ArrayList<String> properties = new ArrayList<String>();
 		
 		properties = getPropertiesFromFile(productCategory);
@@ -72,6 +72,10 @@ public class ProductCatalogs {
 				if (value.equals("")) continue;
 				preprocessedValue.add(value);
 				List<String> tokenizedValue = processText.textProcessing(null, value, grams, false, preprocessing,null);
+				//check for product model names
+				if(preprocessing.isModelNameHandling()){
+					tokenizedValue=getTokensWithModelNameHandling(tokenizedValue,preprocessing);					
+				}
 				entityValues.addAll(tokenizedValue);
 
 			}
@@ -86,6 +90,31 @@ public class ProductCatalogs {
 		}
 		
 		return catalogProducts;
+	}
+
+	static ArrayList<String> getTokensWithModelNameHandling(List<String> tokenizedValue, PreprocessingConfiguration preprocessing) {
+		
+		ArrayList<String> tokensToReturn=new ArrayList<String>();
+		String processedValue="";
+		for(int t=0;t<tokenizedValue.size();t++) processedValue=processedValue+" "+tokenizedValue.get(t);
+		ArrayList<String> modelNamesFound= new ArrayList<String>();
+		for(String modelName:preprocessing.getProductNames()){
+			if(processedValue.contains(modelName)) modelNamesFound.add(modelName);
+		}
+		//put the model names and the rest of the tokens
+		for(String fmodel:modelNamesFound){
+			int countMatches= StringUtils.countMatches(processedValue, fmodel);
+			
+			for (int matches=1; matches<=countMatches;matches++){
+				tokensToReturn.add(fmodel);}
+		}
+		String[] restOfTokens=processedValue.split(" ");
+		for(int i=0;i<restOfTokens.length;i++) {
+			if(!(restOfTokens[i].equals("") ||restOfTokens[i].equals(" ") ))tokensToReturn.add(restOfTokens[i]);
+		}
+		
+		return tokensToReturn;
+		
 	}
 
 	public static ArrayList<String> getPropertiesFromFile(String productCategory){
@@ -163,7 +192,33 @@ public class ProductCatalogs {
 		return catalogTokens;
 	}
 
-	
+	public static ArrayList<String> getProductNamesFromcatalog(String productCategory, String filePath, PreprocessingConfiguration preprocessing) throws JSONException, IOException{
+		
+		DocPreprocessor processText = new DocPreprocessor();
+		String headItem=getHeadItem(productCategory);
+		String productNameProperty="Product Name";
+		ArrayList<String> productNames=new ArrayList<String>();
+	    JSONObject catalog = new JSONObject(DocPreprocessor.fileToText(filePath));
+
+		JSONArray array = catalog.getJSONArray(headItem);
+		
+		for(int i = 0 ; i < array.length() ; i++){
+			ArrayList<String> preprocessedValue = new ArrayList<String>();
+				
+			String value= array.getJSONObject(i).getString(productNameProperty);
+			preprocessedValue.add(value);
+			List<String> tokenizedValue = processText.textProcessing(null, value, 1, false, preprocessing,null);
+			
+			//do not tokenize the value
+			String productName="";
+			for(int t=0;t<tokenizedValue.size();t++) productName= productName+" "+tokenizedValue.get(t);
+			
+			productNames.add(productName.trim());
+		}
+		
+		return productNames;
+		
+	}
 		
 		
 }

@@ -1,5 +1,10 @@
 package BagOfWordsModel;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,6 +13,13 @@ import java.util.Map;
 import java.util.Set;
 
 public class Weightening {
+	HashMap<String, Double> optimalWeights;
+	
+	public  Weightening(){};
+	
+	public  Weightening(String optimalWeightsFile) throws IOException{
+		optimalWeights = readWeightsFromFile(optimalWeightsFile);
+	};
 	
 	public HashMap<String,Double> getSimpleWeighting(List<String> wordsOfVector){
 		HashMap<String, Double> gramWeights = new HashMap<String,Double>();
@@ -87,4 +99,33 @@ public class Weightening {
 		}
 		return frequencyOfWords;
 	}
+
+	public HashMap<String, Double> getOptimalWeighting(
+		List<String> itemVector) throws IOException {
+		HashMap<String,Double> itemWeights = new HashMap<String,Double>();
+
+		for(String word:  itemVector){
+			if(optimalWeights.containsKey(word)) itemWeights.put(word, optimalWeights.get(word));
+			else itemWeights.put(word, 0.0);
+		}
+		return itemWeights;
+	}
+
+	private HashMap<String, Double> readWeightsFromFile(
+			String featureWeightsFile) throws IOException {
+		HashMap<String, Double> allWeights= new HashMap<String,Double>();
+		
+		BufferedReader reader = new BufferedReader(new FileReader(new File(featureWeightsFile)));
+		String line="";
+		while((line = reader.readLine()) != null){
+			String attribute=line.split(";")[0];
+			String score=line.split(";")[1].replace(",", ".");
+			double weight= Double.parseDouble(score);
+			allWeights.put(attribute.replaceAll("\"", ""), weight);
+		}
+		reader.close();
+		return allWeights;
+	}
+	
+	
 }

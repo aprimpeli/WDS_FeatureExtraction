@@ -40,7 +40,6 @@ public class ReportGenarator {
 				if(evaluation.getA()==-1) lineToAppend+=";n/a";
 				else lineToAppend+=";"+evaluation.getA();
 				lineToAppend+=";"+evaluation.getThreshold();
-				lineToAppend+=";"+evaluation.getAvgCommonGrams();
 
 				bw.append(lineToAppend);
 				bw.newLine();

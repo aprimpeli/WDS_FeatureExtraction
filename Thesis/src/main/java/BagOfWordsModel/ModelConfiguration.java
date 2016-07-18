@@ -10,7 +10,7 @@ public class ModelConfiguration {
 	public ModelConfiguration(String simType, int windowSize,
 			String labelledPath,  double finalSimThreshold, boolean isLevenshtein,
 			int pruneLength, String similarityType, String typeOfWeighting, int grams, String htmlFolder, 
-			String productCategory, String catalog) {
+			String productCategory, String catalog, boolean optimalFeatureWeights, String featureWeightsFile) {
 		super();
 		this.dictsimType = simType;
 		this.windowSize = windowSize;
@@ -24,8 +24,30 @@ public class ModelConfiguration {
 		this.htmlFolder=htmlFolder;
 		this.productCategory=productCategory;
 		this.catalog=catalog;
+		this.featureWeightsFile=featureWeightsFile;
+		this.optimalFeatureWeights=optimalFeatureWeights;
 	}
 	
+	public ModelConfiguration(String modelType, String productCategory, String catalog,
+			String htmlFolder, String labelled, 
+			String similarityType, String typeOfWeighting, int grams,
+			double maxFreq, double minFreq, boolean onTopLevenshtein,
+			double levenshteinThreshold, boolean optimalFeatureWeights, String featureWeightsFile) {
+		super();
+		this.productCategory = productCategory;
+		this.catalog = catalog;
+		this.htmlFolder = htmlFolder;
+		this.labelled = labelled;
+		this.similarityType = similarityType;
+		this.typeOfWeighting = typeOfWeighting;
+		this.grams = grams;
+		this.maxFreq = maxFreq;
+		this.minFreq = minFreq;
+		this.onTopLevenshtein = onTopLevenshtein;
+		this.levenshteinThreshold = levenshteinThreshold;
+		this.featureWeightsFile=featureWeightsFile;
+		this.optimalFeatureWeights=optimalFeatureWeights;
+	}
 	private String dictsimType;
 	public String getDictsimType() {
 		return dictsimType;
@@ -85,6 +107,25 @@ public class ModelConfiguration {
 	private HashMap<String, Double> idfWeightsCatalog;
 	private HashMap<String,Double> idfWeightsPages;
 	
+	private boolean optimalFeatureWeights;
+	private String featureWeightsFile;
+	
+	public boolean isOptimalFeatureWeights() {
+		return optimalFeatureWeights;
+	}
+
+	public void setOptimalFeatureWeights(boolean optimalFeatureWeights) {
+		this.optimalFeatureWeights = optimalFeatureWeights;
+	}
+
+	public String getFeatureWeightsFile() {
+		return featureWeightsFile;
+	}
+
+	public void setFeatureWeightsFile(String featureWeightsFile) {
+		this.featureWeightsFile = featureWeightsFile;
+	}
+
 	private HashMap<String,Integer> vectorPageFrequencies;
 	private HashMap<String,Integer> vectorCatalogFrequencies;
 
@@ -107,24 +148,7 @@ public class ModelConfiguration {
 		this.vectorCatalogFrequencies = vectorCatalogFrequencies;
 	}
 
-	public ModelConfiguration(String modelType, String productCategory, String catalog,
-			String htmlFolder, String labelled, 
-			String similarityType, String typeOfWeighting, int grams,
-			double maxFreq, double minFreq, boolean onTopLevenshtein,
-			double levenshteinThreshold) {
-		super();
-		this.productCategory = productCategory;
-		this.catalog = catalog;
-		this.htmlFolder = htmlFolder;
-		this.labelled = labelled;
-		this.similarityType = similarityType;
-		this.typeOfWeighting = typeOfWeighting;
-		this.grams = grams;
-		this.maxFreq = maxFreq;
-		this.minFreq = minFreq;
-		this.onTopLevenshtein = onTopLevenshtein;
-		this.levenshteinThreshold = levenshteinThreshold;
-	}
+	
 	public ModelConfiguration() {
 		// TODO Auto-generated constructor stub
 	}

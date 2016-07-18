@@ -51,7 +51,7 @@ public class DocPreprocessor {
 			String labelledPath="";
 			DocPreprocessor process = new DocPreprocessor();
 			System.out.println("CASE 1");
-			PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(true, true, true, "html_tables_lists",true,false);
+			PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(true, true, true, "html_tables_lists",true,false,true);
 		
 			System.out.print(process.getText(true, null, filepath,  preprocessing,labelledPath));
 //			System.out.println("CASE 2");
@@ -168,22 +168,22 @@ public class DocPreprocessor {
 
 				}
 				else{
-					String TablesListstext=utils.getTablesListsContentFromWrappers(filepath);
+					String TablesListstext=utils.getTablesListsContentFromWrappers(filepath,labelledpath);
 					allContent.append(TablesListstext);
 
 				}
 				
 				text = allContent.toString();
 			}
-			else if(preprocessing.getHtmlParsingType().equals("html_tables_lists_wrapper")){
-				HTMLFragmentsExtractor utils = new HTMLFragmentsExtractor(labelledpath);
-				StringBuilder allContent = new StringBuilder();
-				text=utils.getTableWithWrapperText(filepath);
-				if (null==text) return null;
-				allContent.append(text);
-				text = allContent.toString();
-				//System.out.println("ALL:"+text);
-			}
+//			else if(preprocessing.getHtmlParsingType().equals("html_tables_lists_wrapper")){
+//				HTMLFragmentsExtractor utils = new HTMLFragmentsExtractor(labelledpath);
+//				StringBuilder allContent = new StringBuilder();
+//				text=utils.getTableWithWrapperText(filepath);
+//				if (null==text) return null;
+//				allContent.append(text);
+//				text = allContent.toString();
+//				//System.out.println("ALL:"+text);
+//			}
 			else if (preprocessing.getHtmlParsingType().equals("marked_up_data")){
 				 NodeFromLabelled node =LabelledFileExtractions.extractNodeFromLabelledFile(filepath, labelledpath);
 				 StringBuilder allContent = new StringBuilder();

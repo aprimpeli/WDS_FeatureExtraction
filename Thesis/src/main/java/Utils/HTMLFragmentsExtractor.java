@@ -63,16 +63,14 @@ import com.google.common.base.Optional;
 import BagOfWordsModel.DocPreprocessor;
 
 public class HTMLFragmentsExtractor {
-	String labelledEntitiesPath;
+	static String labelledEntitiesPath;
 	
 	public HTMLFragmentsExtractor(String labelPath){
 		labelledEntitiesPath=labelPath;
 	}
-	public HTMLFragmentsExtractor(){
-	}
-				
+			
 	public static void main(String args[]) throws IOException{
-		HTMLFragmentsExtractor extr= new HTMLFragmentsExtractor();
+		HTMLFragmentsExtractor extr= new HTMLFragmentsExtractor("");
 		
 		File folder = new File("C:/Users/Johannes/Google Drive/Master_Thesis/2.ProfilingOfData/LabelledDataProfiling/HTML_Pages/Unified_extra/"
 				+ "tvs");
@@ -80,7 +78,7 @@ public class HTMLFragmentsExtractor {
 
 	    for (int i = 0; i < listOfFiles.length; i++) {
 	    	System.out.println(listOfFiles[i].getName());
-	    	System.out.println(extr.getTablesListsContentFromWrappers(listOfFiles[i].getPath()));
+	    	System.out.println(extr.getTablesListsContentFromWrappers(listOfFiles[i].getPath(), labelledEntitiesPath));
 	    }
 		    
 		
@@ -131,101 +129,8 @@ public class HTMLFragmentsExtractor {
 
 	}
 	
-	public String getTableWithWrapperText(String file) throws IOException{
-		
-		String pld= HTMLPages.getPLDFromHTMLPath(labelledEntitiesPath, file);
-		
-		String contentOfFile = DocPreprocessor.fileToText(file);
-		Document doc = Jsoup.parse(contentOfFile, "UTF-8");	
-		StringBuilder allTablesContent= new StringBuilder();
-		
-		if(pld.contains("ebay")){
-			Element firstTable = doc.getElementsByClass("itemAttr").first();
-			if(null!=firstTable){
-				Elements items = firstTable.select("tr");
-				for(Element item:items){
-					Elements values= item.select("td");
-					if(values.size()!= 4) continue;
-					//get only the values not the feature names
-					allTablesContent.append(values.get(1).text()+" ");
-					allTablesContent.append(values.get(3).text()+" ");						
-				}				
-			} 					
-			//detailed table
-			Element secondTable = doc.getElementsByClass("prodDetailSec").first();
-			if (null!=secondTable){
-				Elements detaileditems = secondTable.select("tr");
-				for(Element item:detaileditems){
-					Elements values = item.select("td");
-					if(values.size()!=2) continue;
-					else {
-						if (values.get(1).text().isEmpty() || values.get(1).text()==null ) continue;
-						allTablesContent.append(values.get(1).text()+" ");						
-					}
-				}
-			}						
-		}// end of ebay wrapper
-		else if (pld.contains("overstock")){
-			Element firstTable = doc.select("table[class=table table-dotted table-extended table-header translation-table]").first();
-			Element content = firstTable.select("tbody").first();
-			if(null!=content){
-				Elements items = content.select("tr");
-				for(Element item:items){
-					Elements values= item.select("td");
-					if(values.size()!= 2) continue;
-					allTablesContent.append(values.get(1).text()+" ");
-				}	
-				Element secondTable = doc.select("table[class=table table-dotted table-header]").first();
-				Elements seconditems = secondTable.select("tr");
-				if(null!=content){
-					for(Element item:seconditems){
-						Elements values= item.select("td");
-						if(values.size()!= 2) continue;		
-						allTablesContent.append(values.get(1).text()+" ");				
-					}
-					
-				} 
-			}
-		} 	//end of overstock parser	
-		else if (pld.contains("tesco")){
-			Element table = doc.select("div[id=product-spec-section-content]").first();
-			if(null!=table){
 
-				Elements labelCells = table.select("div[class=product-spec-cell product-spec-label]");
-				Elements labelValues = table.select("div[class=product-spec-cell product-spec-value]");
-				if (labelCells.size()!= labelValues.size()) System.out.println("The labels size and the value size do not match. Please check the Tesco wrapper.");
-				for(int i=0; i<labelCells.size(); i++){
-					String value= labelValues.get(i).text();
-					allTablesContent.append(value+" ");										
-				}					
-			}
-		}//end of tesco wrapper
-			
-		else if (pld.contains("alibaba")){
-
-			Elements labelCells = doc.select("td[class=name J-name]");
-			Elements labelValues = doc.select("td[class=value J-value]");
-			if (labelCells.size()!= labelValues.size()) System.out.println("The labels size and the value size do not match. Please check the Alibaba wrapper.");
-			for(int i=0; i<labelCells.size(); i++){
-				String value= labelValues.get(i).text();
-				allTablesContent.append(value+" ");
-				
-			}	
-			Elements secondlabelValues = doc.select("table[class=aliDataTable]").select("td");
-			for(int i=0; i<secondlabelValues.size(); i=i+2){
-				String value= secondlabelValues.get(i+1).text();
-				allTablesContent.append(value+" ");
-
-			}	
-		}
-		else {
-			System.out.println("No wrapper was defined for the pld:"+pld);
-			return null;
-			}
-		return allTablesContent.toString();
-	}
-
-	public String getTablesListsContentFromWrappers(String file) throws JSONException, IOException{
+	public String getTablesListsContentFromWrappers(String file, String labelledEntitiesPath) throws JSONException, IOException{
 		String pld= HTMLPages.getPLDFromHTMLPath(labelledEntitiesPath, file);
 		if(pld.contains("alibaba")){
 			AlibabaWrapper w= new AlibabaWrapper();
@@ -422,4 +327,102 @@ public class HTMLFragmentsExtractor {
 		}
 		return allListsContent.toString();
 	}
+
+//	public String getTableWithWrapperText(String file) throws IOException{
+//		
+//		String pld= HTMLPages.getPLDFromHTMLPath(labelledEntitiesPath, file);
+//		
+//		String contentOfFile = DocPreprocessor.fileToText(file);
+//		Document doc = Jsoup.parse(contentOfFile, "UTF-8");	
+//		StringBuilder allTablesContent= new StringBuilder();
+//		
+//		if(pld.contains("ebay")){
+//			Element firstTable = doc.getElementsByClass("itemAttr").first();
+//			if(null!=firstTable){
+//				Elements items = firstTable.select("tr");
+//				for(Element item:items){
+//					Elements values= item.select("td");
+//					if(values.size()!= 4) continue;
+//					//get only the values not the feature names
+//					allTablesContent.append(values.get(1).text()+" ");
+//					allTablesContent.append(values.get(3).text()+" ");						
+//				}				
+//			} 					
+//			//detailed table
+//			Element secondTable = doc.getElementsByClass("prodDetailSec").first();
+//			if (null!=secondTable){
+//				Elements detaileditems = secondTable.select("tr");
+//				for(Element item:detaileditems){
+//					Elements values = item.select("td");
+//					if(values.size()!=2) continue;
+//					else {
+//						if (values.get(1).text().isEmpty() || values.get(1).text()==null ) continue;
+//						allTablesContent.append(values.get(1).text()+" ");						
+//					}
+//				}
+//			}						
+//		}// end of ebay wrapper
+//		else if (pld.contains("overstock")){
+//			Element firstTable = doc.select("table[class=table table-dotted table-extended table-header translation-table]").first();
+//			Element content = firstTable.select("tbody").first();
+//			if(null!=content){
+//				Elements items = content.select("tr");
+//				for(Element item:items){
+//					Elements values= item.select("td");
+//					if(values.size()!= 2) continue;
+//					allTablesContent.append(values.get(1).text()+" ");
+//				}	
+//				Element secondTable = doc.select("table[class=table table-dotted table-header]").first();
+//				Elements seconditems = secondTable.select("tr");
+//				if(null!=content){
+//					for(Element item:seconditems){
+//						Elements values= item.select("td");
+//						if(values.size()!= 2) continue;		
+//						allTablesContent.append(values.get(1).text()+" ");				
+//					}
+//					
+//				} 
+//			}
+//		} 	//end of overstock parser	
+//		else if (pld.contains("tesco")){
+//			Element table = doc.select("div[id=product-spec-section-content]").first();
+//			if(null!=table){
+//
+//				Elements labelCells = table.select("div[class=product-spec-cell product-spec-label]");
+//				Elements labelValues = table.select("div[class=product-spec-cell product-spec-value]");
+//				if (labelCells.size()!= labelValues.size()) System.out.println("The labels size and the value size do not match. Please check the Tesco wrapper.");
+//				for(int i=0; i<labelCells.size(); i++){
+//					String value= labelValues.get(i).text();
+//					allTablesContent.append(value+" ");										
+//				}					
+//			}
+//		}//end of tesco wrapper
+//			
+//		else if (pld.contains("alibaba")){
+//
+//			Elements labelCells = doc.select("td[class=name J-name]");
+//			Elements labelValues = doc.select("td[class=value J-value]");
+//			if (labelCells.size()!= labelValues.size()) System.out.println("The labels size and the value size do not match. Please check the Alibaba wrapper.");
+//			for(int i=0; i<labelCells.size(); i++){
+//				String value= labelValues.get(i).text();
+//				allTablesContent.append(value+" ");
+//				
+//			}	
+//			Elements secondlabelValues = doc.select("table[class=aliDataTable]").select("td");
+//			for(int i=0; i<secondlabelValues.size(); i=i+2){
+//				String value= secondlabelValues.get(i+1).text();
+//				allTablesContent.append(value+" ");
+//
+//			}	
+//		}
+//		else {
+//			System.out.println("No wrapper was defined for the pld:"+pld);
+//			return null;
+//			}
+//		return allTablesContent.toString();
+//	}
+
+
+
 }
+

@@ -51,11 +51,18 @@ public class MultipleRunsInitializerDictionary {
 	static boolean stemming=true;
 	static boolean stopWordRemoval=true;
 	static boolean lowerCase=true;
-	static String htmlParsingElements="all_html"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
+	static String htmlParsingElements="marked_up_data"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
 	static double idfThresholdForcatalog=0.8;
 	static boolean idfFiltering =false;
-	static boolean numericalHandling=true;
+	//advanced
+	static boolean numericalHandling=false;
 	static boolean tablesListsFiltering=true;
+	static boolean modelNameHandling=false;
+	
+	//advanced matching
+	static boolean optimalFeatureWeighting=false;
+	static String weightsFile="C:\\Users\\Johannes\\Google Drive\\Master_Thesis\\6.AdditionalMethod\\LearnWeightsForMethods\\test\\learned_weights.csv";
+
 	static String errorLogFile="resources/errorAnalysis/dictionary_"+htmlParsingElements+"_"+productCategory+"_error_analysis.csv";
 
 	
@@ -102,7 +109,7 @@ public class MultipleRunsInitializerDictionary {
 	private void getDictionary() throws JSONException, IOException{
 		dictionary = new Dictionary();
 		DictionaryCreator creator= new DictionaryCreator();
-		preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements,numericalHandling,tablesListsFiltering);
+		preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements,numericalHandling,tablesListsFiltering,modelNameHandling);
 		dictionary=creator.createDictionary(catalog, productCategory,preprocessing, labelled, idfThresholdForcatalog, idfFiltering);
 	}
 	private HashMap<String,List<String>> getFeatureTagging(ModelConfiguration modelConfig) throws IOException{
@@ -176,7 +183,7 @@ public class MultipleRunsInitializerDictionary {
 			String pld = HTMLPages.getPLDFromHTMLPath(labelled, listOfHTML[i].getPath());
 	    	if(mode.equals("wrapper") && !(pld.contains("ebay")||pld.contains("tesco")||pld.contains("alibaba")||pld.contains("overstock")) ) continue;
 			
-	    	PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements,numericalHandling,tablesListsFiltering);
+	    	PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements,numericalHandling,tablesListsFiltering,modelNameHandling);
 			HashMap<Integer,List<String>> pagetokenizedInput= new HashMap<Integer,List<String>>();
 			DocPreprocessor process= new DocPreprocessor();
 			for (int j=1; j<=5; j++){
@@ -188,7 +195,7 @@ public class MultipleRunsInitializerDictionary {
 	}
 
 	private void runMultipleInitializer() throws JSONException, IOException{
-		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements,numericalHandling,tablesListsFiltering);
+		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements,numericalHandling,tablesListsFiltering,modelNameHandling);
 		LinkedHashMap<ModelConfiguration, ResultItem> allResults = new LinkedHashMap<ModelConfiguration,ResultItem>();
 		Queue<ModelConfiguration> allmodels = defineExperiments();
 		
@@ -294,7 +301,7 @@ public class MultipleRunsInitializerDictionary {
 	private static void writeLog(BufferedWriter logger,
 			List<EvaluationItem> itemstoBeEvaluated) throws IOException {
 		for(EvaluationItem ev:itemstoBeEvaluated){
-			logger.append("NEW ITEM");
+			logger.append(ev.getPath());
 			logger.newLine();
 			for (String answer:ev.getRightAnswers()){
 				logger.append("Right Answer:"+answer);
@@ -312,10 +319,10 @@ public class MultipleRunsInitializerDictionary {
 		Queue<ModelConfiguration> models = new LinkedList<ModelConfiguration>();
 		
 		//simType, windowsize, labelledpath, finalSimThreshold, editdistancetype, prunelength, similarityType, weighting, grams, html,category,catalog
-		models.add(new ModelConfiguration("exact", 0,labelled,  0, false, 0, "cosine", "tfidf", 1 , htmlFolder, productCategory, catalog));
-//		models.add(new ModelConfiguration("non-exact", 3,labelled,  0.7, true, 3,"cosine", "tfidf", 1 , htmlFolder, productCategory, catalog));
-//		models.add(new ModelConfiguration("non-exact", 2,labelled,  0.6, true, 3,"cosine", "tfidf", 1 , htmlFolder, productCategory, catalog));
-//		models.add(new ModelConfiguration("non-exact", 2,labelled,  0.85, true, 4,"cosine", "tfidf", 1 , htmlFolder, productCategory, catalog));
+		models.add(new ModelConfiguration("exact", 0,labelled,  0, false, 0, "cosine", "tfidf", 1 , htmlFolder, productCategory, catalog, optimalFeatureWeighting, weightsFile));
+//		models.add(new ModelConfiguration("non-exact", 3,labelled,  0.7, true, 3,"cosine", "tfidf", 1 , htmlFolder, productCategory, catalog, optimalFeatureWeighting, weightsFile));
+//		models.add(new ModelConfiguration("non-exact", 2,labelled,  0.6, true, 3,"cosine", "tfidf", 1 , htmlFolder, productCategory, catalog, optimalFeatureWeighting, weightsFile));
+//		models.add(new ModelConfiguration("non-exact", 2,labelled,  0.85, true, 4,"cosine", "tfidf", 1 , htmlFolder, productCategory, catalog, optimalFeatureWeighting, weightsFile));
 
 		return models;
 	}

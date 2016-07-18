@@ -38,11 +38,16 @@ public class HTMLPages {
 		    for (int i = 0; i < listOfHTML.length; i++) {	
 		    	if(mode.equals("wrapper")){
 		    		String pld= getPLDFromHTMLPath(model.getLabelled(), listOfHTML[i].getPath());
-		    	 if(!(pld.contains("ebay")|| pld.contains("overstock")||pld.contains("alibaba")||pld.contains("tesco"))) continue;
-				
+		    	 if(!(pld.contains("ebay")|| pld.contains("overstock")||pld.contains("alibaba")||pld.contains("tesco"))) continue;				
 		    	}
+		    	
 		    	List<String> tokenizedValue = processText.textProcessing(listOfHTML[i].getPath(), null, model.getGrams(), true, preprocessing,model.getLabelled());
 				
+		    	if(preprocessing.isModelNameHandling()){
+		    		List<String> tokenizedValueWithModelNameHandling=ProductCatalogs.getTokensWithModelNameHandling(tokenizedValue,preprocessing);
+		    		tokenizedValue.clear();
+		    		tokenizedValue=tokenizedValueWithModelNameHandling;
+		    	}
 				logProcessing.append("Before Processing;"+listOfHTML[i].getName()+";"+processText.getText(true, null, listOfHTML[i].getPath(), preprocessing, model.getLabelled()));
 				logProcessing.newLine();
 				logProcessing.append("AFTER Processing;"+listOfHTML[i].getName()+";"+tokenizedValue);
@@ -55,7 +60,8 @@ public class HTMLPages {
 					continue;
 				}
 				//System.out.println(listOfHTML[i].getName()+"--"+tokenizedValue.toString());
-				tokensOfPages.put(listOfHTML[i].getName(), tokenizedValue);
+		    	tokensOfPages.put(listOfHTML[i].getName(), tokenizedValue);
+
 		    }
 			return tokensOfPages;      
 		  }catch(Exception e){

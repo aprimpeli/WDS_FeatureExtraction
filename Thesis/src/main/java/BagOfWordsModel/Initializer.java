@@ -28,6 +28,8 @@ public class Initializer {
 	static String htmlParsingElements=""; //
 	static boolean numericalHandling=true;
 	static boolean tablesFiltering=true;
+	static boolean modelNameHandling=true;
+
 	
 	//SIMILARITY CONFIGURATION
 	//cosine or simple(exact matching) or jaccard or simple with frequency threshold
@@ -44,6 +46,8 @@ public class Initializer {
 	static double levenshteinThreshold=0.8;
 	static String mode="wrapper";
 
+	static boolean optimalFeatureWeighting;
+	static String weightsFile;
 	
 	public static void main (String args[]) throws Exception{
 		
@@ -51,9 +55,9 @@ public class Initializer {
 				 htmlFolder,  labelled, 
 				 similarityType, typeOfWeighting, grams,
 				 maxFreq,  minFreq,  onTopLevenshtein,
-				 levenshteinThreshold);
+				 levenshteinThreshold, optimalFeatureWeighting, weightsFile);
 		
-		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements,numericalHandling,tablesFiltering);
+		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements,numericalHandling,tablesFiltering,modelNameHandling);
 		
 		System.out.println("---START---");
 		System.out.println("The bag of words model will be executed for the product category "+ productCategory);

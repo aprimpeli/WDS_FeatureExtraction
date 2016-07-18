@@ -30,6 +30,7 @@ public class TestDictionaryApproach {
 	static boolean lowerCase=true;
 	static boolean numericalHandling=true;
 	static boolean tablesFiltering=true;
+	static boolean modelNameHandling=true;
 	static String htmlParsingElements="html_tables"; //all_html, html_tables, html_lists, html_tables_lists, marked_up_data, html_tables_lists_wrapper
 	Map<Integer, List<String>> tokenizedInput;
 	
@@ -41,7 +42,7 @@ public class TestDictionaryApproach {
 		String text = "ireland";
 		DictionaryCreator dict = new DictionaryCreator();
 		Dictionary dictionary = new Dictionary();
-		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements,numericalHandling,tablesFiltering);
+		PreprocessingConfiguration preprocessing = new PreprocessingConfiguration(stemming, stopWordRemoval, lowerCase, htmlParsingElements,numericalHandling,tablesFiltering,modelNameHandling);
 
 		dictionary=dict.createDictionary(catalog, "phone",preprocessing, labelled, idfThresholdForcatalog,true);		
 		
